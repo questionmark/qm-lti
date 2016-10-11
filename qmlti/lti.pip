@@ -1,0 +1,18 @@
+; lti.pip
+; PIP file for use with LTI connector to Perception
+; 8th July 2012
+
+[Input]
+
+[Output]
+Participant=%SESSION.USER%
+Assessment_ID=%SESSION.ID%
+Percentage_Score=%SESSION.PERCENT%
+Result_ID=%SESSION.RESULT%
+lti_consumer_key=lti_consumer_key
+lti_context_id=lti_context_id
+lti_result_id=lti_result_id
+
+[Settings]
+HEADER=Content-Type: application/x-www-form-urlencoded
+USEHOME=yes
