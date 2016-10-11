@@ -57,10 +57,18 @@ class PerceptionSoap {
     $this->debug = isset($options["debug"]) ? $options["debug"] : false;
 
     try {
-
+      $context = stream_context_create([
+        'ssl' => [
+          // set some SSL/TLS specific options
+          'verify_peer' => false,
+          'verify_peer_name' => false,
+          'allow_self_signed' => true
+        ]
+      ]);
       $this->soap = new SoapClient("{$perception_qmwise}?wsdl", array(
         "user_agent"  =>  "LTI Perception connector",
-        "trace"     =>  $this->debug
+        "trace"     =>  $this->debug,
+        'stream_context' => $context
       ));
       if(!is_null($security_client_id) || !is_null($security_checksum)) {
         if(is_null($security_client_id)) {
