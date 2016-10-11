@@ -11,9 +11,9 @@ http://projects.oscelot.org/gf/project/lti-qm/
 For information about supported solutions based on this software please refer
 to the Questionmark website:
 
-http://www.quesitonmark.com/
+http://www.questionmark.com/
 
-### Terms of Distribution
+## Terms of Distribution
 
 The LTI Connector is distributed under the terms of the GNU General Public
 License (GPL), version 2.
