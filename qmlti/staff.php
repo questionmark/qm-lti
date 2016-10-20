@@ -31,7 +31,7 @@ require_once('LTI_Data_Connector_qmp.php');
 // Initialise database
   $db = open_db();
 
-  session_name(SESSION_NAME);
+  session_name();
   session_start();
 
   $consumer_key = $_SESSION['consumer_key'];
@@ -41,6 +41,28 @@ require_once('LTI_Data_Connector_qmp.php');
   $lastname = $_SESSION['lastname'];
   $email = $_SESSION['email'];
   $isStudent = $_SESSION['isStudent'];
+  $coachingReport = $_SESSION['coaching_report'];
+  $assessment_id = $_SESSION['assessment_id'];
+
+  $coaching_check = '';
+  
+  if (isset($coachingReport)) {
+    if ($coachingReport) {
+      $coaching_check = 'checked';
+    } else {
+      $coaching_check = '';
+    }
+  }
+
+  if (isset($_POST['id_coachingreport'])) {
+    if ($_POST['id_coachingreport'] == '1') {
+      $coaching_check = 'checked';
+      $coachingReport = True;
+    } else {
+      $coaching_check = '';
+      $coachingReport = False;
+    }
+  } 
 
   if (isset($_POST['assessment'])) {
     $_SESSION['assessment_id'] = htmlentities($_POST['assessment']);
@@ -48,9 +70,9 @@ require_once('LTI_Data_Connector_qmp.php');
     $consumer = new LTI_Tool_Consumer($consumer_key, $data_connector);
     $resource_link = new LTI_Resource_Link($consumer, $resource_link_id);
     $resource_link->setSetting(ASSESSMENT_SETTING, $_SESSION['assessment_id']);
+    $resource_link->setSetting(COACHING_REPORT, $coachingReport);
     $resource_link->save();
   }
-  $assessment_id = $_SESSION['assessment_id'];
 
   $ok = !$isStudent;
   if (!$ok) {
@@ -106,6 +128,7 @@ function doReset() {
     if (el) {
       el.className = 'hide';
     }
+
   }
 }
 // -->
@@ -154,6 +177,9 @@ EOD;
     }
 ?>
         </table>
+        <br><hr>
+        <input type="hidden" id="id_coachingreport" name="id_coachingreport" value="0">
+        <input type="checkbox" id="id_coachingreport" name="id_coachingreport" onclick="doChange('id_coachingreport');" value="1" <?php echo $coaching_check ?> >Allow participants to view coaching reports.
         <p>
         <input type="submit" id="id_save" value="Save change" disabled="disabled" />
         </p>

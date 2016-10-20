@@ -28,7 +28,7 @@
 
 require_once('lib.php');
 
-  session_name(SESSION_NAME);
+  session_name();
   session_start();
 
 // Get data from session
@@ -43,11 +43,17 @@ require_once('lib.php');
   if (!$return_url) {
     $return_url = get_root_url() . 'return.php';
   }
+
+  $coachingReport = $_SESSION['coaching_report'];
   $isStudent = $_SESSION['isStudent'];
-  $notify_url = get_root_url() . 'notify.php';
+  # $notify_url = get_root_url() . 'notify.php';
+  # error_log($notify_url);
+
+  #$notify_url = "http://pipnotifyreflector.azurewebsites.net/home/index/anson-li-notify-999" . rand(0, 100000);
+  $notify_url = 'http://localhost/LTI/notify.php';
   $result_id = $_SESSION['result_id'];
 
-// Ensure this is a student, an assessment has been defined and the LMS will accept an outcome
+  // Ensure this is a student, an assessment has been defined and the LMS will accept an outcome
   if (!$isStudent) {
     $_SESSION['error'] = 'Not a student';
   } else if (!$assessment_id) {
@@ -71,13 +77,15 @@ require_once('lib.php');
 // Get assessment URL
   if (!isset($_SESSION['error'])) {
     $url = get_access_assessment_notify($assessment_id, "${firstname} {$lastname}", $consumer_key, $resource_link_id, $result_id,
-       $notify_url, $return_url);
+       $notify_url, $return_url, $coachingReport);
   }
 
   if (isset($_SESSION['error'])) {
     $url = "error.php";
+    error_log( print_r( $_SESSION['error'], true ) );
   }
 
+  error_log( print_r( $url, true));
   header("Location: {$url}");
 
 ?>

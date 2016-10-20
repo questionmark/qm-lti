@@ -30,7 +30,7 @@ require_once('lti/OAuth.php');
 
 // initialise database
   $db = open_db();
-
+  
   $ok = TRUE;
   if (isset($_POST['oauth_signature'])) {
 

@@ -198,7 +198,6 @@ class LTI_Tool_Provider {
  * @return mixed Returns TRUE or FALSE, a redirection URL or HTML
  */
   public function execute() {
-
 #
 ### Initialise data connector
 #
@@ -209,11 +208,16 @@ class LTI_Tool_Provider {
     if (isset($_POST['launch_presentation_return_url'])) {
       $this->return_url = $_POST['launch_presentation_return_url'];
     }
+
 #
 ### Perform action
 #
     if ($this->authenticate()) {
       $this->doCallback();
+      error_log("Callback successful.");
+    } else {
+      error_log( "Error authenticating." );
+      error_log( $this->reason ); 
     }
     $this->result();
 
@@ -321,16 +325,17 @@ class LTI_Tool_Provider {
  * @return string Output to be displayed (redirection, or display HTML or message)
  */
   private function result() {
-
+    
     $ok = FALSE;
     if (!$this->isOK && isset($this->callbackHandler['error'])) {
       $ok = call_user_func($this->callbackHandler['error'], $this);
     }
+    # error_log( print_r( $this, true ) );
     if (!$ok) {
       if (!$this->isOK) {
-#
-### If not valid, return an error message to the tool consumer if a return URL is provided
-#
+      #
+      ### If not valid, return an error message to the tool consumer if a return URL is provided
+      #
         if (!empty($this->return_url)) {
           $this->error = $this->return_url;
           if (strpos($this->error, '?') === FALSE) {
@@ -360,7 +365,11 @@ class LTI_Tool_Provider {
       } else if (!is_null($this->redirectURL)) {
         header("Location: {$this->redirectURL}");
       } else if (!is_null($this->output)) {
-        echo $this->output;
+        if ($this->output == "student.php" || $this->output == "staff.php") {
+          header("Location: {$this->output}");
+        } else {
+          echo $this->output;
+        } 
       }
     }
 
@@ -855,6 +864,7 @@ class LTI_Tool_Consumer {
     $this->created = NULL;
     $this->updated = NULL;
 
+
   }
 
 /**
@@ -1038,6 +1048,10 @@ class LTI_Resource_Link {
  */
   public $primary_consumer_key = NULL;
 /**
+ * Boolean configuration for participant access to coaching reports
+ */
+  public $bool_coaching_reports = FALSE;
+/**
  * ID value for resource link being shared (if any).
  */
   public $primary_resource_link_id = NULL;
@@ -1109,7 +1123,6 @@ class LTI_Resource_Link {
     $this->share_approved = NULL;
     $this->created = NULL;
     $this->updated = NULL;
-
   }
 
 /**
@@ -1391,6 +1404,12 @@ EOF;
         }
         if (!empty($lti_outcome->data_source)) {
           $params['result_datasource'] = $lti_outcome->data_source;
+        }
+        if (!empty($lti_outcome->coaching_report)) {
+          $params['result_result_id'] = $lti_outcome->coaching_report;
+        }
+        if (!empty($lti_outcome->report_available)) {
+          $params['result_report_available'] = $lti_outcome->report_available;
         }
         if ($this->doService($do, $urlExt, $params)) {
           switch ($action) {
@@ -1729,7 +1748,7 @@ EOF;
 
     $this->ext_response = NULL;
     if (!empty($url)) {
-// Check for query parameters which need to be included in the signature
+      // Check for query parameters which need to be included in the signature
       $query_params = array();
       $query_string = parse_url($url, PHP_URL_QUERY);
       if (!is_null($query_string)) {
@@ -1744,23 +1763,23 @@ EOF;
         }
       }
       $params = $params + $query_params;
-// Add standard parameters
+      // Add standard parameters
       $params['oauth_consumer_key'] = $this->consumer->getKey();
       $params['lti_version'] = LTI_Tool_Provider::LTI_VERSION;
       $params['lti_message_type'] = $type;
-// Add OAuth signature
+      // Add OAuth signature
       $hmac_method = new OAuthSignatureMethod_HMAC_SHA1();
       $consumer = new OAuthConsumer($this->consumer->getKey(), $this->consumer->secret, NULL);
       $req = OAuthRequest::from_consumer_and_token($consumer, NULL, 'POST', $url, $params);
       $req->sign_request($hmac_method, $consumer, NULL);
       $params = $req->get_parameters();
-// Remove parameters being passed on the query string
+      // Remove parameters being passed on the query string
       foreach (array_keys($query_params) as $name) {
         unset($params[$name]);
       }
-// Connect to tool consumer
+      // Connect to tool consumer
       $this->ext_response = $this->do_post_request($url, $params);
-// Parse XML response
+      // Parse XML response
       if ($this->ext_response) {
         try {
           $this->ext_doc = new DOMDocument();
@@ -1865,7 +1884,7 @@ EOF;
       $data = $params;
     }
     $this->ext_request = $data;
-// Try using curl if available
+    // Try using curl if available
     if (function_exists('curl_init')) {
       $ch = curl_init();
       curl_setopt($ch, CURLOPT_URL, $url);
@@ -2036,6 +2055,14 @@ class LTI_Outcome {
  * Outcome value.
  */
   private $value = NULL;
+/**
+ * Reports course URL value.
+ */
+  private $coaching_report = NULL;
+/**
+ * Determines whether or not coaching report is made available.
+ */
+  private $report_available = FALSE;
 
 /**
  * Class constructor.
@@ -2050,7 +2077,6 @@ class LTI_Outcome {
     $this->language = 'en-US';
     $this->date = gmdate('Y-m-d\TH:i:s\Z', time());
     $this->type = 'decimal';
-
   }
 
 /**
@@ -2077,6 +2103,30 @@ class LTI_Outcome {
 
   }
 
+
+/**
+ * Get the boolean describing if coaching reports are available.
+ *
+ * @return boolean Coaching report available
+ */
+  public function getReportAvailable() {
+
+    return $this->report_available;
+
+  }
+
+/**
+ * Get the coaching report URL.
+ * 
+ * @return string Coaching report url
+ */
+  public function getCoachingReport() {
+    if ($this->getReportAvailable() == FALSE) {
+      return NULL;
+    }
+    return $this->coaching_report;
+  }
+
 /**
  * Set the outcome value.
  *
@@ -2087,6 +2137,27 @@ class LTI_Outcome {
     $this->value = $value;
 
   }
+
+  /**
+ * Set the boolean describing if coaching reports are available.
+ *
+ * @oaram boolean Coaching report available
+ */
+  public function setReportAvailable($report_available) {
+
+    $this->report_available = $report_available;
+
+  }
+
+  /**
+ * Set the coaching report URL.
+ * 
+ * @param string Coaching report url
+ */
+  public function setCoachingReport($coaching_report) {
+    $this->coaching_report = $coaching_report;
+  }
+
 
 }
 
@@ -2855,9 +2926,11 @@ class LTI_OAuthDataStore extends OAuthDataStore {
 
     $nonce = new LTI_Consumer_Nonce($this->tool_provider->consumer, $value);
     $ok = !$nonce->load();
+
     if ($ok) {
       $ok = $nonce->save();
     }
+
     if (!$ok) {
       $this->tool_provider->reason = 'Invalid nonce.';
     }

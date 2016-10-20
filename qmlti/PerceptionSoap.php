@@ -240,7 +240,7 @@ class PerceptionSoap {
    * Perception doesn't check for one and just adds its own questionmark and
    * query string at the end.
    */
-  public function get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url) {
+  public function get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url, $coaching_report) {
 
     try {
       $access_assessment = $this->soap->GetAccessAssessmentNotify(array(
@@ -250,10 +250,12 @@ class PerceptionSoap {
         "Notify" => $notify_url,
         "ParameterList" => array(
           "Parameter" => array(
-            array("Name" => "home", "Value" => $home_url),
+            array("Name" => "HOME", "Value" => $home_url),
             array("Name" => "lti_consumer_key", "Value" => $consumer_key),
             array("Name" => "lti_context_id", "Value" => $resource_link_id),
             array("Name" => "lti_result_id", "Value" => $result_id),
+            array("Name" => "coaching_report", "Value" => $coaching_report),
+            array("Name" => "CALLBACK", "Value" => 1)
           )
         )
       ));

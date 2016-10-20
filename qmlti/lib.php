@@ -45,6 +45,7 @@ require_once('lti/LTI_Tool_Provider.php');
   define('MAX_NAME_LENGTH', 50);  // maximum length of a username in QM
   define('MAX_EMAIL_LENGTH', 255);  // maximum length of a email address in QM
   define('ASSESSMENT_SETTING', 'qmp_assessment_id');
+  define('COACHING_REPORT', 'qmp_coaching_reports');
 // LTI roles supported
   $LTI_ROLES = array('a' => 'Administrator',
                      'd' => 'ContentDeveloper',
@@ -428,22 +429,44 @@ EOD;
 
   }
 
+
+/*
+ * SOAP call to get coaching report URL given a result ID
+ *
+ *   returns the coaching report url or FALSE
+ */
+  function get_report_url($report_id) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $report_url = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_report_url($report_id);
+    } catch (Exception $e) {
+      log_error($e);
+      $assessments = FALSE;
+    }
+
+    return $report_url;
+
+  }
+
+
 /*
  * SOAP call to get a direct URL to an assessment for a participant which includes the notify option
  *
  *   returns the URL or FALSE
  */
-  function get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url) {
+  function get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url, $coaching_report) {
 
     try {
       $soap_connection_id = perception_soapconnect_id();
-      $access = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url);
+      $access = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url, $coaching_report);
       $url = $access->URL;
     } catch (Exception $e) {
       log_error($e);
       $url = FALSE;
     }
 
+    error_log( print_r( $url, true));
     return $url;
 
   }
@@ -566,7 +589,7 @@ EOD;
       $html .= <<<EOD
   <div id="FooterWrapper">
     <span id="Copyright">
-      <a id="lnkCopyright" href="http://www.questionmark.com" target="_blank">Copyright &copy;2012 Questionmark Computing Ltd.</a>
+      <a id="lnkCopyright" href="http://www.questionmark.com" target="_blank">Copyright &copy;2016 Questionmark Computing Ltd.</a>
     </span>
   </div>
 </div>
