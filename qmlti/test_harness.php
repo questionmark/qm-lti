@@ -107,7 +107,7 @@ EOD;
         <h1>LTI Connector Test Harness</h1>
 
 <?php
-  $sql = 'SELECT result_sourcedid, score, created ' .
+  $sql = 'SELECT result_sourcedid, score, created, report_url ' .
          'FROM ' . TABLE_PREFIX . 'lti_outcome ' .
          'ORDER BY created DESC';
   $query = $db->prepare($sql);
@@ -127,6 +127,7 @@ EOD;
             <td class="AssessmentAuthor">Result SourcedId</td>
             <td class="AssessmentAuthor">Score</td>
             <td class="Created">Created</td>
+            <td class="ReportURL">Report URL</td>
           </tr>
 <?php
     do {
@@ -135,6 +136,48 @@ EOD;
             <td>&nbsp;<?php echo $row['result_sourcedid']; ?></td>
             <td>&nbsp;<?php echo $row['score']; ?></td>
             <td>&nbsp;<?php echo $row['created']; ?></td>
+            <td>&nbsp;<?php echo $row['report_url']; ?></td>
+          </tr>
+<?php
+      $row = $query->fetch();
+      $ok = ($row !== FALSE);
+    } while ($ok);
+?>
+          </table>
+        </div>
+<?php
+  }
+?>
+
+<?php
+  $sql = 'SELECT context_id, assessment_id, is_accessible ' .
+         'FROM ' . TABLE_PREFIX . 'lti_coachingreports ' .
+         'ORDER BY context_id DESC';
+  $query = $db->prepare($sql);
+  $query->execute();
+
+  $row = $query->fetch();
+
+  $ok = ($row !== FALSE);
+
+  if ($ok) {
+?>
+        <div class="coaching_box">
+          <h2>Coaching Reports Accessibility</h2>
+
+          <table class="DataTable" cellpadding="0" cellspacing="0">
+          <tr class="GridHeader">
+            <td class="ContextID">Context ID</td>
+            <td class="AssessmentID">Assessment ID</td>
+            <td class="IsAccessible">Is Accessible</td>
+          </tr>
+<?php
+    do {
+?>
+          <tr border="1" class="GridRow">
+            <td>&nbsp;<?php echo $row['context_id']; ?></td>
+            <td>&nbsp;<?php echo $row['assessment_id']; ?></td>
+            <td>&nbsp;<?php echo $row['is_accessible']; ?></td>
           </tr>
 <?php
       $row = $query->fetch();

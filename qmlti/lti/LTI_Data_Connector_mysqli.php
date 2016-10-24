@@ -798,6 +798,95 @@ class LTI_Data_Connector_MySQLi extends LTI_Data_Connector {
 
   }
 
+###
+###  Coaching Config methods
+###
+
+###
+#    Checks to see if report config is already loaded for specific build
+###
+  public function ReportConfig_load($resource_link_id, $assessment_id) {
+
+    $ok = FALSE;
+
+    $sql = 'SELECT is_accessible' .
+           "FROM {$this->dbTableNamePrefix}" . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
+           'WHERE( context_id = ?) AND ( assessment_id = ?)';
+    $result = $this->db->prepare($sql);
+    if ($result) {
+      $key = $user->getResourceLink()->getKey();
+      $id = $user->getResourceLink()->getId();
+      $userId = $user->getId(LTI_Tool_Provider::ID_SCOPE_ID_ONLY);
+      $ok = $result->bind_param('ss', $context_id, $assessment_id);
+    }
+    if ($result && $ok) {
+      if ($result->execute()) {
+        if ($result->bind_result($is_accessible)) {
+          if ($result->fetch()) {
+            $ok = TRUE;
+          }
+        }
+      }
+    }
+    if ($result) {
+      $result->close();
+    }
+
+    return $ok;
+
+  }
+
+###
+#    Inserts the report configuration to the database
+###
+  public function ReportConfig_insert($resource_link_id, $assessment_id, $is_accessible) {
+
+    $ok = FALSE;
+    $sql = "INSERT INTO {$this->dbTableNamePrefix}" . LTI_Data_Connector::REPORTS_TABLE_NAME . ' (context_id, ' .
+           'assessment_id, is_accessible) ' .
+           'VALUES (?, ?, ?)';
+    $result = $this->db->prepare($sql);
+    if ($result) {
+      $ok = $result->bind_param('ssi', $resource_link_id, $assessment_id, $is_accessible);
+    }
+    if ($result && $ok) {
+      $ok = $result->execute();
+    }
+    if ($result) {
+      $result->close();
+    }
+
+    return $ok;
+
+  }
+
+###
+#    Updates the report configuration to the database
+###
+  public function ReportConfig_update($resource_link_id, $assessment_id, $is_accessible) {
+    
+    $ok = FALSE;
+
+    $sql = "UPDATE {$this->dbTableNamePrefix}" . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
+       'SET is_accessible = ? ' .
+       'WHERE (context_id = ?) AND (assessment_id = ?)';
+
+    $result = $this->db->prepare($sql);
+    if ($result) {
+      $ok = $result->bind_param('iss', $is_accessible, $resource_link_id, $assessment_id );
+    }
+    if ($result && $ok) {
+      $ok = $result->execute();
+    }
+    if ($result) {
+      $result->close();
+    }
+
+    return $ok;
+
+
+  }
+
 
 ###
 ###  LTI_User methods

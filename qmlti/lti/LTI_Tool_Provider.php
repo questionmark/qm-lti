@@ -1310,9 +1310,11 @@ class LTI_Resource_Link {
 #
     $source_resource_link = $this;
     $sourcedid = $lti_outcome->getSourcedid();
+    $resultid = $lti_outcome->getResultID();
     if (!is_null($user)) {
       $source_resource_link = $user->getResourceLink();
       $sourcedid = $user->lti_result_sourcedid;
+      $resultid = '';
     }
 #
 ### Use LTI 1.1 service in preference to extension service if it is available
@@ -1361,6 +1363,7 @@ class LTI_Resource_Link {
           <resultScore>
             <language>{$lti_outcome->language}</language>
             <textString>{$value}</textString>
+            <resultID>{$resultid}</resultID>
           </resultScore>
         </result>
 EOF;
@@ -1390,6 +1393,8 @@ EOF;
         $params = array();
         $params['sourcedid'] = $lti_outcome->getSourcedid();
         $params['result_resultscore_textstring'] = $value;
+        $params['result_resultscore_resultid'] = $lti_outcome->getResultID();
+
         if (!empty($lti_outcome->language)) {
           $params['result_resultscore_language'] = $lti_outcome->language;
         }
@@ -1404,12 +1409,6 @@ EOF;
         }
         if (!empty($lti_outcome->data_source)) {
           $params['result_datasource'] = $lti_outcome->data_source;
-        }
-        if (!empty($lti_outcome->coaching_report)) {
-          $params['result_result_id'] = $lti_outcome->coaching_report;
-        }
-        if (!empty($lti_outcome->report_available)) {
-          $params['result_report_available'] = $lti_outcome->report_available;
         }
         if ($this->doService($do, $urlExt, $params)) {
           switch ($action) {
@@ -2056,13 +2055,9 @@ class LTI_Outcome {
  */
   private $value = NULL;
 /**
- * Reports course URL value.
+ * Returns resultid value.
  */
-  private $coaching_report = NULL;
-/**
- * Determines whether or not coaching report is made available.
- */
-  private $report_available = FALSE;
+  private $resultid = NULL;
 
 /**
  * Class constructor.
@@ -2106,7 +2101,7 @@ class LTI_Outcome {
 
 /**
  * Get the boolean describing if coaching reports are available.
- *
+ * FIXME: Change this to database access to identify report availability
  * @return boolean Coaching report available
  */
   public function getReportAvailable() {
@@ -2116,15 +2111,12 @@ class LTI_Outcome {
   }
 
 /**
- * Get the coaching report URL.
+ * Get the result ID for coaching report URL.
  * 
  * @return string Coaching report url
  */
-  public function getCoachingReport() {
-    if ($this->getReportAvailable() == FALSE) {
-      return NULL;
-    }
-    return $this->coaching_report;
+  public function getResultID() {
+    return $this->resultid;
   }
 
 /**
@@ -2139,23 +2131,12 @@ class LTI_Outcome {
   }
 
   /**
- * Set the boolean describing if coaching reports are available.
- *
- * @oaram boolean Coaching report available
- */
-  public function setReportAvailable($report_available) {
-
-    $this->report_available = $report_available;
-
-  }
-
-  /**
- * Set the coaching report URL.
+ * Set the result ID.
  * 
- * @param string Coaching report url
+ * @param string result ID
  */
-  public function setCoachingReport($coaching_report) {
-    $this->coaching_report = $coaching_report;
+  public function setResultID($resultid) {
+    $this->resultid = $resultid;
   }
 
 
@@ -2992,6 +2973,10 @@ abstract class LTI_Data_Connector {
  * Default name for database table used to store users.
  */
   const USER_TABLE_NAME = 'lti_user';
+/**
+ * Default name for database table used to store users.
+ */
+  const REPORTS_TABLE_NAME = 'lti_coachingreports';
 /**
  * Default name for database table used to store resource link share keys.
  */

@@ -211,6 +211,20 @@ class PerceptionSoap {
 
   }
 
+  public function get_assessment_result_list_by_assessment($assessment_id) {
+
+    try {
+      $list = $this->soap->GetAssessmentResultListByAssessment(array(
+        "Assessment_ID" => $assessment_id
+      ));
+    } catch(SoapFault $e) {
+      throw new QMWiseException($e);
+    }
+
+    return $list->AssessmentResultList; 
+
+  }
+
   public function get_access_administrator($username) {
 
     try {

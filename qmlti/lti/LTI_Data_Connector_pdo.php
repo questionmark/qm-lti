@@ -664,6 +664,68 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
 
   }
 
+###
+###  Coaching Config methods
+###
+
+###
+#    Checks to see if report config is already loaded for specific build
+###
+  public function ReportConfig_load($resource_link_id, $assessment_id) {
+
+    $sql = 'SELECT is_accessible ' .
+           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
+           'WHERE (context_id = :context) AND (assessment_id = :assessment)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('context', $resource_link_id, PDO::PARAM_STR);
+    $query->bindValue('assessment', $assessment_id, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      $row = $query->fetch();
+      $ok = ($row !== FALSE);
+    }
+
+    return $ok;
+
+  }
+
+###
+#    Inserts the report configuration to the database
+###
+  public function ReportConfig_insert($resource_link_id, $assessment_id, $is_accessible) {
+
+    $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::REPORTS_TABLE_NAME . ' (context_id, ' .
+             'assessment_id, is_accessible) ' .
+             'VALUES (:context, :assessment, :accessible)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('context', $resource_link_id, PDO::PARAM_STR);
+    $query->bindValue('assessment', $assessment_id, PDO::PARAM_STR);
+    $query->bindValue('accessible', $is_accessible, PDO::PARAM_BOOL);
+    $ok = $query->execute();
+
+    return $ok;
+
+  }
+
+###
+#    Updates the report configuration to the database
+###
+  public function ReportConfig_update($resource_link_id, $assessment_id, $is_accessible) {
+    
+    $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
+             'SET is_accessible = :accessible ' .
+             'WHERE (context_id = :context) AND (assessment_id = :assessment_id)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('context', $resource_link_id, PDO::PARAM_STR);
+    $query->bindValue('assessment', $assessment_id, PDO::PARAM_STR);
+    $query->bindValue('accessible', $is_accessible, PDO::PARAM_BOOL);
+    $ok = $query->execute();
+
+    return $ok;
+
+
+  }
+
 
 ###
 ###  LTI_User methods

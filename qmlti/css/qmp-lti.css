@@ -40,9 +40,10 @@ input[type="text"], input[type="checkbox"] {
   visibility: visible;
 }
 
-.grades_box {
+.grades_box,
+.coaching_box {
   float: right;
-  border: 1px solid #000;
+  border: none;
   padding: 5px;
 }
 

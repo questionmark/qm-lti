@@ -194,6 +194,37 @@ class LTI_Data_Connector_None extends LTI_Data_Connector {
 
   }
 
+###
+###  Coaching Config methods
+###
+
+###
+#    Checks to see if report config is already loaded for specific build
+###
+  public function ReportConfig_load($resource_link_id, $assessment_id) {
+
+    return TRUE;
+
+  }
+
+###
+#    Inserts the report configuration to the database
+###
+  public function ReportConfig_insert($resource_link_id, $assessment_id, $is_accessible) {
+
+    return TRUE;
+
+  }
+
+###
+#    Updates the report configuration to the database
+###
+  public function ReportConfig_update($resource_link_id, $assessment_id, $is_accessible) {
+    
+    return TRUE;
+
+  }
+
 
 ###
 ###  LTI_User methods

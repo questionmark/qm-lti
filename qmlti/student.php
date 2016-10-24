@@ -28,7 +28,7 @@
 
 require_once('lib.php');
 
-  session_name();
+  session_name(SESSION_NAME);
   session_start();
 
 // Get data from session
@@ -46,11 +46,8 @@ require_once('lib.php');
 
   $coachingReport = $_SESSION['coaching_report'];
   $isStudent = $_SESSION['isStudent'];
-  # $notify_url = get_root_url() . 'notify.php';
-  # error_log($notify_url);
 
-  #$notify_url = "http://pipnotifyreflector.azurewebsites.net/home/index/anson-li-notify-999" . rand(0, 100000);
-  $notify_url = 'http://localhost/LTI/notify.php';
+  $notify_url = get_root_url() . 'notify.php';
   $result_id = $_SESSION['result_id'];
 
   // Ensure this is a student, an assessment has been defined and the LMS will accept an outcome

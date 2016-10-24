@@ -35,6 +35,7 @@ require_once('lib.php');
   session_unset();
 
   $res = $db->exec('DROP TABLE ' . TABLE_PREFIX . 'lti_outcome');
+  $res = $db->exec('DROP TABLE ' . TABLE_PREFIX . 'lti_coachingreports');
 
   header("Location: test_harness.php");
 
