@@ -31,7 +31,7 @@ require_once('LTI_Data_Connector_qmp.php');
 // Initialise database
   $db = open_db();
 
-  session_name();
+  session_name(SESSION_NAME);
   session_start();
 
   $consumer_key = $_SESSION['consumer_key'];
@@ -58,9 +58,11 @@ require_once('LTI_Data_Connector_qmp.php');
     if ($_POST['id_coachingreport'] == '1') {
       $coaching_check = 'checked';
       $coachingReport = True;
+      $intCoaching = 1;
     } else {
       $coaching_check = '';
       $coachingReport = False;
+      $intCoaching = 0;
     }
   } 
 
@@ -72,6 +74,16 @@ require_once('LTI_Data_Connector_qmp.php');
     $resource_link->setSetting(ASSESSMENT_SETTING, $_SESSION['assessment_id']);
     $resource_link->setSetting(COACHING_REPORT, $coachingReport);
     $resource_link->save();
+
+    // Insert / Update Coaching Reports index
+    if ($data_connector->ReportConfig_load($resource_link_id, $assessment_id)) {
+      error_log("Updating coaching report configuration with {$resource_link_id}, {$assessment_id}, {$intCoaching}.");
+      $save = $data_connector->ReportConfig_update($resource_link_id, $assessment_id, $intCoaching);
+    } else {
+      error_log("Inserting coaching report configuration with {$resource_link_id}, {$assessment_id}, {$intCoaching}.");
+      $save = $data_connector->ReportConfig_insert($resource_link_id, $assessment_id, $intCoaching);
+    }
+
   }
 
   $ok = !$isStudent;

@@ -30,7 +30,7 @@ require_once('lti/OAuth.php');
 
 // initialise database
   $db = open_db();
-  
+
   $ok = TRUE;
   if (isset($_POST['oauth_signature'])) {
 
@@ -50,8 +50,11 @@ require_once('lti/OAuth.php');
       $ok = FALSE;
     }
     if ($ok) {
+
       $result_id = $_POST['sourcedid'];
       $score = $_POST['result_resultscore_textstring'];
+      $qm_resultid = $_POST['result_resultscore_resultid'];
+
       $codeMinor = 'Full success';
       $response = <<<EOD
 <message_response>
@@ -84,9 +87,12 @@ EOD;
 
     $rawbody = file_get_contents("php://input");
     $xml = new SimpleXMLElement($rawbody);
+
     $type = 'replaceResult';
     $result_id = $xml->imsx_POXBody->replaceResultRequest->resultRecord->sourcedGUID->sourcedId;
     $score = $xml->imsx_POXBody->replaceResultRequest->resultRecord->result->resultScore->textString;
+    $qm_resultid =  $xml->imsx_POXBody->replaceResultRequest->resultRecord->result->resultScore->resultID;
+
     $id = time();
     $codeMajor = 'success';
     $codeMinor = 'Outcome updated';
@@ -117,19 +123,23 @@ EOD;
   if (!$ok) {
     $result_id = 'ERROR';
     $score = '';
+    $qm_resultid = 'ERROR';
   }
 
   $time = time();
   $now = date("Y-m-d H:i:s", $time);
 
   $sql = 'INSERT INTO ' . TABLE_PREFIX . 'lti_outcome ' .
-         '(result_sourcedid, score, created) VALUES (:id, :score, :created)';
+         '(result_sourcedid, score, created, report_url) VALUES (:id, :score, :created, :report)';
   $query = $db->prepare($sql);
   $query->bindValue('id', $result_id, PDO::PARAM_STR);
   $query->bindValue('score', $score, PDO::PARAM_STR);
   $query->bindValue('created', $now, PDO::PARAM_STR);
+  $query->bindValue('report', $qm_resultid, PDO::PARAM_STR);
   if (!$query->execute()) {
     error_log("Error saving outcome of {$score} for {$result_id}");
+  } else {
+    error_log("Successfully saved outcome of {$score} for {$result_id}");
   }
 
   header('Content-Type: application/xml');

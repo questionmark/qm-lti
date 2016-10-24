@@ -218,7 +218,25 @@ CREATE TABLE [dbo].[{$outcome_table_name}] (
   [result_sourcedid] VARCHAR(255),
   [score] VARCHAR(255),
   [created] DATETIME,
+  [report_url] VARCHAR(255),
  CONSTRAINT [PK_{$outcome_table_name}] PRIMARY KEY CLUSTERED ([result_sourcedid] ASC, [score] ASC, [created] ASC)
+)
+EOD;
+
+//        $ok = $db->exec($sql) !== FALSE;
+        $db->exec($sql);
+
+      }
+
+      $reports_table_name = TABLE_PREFIX . 'lti_coachingreports';
+      if ($ok && !sqlsrv_table_exists($db, $reports_table_name)) {
+
+        $sql = <<< EOD
+CREATE TABLE [dbo].[{$reports_table_name}] (
+  [context_id] VARCHAR(255),
+  [assessment_id] VARCHAR(255),
+  [is_accessible] BIT,
+ CONSTRAINT [PK_{$reports_table_name}] PRIMARY KEY CLUSTERED ([context_id] ASC, [assessment_id] ASC, [is_accessible] ASC)
 )
 EOD;
 
@@ -276,7 +294,16 @@ EOD;
         $sql = 'CREATE TABLE IF NOT EXISTS ' . TABLE_PREFIX . 'lti_outcome ' .
                '(result_sourcedid VARCHAR(255),' .
                ' score VARCHAR(255),' .
+               ' report_url VARCHAR(255),' .
                ' created DATETIME)';
+        $ok = $db->exec($sql) !== FALSE;
+      }
+
+      if ($ok) {
+        $sql = 'CREATE TABLE IF NOT EXISTS ' . TABLE_PREFIX . 'lti_coachingreports ' .
+               '(context_id VARCHAR(255),' .
+               ' assessment_id VARCHAR(255),' .
+               ' is_accessible TINYINT)';
         $ok = $db->exec($sql) !== FALSE;
       }
 
@@ -429,6 +456,20 @@ EOD;
 
   }
 
+/*
+ * External call to grab coaching report url if allowed
+ *
+ * returns the coaching report url
+ */
+ function get_coaching_report($db, $lti_outcome, $resource_link_id, $assessment_id) {
+   $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+   if ($data_connector->ReportConfig_loadAccessible($resource_link_id, $assessment_id) == 1) {
+      return get_report_url($lti_outcome->getResultID());
+   } else {
+      return FALSE;
+   }
+ }
+
 
 /*
  * SOAP call to get coaching report URL given a result ID
@@ -442,11 +483,28 @@ EOD;
       $report_url = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_report_url($report_id);
     } catch (Exception $e) {
       log_error($e);
-      $assessments = FALSE;
+      $report_url = FALSE;
     }
 
     return $report_url;
 
+  }
+
+/*
+ * SOAP call to get all result IDs from an assessment for all participants
+ * 
+ *   returns an array of resultIDs
+ */
+  function get_assessment_result_list_by_assessment($assessment_id) {
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $assessment_results = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_assessment_result_list_by_assessment($assessment_id);
+    } catch (Exception $e) {
+      log_error($e);
+      $assessment_results = FALSE;
+    }
+
+    return $assessment_results;
   }
 
 
@@ -484,6 +542,7 @@ EOD;
       $soap_connection_id = perception_soapconnect_id();
       $participant_details = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_participant_by_name($username);
     } catch (Exception $e) {
+      log_error($e);
     }
 
     return $participant_details;
