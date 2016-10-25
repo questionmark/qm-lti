@@ -41,6 +41,7 @@ require_once('LTI_Data_Connector_qmp.php');
   $username = $_SESSION['username'];
   $firstname = $_SESSION['firstname'];
   $lastname = $_SESSION['lastname'];
+  $participant_name = "{$firstname} {$lastname}";
   $email = $_SESSION['email'];
   $return_url = $_SESSION['lti_return_url'];
   if (!$return_url) {
@@ -75,9 +76,12 @@ require_once('LTI_Data_Connector_qmp.php');
       header("Location: {$redirect}");
     } else if ($_POST['action'] == 'View Coaching Report') {
       // view coaching report
-      $participant_name = "{$firstname} {$lastname}";
       $resultIDs = get_result_id($participant_name);
-      $coachingreport = get_report_url($resultIDs->AssessmentResult[0]->Result->Result_ID);
+      if ( is_array($resultIDs->AssessmentResult)) {
+        $coachingreport = get_report_url($resultIDs->AssessmentResult[0]->Result->Result_ID);
+      } else {
+        $coachingreport = get_report_url($resultIDs->AssessmentResult->Result->Result_ID);
+      }
       header("Location: {$coachingreport->URL}");
     }
   }
@@ -90,7 +94,7 @@ require_once('LTI_Data_Connector_qmp.php');
   }
 
 // Get coaching report availability
-  $bool_coaching_report = is_coaching_report_available($db, $resource_link_id, $assessment_id);
+  $bool_coaching_report = is_coaching_report_available($db, $resource_link_id, $assessment_id, $participant_name);
 
 // Get assessment URL
   if (!isset($_SESSION['error'])) {

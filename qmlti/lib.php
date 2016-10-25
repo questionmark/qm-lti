@@ -511,10 +511,15 @@ EOD;
  *
  * returns TRUE if coaching report is valid
  */
-function is_coaching_report_available($db, $resource_link_id, $assessment_id) {
+function is_coaching_report_available($db, $resource_link_id, $assessment_id, $participant_name) {
   $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
    if ($data_connector->ReportConfig_loadAccessible($resource_link_id, $assessment_id) == 1) {
-      return TRUE;
+      $result_id = get_result_id($participant_name);
+      if (( $result_id != FALSE ) && (count( (array)$result_id) != 0 )) {
+        return TRUE;
+      } else {
+        return FALSE;
+      }  
    } else {
       return FALSE;
    }
