@@ -189,6 +189,20 @@ class PerceptionSoap {
 
   }
 
+  public function get_assessment($assessment_id) {
+
+    try {
+      $assessment = $this->soap->GetAssessment(array(
+        "Assessment_ID" => $assessment_id
+      ));
+    } catch(SoapFault $e) {
+      throw new QMWiseException($e);
+    }
+
+    return $assessment->Assessment;
+
+  }
+
   public function get_assessment_list_by_administrator($admin_id, $parent_id, $only_run_from_integration) {
 
     try {
@@ -223,6 +237,19 @@ class PerceptionSoap {
 
     return $list->AssessmentResultList; 
 
+  }
+
+  public function get_assessment_result_list_by_participant($participant_name) {
+
+    try {
+      $list = $this->soap->GetAssessmentResultListByParticipant(array(
+        "Participant_Name" => $participant_name
+      ));
+    } catch (SoapFault $e) {
+      throw new QMWiseException($e);
+    }
+
+    return $list->AssessmentResultList;
   }
 
   public function get_access_administrator($username) {

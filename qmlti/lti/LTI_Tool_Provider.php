@@ -2075,6 +2075,18 @@ class LTI_Outcome {
   }
 
 /**
+ * Saves the results in outcome to Results database
+ *
+ * @param consumer_tool Consumer tool used to connect to database
+ * 
+ * @return boolean True if saved
+ */
+
+
+  }
+
+
+/**
  * Get the result sourcedid value.
  *
  * @deprecated Use User object instead
@@ -2985,6 +2997,10 @@ abstract class LTI_Data_Connector {
  * Default name for database table used to store nonce values.
  */
   const NONCE_TABLE_NAME = 'lti_nonce';
+/**
+ * Default name for database table used to store student result values
+ */
+  const RESULTS_TABLE_NAME = 'lti_results';
 
 /**
  * Load tool consumer object.
@@ -3101,7 +3117,35 @@ abstract class LTI_Data_Connector {
  * @return boolean True if the resource link share key object was successfully deleted
  */
   abstract public function Resource_Link_Share_Key_delete($share_key);
-
+/**
+ * Loads is_accessible parameter.
+ *
+ * @param String Resource Link object
+ * @param String Assessment to match parameter
+ *
+ * @return boolean is_accessible
+ */
+  abstract public function ReportConfig_load($resource_link_id, $assessment_id);
+/**
+ * Inserts new report into database.
+ *
+ * @param String context
+ * @param String assessment_id
+ * @param Boolean is_accessible 
+ *
+ * @return boolean True if the configuration was successfully inserted
+ */
+  abstract public function ReportConfig_insert($resource_link_id, $assessment_id, $is_accessible);
+/**
+ * Updates existing report configuration entry with new accessible boolean.
+ * 
+ * @param String context
+ * @param String assessment_id
+ * @param Boolean is_accessible
+ * 
+ * @return boolean True if the configuration was successfully updated
+ */
+  abstract public function ReportConfig_update($resource_link_id, $assessment_id, $is_accessible);
 /**
  * Load user object.
  *

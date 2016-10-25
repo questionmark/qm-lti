@@ -472,7 +472,6 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 
   }
 
-
 ###
 ###  LTI_Resource_Link_Share_Key methods
 ###
@@ -504,6 +503,31 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 
   }
 
+###
+###  Result methods
+###
+
+###
+#    Saves the current result into the Results table.
+###
+
+    $time = time();
+    $now = date('Y-m-d H:i:s', $time);
+    $id = $resource_link->getId();
+
+    $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' (context_id, ' .
+             'assessment_id, customer_id, created, score, result_id) ' .
+             'VALUES (:context, :assessment, :customer, :created, :score, :result)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('context', $id, PDO::PARAM_STR);
+    $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
+    $query->bindValue('created', $now, PDO::PARAM_STR);
+    $query->bindValue('score', $outcome->getValue(), PDO::PARAM_STR);
+    $query->bindValue('result', $outcome->getResultID(), PDO::PARAM_STR);
+    $ok = $query->execute();
+    return $ok;
+
+  }
 
 ###
 ###  Coaching Config methods

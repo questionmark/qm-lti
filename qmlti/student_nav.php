@@ -27,6 +27,9 @@
 */
 
 require_once('lib.php');
+require_once('LTI_Data_Connector_qmp.php');
+
+  $db = open_db();
 
   session_name(SESSION_NAME);
   session_start();
@@ -64,8 +67,24 @@ require_once('lib.php');
     perception_soapconnect();
   }
 
-// Create participant
-  if (!isset($_SESSION['error']) && (($participant_details = get_participant_by_name($username)) !== FALSE)) {
+  // An action was previously selected
+  if (isset($_POST['action'])) {
+    if ($_POST['action'] == 'assessment') {
+      // start assessment
+      $redirect =  get_root_url() . 'student.php';
+      header("Location: {$redirect}");
+    } else if ($_POST['action'] == 'coachingreport') {
+      // view coaching report
+      $participant_name = "{$firstname} {$lastname}";
+      $resultIDs = get_result_id($participant_name);
+      $coachingreport = get_report_url($resultIDs->AssessmentResult[0]->Result->Result_ID);
+      header("Location: {$coachingreport->URL}");
+    }
+  }
+
+// // Create participant if it doesn't exist
+  if (!isset($_SESSION['error'])) {
+    $participant_details = get_participant_by_name($username);
     $participant_id = $participant_details->Participant_ID;
   } else if (!isset($_SESSION['error'])) {
     $participant_id = create_participant($username, $firstname, $lastname, $email);
@@ -77,11 +96,24 @@ require_once('lib.php');
        $notify_url, $return_url, $coachingReport);
   }
 
-  if (isset($_SESSION['error'])) {
-    $url = "error.php";
-    error_log( print_r( $_SESSION['error'], true ) );
+  // Get assessment
+  $assessment = '';
+  if (!isset($_SESSION['error'])) {
+    $assessment = get_assessment($assessment_id);
   }
 
-  header("Location: {$url}");
+  if (isset($_SESSION['error'])) {
+    $url = "error.php";
+  }
 
+  # header("Location: {$url}");
+  page_header();
 ?>
+<h1>Student Portal</h1>
+<form action="student_nav.php" method="POST">
+  Select one of the following options:<br><br>
+  <input type="radio" name="action" value="assessment" />Start assessment<br>
+  <input type="radio" name="action" value="coachingreport" />View coaching report<br><br>
+  <input type="submit" id="id_action" value="Start" />
+</form>
+<br>

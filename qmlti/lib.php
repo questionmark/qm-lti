@@ -222,13 +222,13 @@ CREATE TABLE [dbo].[{$outcome_table_name}] (
  CONSTRAINT [PK_{$outcome_table_name}] PRIMARY KEY CLUSTERED ([result_sourcedid] ASC, [score] ASC, [created] ASC)
 )
 EOD;
-
+ 
 //        $ok = $db->exec($sql) !== FALSE;
         $db->exec($sql);
 
       }
 
-      $reports_table_name = TABLE_PREFIX . 'lti_coachingreports';
+      $reports_table_name = TABLE_PREFIX . LTI_Data_Connector::REPORTS_TABLE_NAME;
       if ($ok && !sqlsrv_table_exists($db, $reports_table_name)) {
 
         $sql = <<< EOD
@@ -237,6 +237,26 @@ CREATE TABLE [dbo].[{$reports_table_name}] (
   [assessment_id] VARCHAR(255),
   [is_accessible] BIT,
  CONSTRAINT [PK_{$reports_table_name}] PRIMARY KEY CLUSTERED ([context_id] ASC, [assessment_id] ASC, [is_accessible] ASC)
+)
+EOD;
+
+//        $ok = $db->exec($sql) !== FALSE;
+        $db->exec($sql);
+
+      }
+
+      $results_table_name = TABLE_PREFIX . LTI_Data_Connector::RESULTS_TABLE_NAME;
+      if ($ok && !sqlsrv_table_exists($db, $results_table_name)) {
+
+        $sql = <<< EOD
+CREATE TABLE [dbo].[{$results_table_name}] (
+  [context_id] VARCHAR(255),
+  [assessment_id] VARCHAR(255),
+  [customer_id] VARCHAR(25),
+  [created] DATETIME,
+  [score] VARCHAR(255),
+  [result_id] VARCHAR(255),
+ CONSTRAINT [PK_{$results_table_name}] PRIMARY KEY CLUSTERED ([context_id] ASC, [assessment_id] ASC, [result_id] ASC)
 )
 EOD;
 
@@ -300,10 +320,21 @@ EOD;
       }
 
       if ($ok) {
-        $sql = 'CREATE TABLE IF NOT EXISTS ' . TABLE_PREFIX . 'lti_coachingreports ' .
+        $sql = 'CREATE TABLE IF NOT EXISTS ' . TABLE_PREFIX .  LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
                '(context_id VARCHAR(255),' .
                ' assessment_id VARCHAR(255),' .
                ' is_accessible TINYINT)';
+        $ok = $db->exec($sql) !== FALSE;
+      }
+
+      if ($ok) {
+        $sql = 'CREATE TABLE IF NOT EXISTS ' . TABLE_PREFIX . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
+               '(context_id VARCHAR(255),' .
+               ' assessment_id VARCHAR(255),' .
+               ' customer_id VARCHAR(25),' .
+               ' created DATETIME,' .
+               ' score VARCHAR(255),' .
+               ' result_id VARCHAR(255))';
         $ok = $db->exec($sql) !== FALSE;
       }
 
@@ -436,6 +467,25 @@ EOD;
 
   }
 
+/*
+ * SOAP call to get an assessment's details 
+ *
+ *   returns the assessment or FALSE
+ */
+  function get_assessment($assessment_id) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $assessment = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_assessment($assessment_id);
+    } catch (Exception $e) {
+      log_error($e);
+      $assessment = FALSE;
+    }
+
+    return $assessment;
+
+  }
+
 
 /*
  * SOAP call to get a list of assessments availalble to an administrator account
@@ -470,6 +520,24 @@ EOD;
    }
  }
 
+/*
+ * External call to grab most recent result ID
+ *
+ *   returns the result id or FALSE
+ */
+  function get_result_id($participant_name) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $result_id = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_assessment_result_list_by_participant($participant_name);
+    } catch (Exception $e) {
+      log_error($e);
+      $result_id = FALSE;
+    } 
+
+    return $result_id;
+
+  }
 
 /*
  * SOAP call to get coaching report URL given a result ID
@@ -524,7 +592,6 @@ EOD;
       $url = FALSE;
     }
 
-    error_log( print_r( $url, true));
     return $url;
 
   }
@@ -541,8 +608,8 @@ EOD;
     try {
       $soap_connection_id = perception_soapconnect_id();
       $participant_details = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_participant_by_name($username);
+      error_log(print_r($participant_details, true));
     } catch (Exception $e) {
-      log_error($e);
     }
 
     return $participant_details;

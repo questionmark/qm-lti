@@ -102,7 +102,7 @@ require_once('LTI_Data_Connector_qmp.php');
 
       // set redirect URL
       if ($isStudent) {
-        $page = 'student';
+        $page = 'student_nav';
       } else {
         $page = 'staff';
       }

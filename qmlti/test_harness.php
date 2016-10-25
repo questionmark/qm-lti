@@ -106,89 +106,6 @@ EOD;
 ?>
         <h1>LTI Connector Test Harness</h1>
 
-<?php
-  $sql = 'SELECT result_sourcedid, score, created, report_url ' .
-         'FROM ' . TABLE_PREFIX . 'lti_outcome ' .
-         'ORDER BY created DESC';
-  $query = $db->prepare($sql);
-  $query->execute();
-
-  $row = $query->fetch();
-
-  $ok = ($row !== FALSE);
-
-  if ($ok) {
-?>
-        <div class="grades_box">
-          <h2>Grades</h2>
-
-          <table class="DataTable" cellpadding="0" cellspacing="0">
-          <tr class="GridHeader">
-            <td class="AssessmentAuthor">Result SourcedId</td>
-            <td class="AssessmentAuthor">Score</td>
-            <td class="Created">Created</td>
-            <td class="ReportURL">Report URL</td>
-          </tr>
-<?php
-    do {
-?>
-          <tr border="1" class="GridRow">
-            <td>&nbsp;<?php echo $row['result_sourcedid']; ?></td>
-            <td>&nbsp;<?php echo $row['score']; ?></td>
-            <td>&nbsp;<?php echo $row['created']; ?></td>
-            <td>&nbsp;<?php echo $row['report_url']; ?></td>
-          </tr>
-<?php
-      $row = $query->fetch();
-      $ok = ($row !== FALSE);
-    } while ($ok);
-?>
-          </table>
-        </div>
-<?php
-  }
-?>
-
-<?php
-  $sql = 'SELECT context_id, assessment_id, is_accessible ' .
-         'FROM ' . TABLE_PREFIX . 'lti_coachingreports ' .
-         'ORDER BY context_id DESC';
-  $query = $db->prepare($sql);
-  $query->execute();
-
-  $row = $query->fetch();
-
-  $ok = ($row !== FALSE);
-
-  if ($ok) {
-?>
-        <div class="coaching_box">
-          <h2>Coaching Reports Accessibility</h2>
-
-          <table class="DataTable" cellpadding="0" cellspacing="0">
-          <tr class="GridHeader">
-            <td class="ContextID">Context ID</td>
-            <td class="AssessmentID">Assessment ID</td>
-            <td class="IsAccessible">Is Accessible</td>
-          </tr>
-<?php
-    do {
-?>
-          <tr border="1" class="GridRow">
-            <td>&nbsp;<?php echo $row['context_id']; ?></td>
-            <td>&nbsp;<?php echo $row['assessment_id']; ?></td>
-            <td>&nbsp;<?php echo $row['is_accessible']; ?></td>
-          </tr>
-<?php
-      $row = $query->fetch();
-      $ok = ($row !== FALSE);
-    } while ($ok);
-?>
-          </table>
-        </div>
-<?php
-  }
-?>
         <form action="test_harness.php" method="POST">
 
         <h2>Tool Provider Details</h2>
@@ -361,6 +278,143 @@ EOD;
         </p>
 
         </form>
+
+        <br><br>
+
+        <?php
+  $sql = 'SELECT result_sourcedid, score, created, report_url ' .
+         'FROM ' . TABLE_PREFIX . 'lti_outcome ' .
+         'ORDER BY created DESC';
+  $query = $db->prepare($sql);
+  $query->execute();
+
+  $row = $query->fetch();
+
+  $ok = ($row !== FALSE);
+
+  if ($ok) {
+?>
+        <div class="grades_box">
+          <h2>Grades</h2>
+
+          <table class="DataTable" cellpadding="0" cellspacing="0">
+          <tr class="GridHeader">
+            <td class="AssessmentAuthor">Result SourcedId</td>
+            <td class="AssessmentAuthor">Score</td>
+            <td class="Created">Created</td>
+            <td class="ReportURL">Report URL</td>
+          </tr>
+<?php
+    do {
+?>
+          <tr border="1" class="GridRow">
+            <td>&nbsp;<?php echo $row['result_sourcedid']; ?></td>
+            <td>&nbsp;<?php echo $row['score']; ?></td>
+            <td>&nbsp;<?php echo $row['created']; ?></td>
+            <td>&nbsp;<?php echo $row['report_url']; ?></td>
+          </tr>
+<?php
+      $row = $query->fetch();
+      $ok = ($row !== FALSE);
+    } while ($ok);
+?>
+          </table>
+        </div>
+<?php
+  }
+?>
+
+<?php
+  $sql = 'SELECT context_id, assessment_id, is_accessible ' .
+         'FROM ' . TABLE_PREFIX . 'lti_coachingreports ' .
+         'ORDER BY context_id DESC';
+  $query = $db->prepare($sql);
+  $query->execute();
+
+  $row = $query->fetch();
+
+  $ok = ($row !== FALSE);
+
+  if ($ok) {
+?>
+        <div class="coaching_box">
+          <h2>Coaching Reports Accessibility</h2>
+
+          <table class="DataTable" cellpadding="0" cellspacing="0">
+          <tr class="GridHeader">
+            <td class="ContextID">Context ID</td>
+            <td class="AssessmentID">Assessment ID</td>
+            <td class="IsAccessible">Is Accessible</td>
+          </tr>
+<?php
+    do {
+?>
+          <tr border="1" class="GridRow">
+            <td>&nbsp;<?php echo $row['context_id']; ?></td>
+            <td>&nbsp;<?php echo $row['assessment_id']; ?></td>
+            <td>&nbsp;<?php echo $row['is_accessible']; ?></td>
+          </tr>
+<?php
+      $row = $query->fetch();
+      $ok = ($row !== FALSE);
+    } while ($ok);
+?>
+          </table>
+        </div>
+
+<?php
+  }
+?>
+
+<?php
+  $sql = 'SELECT context_id, assessment_id, customer_id, created, score, result_id ' .
+         'FROM ' . TABLE_PREFIX . 'lti_results ' .
+         'ORDER BY created DESC';
+  $query = $db->prepare($sql);
+  $query->execute();
+
+  $row = $query->fetch();
+
+  $ok = ($row !== FALSE);
+
+  if ($ok) {
+?>
+        <div class="coaching_box">
+          <h2>Student Results</h2>
+
+          <table class="DataTable" cellpadding="0" cellspacing="0">
+          <tr class="GridHeader">
+            <td>Context ID</td>
+            <td>Assessment ID</td>
+            <td>Customer Name</td>
+            <td>Created</td>
+            <td>Score</td>
+            <td>Result ID</td>
+          </tr>
+<?php
+    do {
+?>
+          <tr border="1" class="GridRow">
+            <td>&nbsp;<?php echo $row['context_id']; ?></td>
+            <td>&nbsp;<?php echo $row['assessment_id']; ?></td>
+            <td>&nbsp;<?php echo $row['customer_id']; ?></td>
+            <td>&nbsp;<?php echo $row['created']; ?></td>
+            <td>&nbsp;<?php echo $row['score']; ?></td>
+            <td>&nbsp;<?php echo $row['result_id']; ?></td>
+          </tr>
+<?php
+      $row = $query->fetch();
+      $ok = ($row !== FALSE);
+    } while ($ok);
+?>
+          </table>
+        </div>
+
+
+<?php
+  }
+?>
+
 <?php
 
   page_footer();
