@@ -579,9 +579,56 @@ class LTI_Data_Connector_MySQL extends LTI_Data_Connector {
 
   }
 
+
+###
+###  Result methods
+###
+
+###
+#    Saves the current result into the Results table.
+###
+  public function Results_save($outcome, $consumer, $resource_link, $participant) {
+
+    $time = time();
+    $now = date('Y-m-d H:i:s', $time);
+    $id = $resource_link->getId();
+    $ok = FALSE;
+    $sql = sprintf("INSERT INTO {$this->dbTableNamePrefix}" . LTI_Data_Connector::RESULTS_TABLE_NAME . ' (context_id, ' .
+           'assessment_id, customer_id, created, score, result_id) ' .
+           'VALUES (%s, %s, %s, %s, %s, %s)', LTI_Data_Connector::quoted($id), LTI_Data_Connector::quoted($resource_link->getSetting('qmp_assessment_id')), LTI_Data_Connector::quoted($participant), LTI_Data_Connector::quoted($now), LTI_Data_Connector::quoted($outcome->getValue()), LTI_Data_Connector::quoted($outcome->getResultID));
+    $ok = mysql_query($sql);
+    return $ok;
+
+  }
+
+
 ###
 ###  Coaching Config methods
 ###
+
+###
+#    Checks to see if report config is already loaded for specific build
+###
+  public function ReportConfig_loadAccessible($resource_link_id, $assessment_id) {
+
+    $ok = FALSE;
+    $is_accessible = FALSE;
+    $sql = sprintf('SELECT is_accessible ' .
+      "FROM {$this->dbTableNamePrefix}" . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' . 
+      'WHERE (context_id = %s) AND (assessment_id = %s)',
+      LTI_Data_Connector::quoted($resource_link_id), LTI_Data_Connector::quoted($assessment_id));
+    $rconfig = mysql_query($sql);
+    if ($rconfig) {
+      $row = mysql_fetch_object($rconfig);
+      if ($row) {
+        $ok = TRUE;
+        $is_accessible = $row->is_accessible;
+      }
+    }
+
+    return $is_accessible;
+
+  }
 
 ###
 #    Checks to see if report config is already loaded for specific build

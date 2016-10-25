@@ -690,6 +690,27 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
   }
 
 ###
+#    Checks to see if report config is already loaded for specific build
+###
+  public function ReportConfig_loadAccessible($resource_link_id, $assessment_id) {
+
+    $sql = 'SELECT is_accessible ' .
+           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
+           'WHERE (context_id = :context) AND (assessment_id = :assessment)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('context', $resource_link_id, PDO::PARAM_STR);
+    $query->bindValue('assessment', $assessment_id, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      $row = $query->fetch();
+      $is_accessible = $row['is_accessible'];
+    }
+
+    return $is_accessible;
+
+  }
+
+###
 #    Inserts the report configuration to the database
 ###
   public function ReportConfig_insert($resource_link_id, $assessment_id, $is_accessible) {
@@ -723,6 +744,35 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
 
     return $ok;
 
+
+  }
+
+###
+###  Result methods
+###
+
+###
+#    Saves the current result into the Results table.
+###
+  public function Results_save($outcome, $consumer, $resource_link, $participant) {
+
+    $time = time();
+    $now = date('Y-m-d H:i:s', $time);
+    $id = $resource_link->getId();
+
+    $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' (context_id, ' .
+             'assessment_id, customer_id, created, score, result_id) ' .
+             'VALUES (:context, :assessment, :customer, :created, :score, :result)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('context', $id, PDO::PARAM_STR);
+    $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
+    $query->bindValue('customer', $participant, PDO::PARAM_STR);
+    $query->bindValue('created', $now, PDO::PARAM_STR);
+    $query->bindValue('score', $outcome->getValue(), PDO::PARAM_STR);
+    $query->bindValue('result', $outcome->getResultID(), PDO::PARAM_STR);
+    $ok = $query->execute();
+
+    return $ok;
 
   }
 
