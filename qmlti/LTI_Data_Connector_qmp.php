@@ -510,6 +510,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 ###
 #    Saves the current result into the Results table.
 ###
+  public function Results_save($outcome, $consumer, $resource_link, $participant) {
 
     $time = time();
     $now = date('Y-m-d H:i:s', $time);
@@ -521,10 +522,12 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     $query = $this->db->prepare($sql);
     $query->bindValue('context', $id, PDO::PARAM_STR);
     $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
+    $query->bindValue('customer', $participant, PDO::PARAM_STR);
     $query->bindValue('created', $now, PDO::PARAM_STR);
     $query->bindValue('score', $outcome->getValue(), PDO::PARAM_STR);
     $query->bindValue('result', $outcome->getResultID(), PDO::PARAM_STR);
     $ok = $query->execute();
+
     return $ok;
 
   }

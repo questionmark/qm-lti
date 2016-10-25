@@ -46,14 +46,20 @@ require_once('LTI_Data_Connector_qmp.php');
 
   $coaching_check = '';
   
+  // checks if a coaching report setting is already set
   if (isset($coachingReport)) {
     if ($coachingReport) {
       $coaching_check = 'checked';
+      $coachingReport = True;
+      $intCoaching = 1;
     } else {
       $coaching_check = '';
+      $coachingReport = False;
+      $intCoaching = 0;
     }
   }
 
+  // checks if the coaching report option was changed
   if (isset($_POST['id_coachingreport'])) {
     if ($_POST['id_coachingreport'] == '1') {
       $coaching_check = 'checked';
@@ -67,6 +73,7 @@ require_once('LTI_Data_Connector_qmp.php');
   } 
 
   if (isset($_POST['assessment'])) {
+
     $_SESSION['assessment_id'] = htmlentities($_POST['assessment']);
     $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
     $consumer = new LTI_Tool_Consumer($consumer_key, $data_connector);
@@ -74,6 +81,8 @@ require_once('LTI_Data_Connector_qmp.php');
     $resource_link->setSetting(ASSESSMENT_SETTING, $_SESSION['assessment_id']);
     $resource_link->setSetting(COACHING_REPORT, $coachingReport);
     $resource_link->save();
+
+    $assessment_id = $_SESSION['assessment_id'];
 
     // Insert / Update Coaching Reports index
     if ($data_connector->ReportConfig_load($resource_link_id, $assessment_id)) {
@@ -83,7 +92,6 @@ require_once('LTI_Data_Connector_qmp.php');
       error_log("Inserting coaching report configuration with {$resource_link_id}, {$assessment_id}, {$intCoaching}.");
       $save = $data_connector->ReportConfig_insert($resource_link_id, $assessment_id, $intCoaching);
     }
-
   }
 
   $ok = !$isStudent;
@@ -149,7 +157,10 @@ function doReset() {
 EOD;
   page_header($script);
 ?>
-        <p><a href="<?php echo $em_url; ?>" target="_blank" />Log into Enterprise Manager</a></p>
+        <p>
+        <a href="<?php echo $em_url; ?>" target="_blank" />Log into Enterprise Manager</a>&nbsp;&nbsp;
+        <a href="staff_results.php" />View Assessment Results</a>
+        </p>
 <?php
   if (!$_SESSION['allow_outcome']) {
 ?>

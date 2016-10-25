@@ -69,11 +69,11 @@ require_once('LTI_Data_Connector_qmp.php');
 
   // An action was previously selected
   if (isset($_POST['action'])) {
-    if ($_POST['action'] == 'assessment') {
+    if ($_POST['action'] == 'Launch Assessment') {
       // start assessment
       $redirect =  get_root_url() . 'student.php';
       header("Location: {$redirect}");
-    } else if ($_POST['action'] == 'coachingreport') {
+    } else if ($_POST['action'] == 'View Coaching Report') {
       // view coaching report
       $participant_name = "{$firstname} {$lastname}";
       $resultIDs = get_result_id($participant_name);
@@ -82,17 +82,19 @@ require_once('LTI_Data_Connector_qmp.php');
     }
   }
 
-// // Create participant if it doesn't exist
-  if (!isset($_SESSION['error'])) {
-    $participant_details = get_participant_by_name($username);
+// Create participant if it doesn't exist
+  if (!isset($_SESSION['error']) && (($participant_details = get_participant_by_name($username)) !== FALSE)) {
     $participant_id = $participant_details->Participant_ID;
   } else if (!isset($_SESSION['error'])) {
     $participant_id = create_participant($username, $firstname, $lastname, $email);
   }
 
+// Get coaching report availability
+  $bool_coaching_report = is_coaching_report_available($db, $resource_link_id, $assessment_id);
+
 // Get assessment URL
   if (!isset($_SESSION['error'])) {
-    $url = get_access_assessment_notify($assessment_id, "${firstname} {$lastname}", $consumer_key, $resource_link_id, $result_id,
+    $url = get_access_assessment_notify($assessment_id, "${firstname} ${lastname}", $consumer_key, $resource_link_id, $result_id,
        $notify_url, $return_url, $coachingReport);
   }
 
@@ -111,9 +113,21 @@ require_once('LTI_Data_Connector_qmp.php');
 ?>
 <h1>Student Portal</h1>
 <form action="student_nav.php" method="POST">
-  Select one of the following options:<br><br>
-  <input type="radio" name="action" value="assessment" />Start assessment<br>
-  <input type="radio" name="action" value="coachingreport" />View coaching report<br><br>
-  <input type="submit" id="id_action" value="Start" />
+  <table class="DataTable" cellpadding="0" cellspacing="0">
+    <tr class="GridHeader">
+      <th>Assessment Name</th>
+      <th>Launch</th>
+    <?php if ($bool_coaching_report) { ?>
+      <th>Coaching Report</th>
+    <?php } ?>
+    </tr>
+    <tr class="GridRow">
+      <td><?php echo $assessment->Session_Name; ?></td>
+      <td><input type="submit" name="action" value="Launch Assessment" /></td>
+    <?php if ($bool_coaching_report) { ?>
+      <td><input type="submit" name="action" value="View Coaching Report" /></td>
+    <?php } ?>
+    </tr>
+  </table>
 </form>
 <br>

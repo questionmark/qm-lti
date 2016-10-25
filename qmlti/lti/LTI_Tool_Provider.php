@@ -2081,7 +2081,9 @@ class LTI_Outcome {
  * 
  * @return boolean True if saved
  */
+  public function saveToResult($consumer, $resource_link, $participant) {
 
+    return $consumer->getDataConnector()->Results_save($this, $consumer, $resource_link, $participant);
 
   }
 

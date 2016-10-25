@@ -506,6 +506,20 @@ EOD;
 
   }
 
+/* 
+ * Boolean check for coaching report availability
+ *
+ * returns TRUE if coaching report is valid
+ */
+function is_coaching_report_available($db, $resource_link_id, $assessment_id) {
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+   if ($data_connector->ReportConfig_loadAccessible($resource_link_id, $assessment_id) == 1) {
+      return TRUE;
+   } else {
+      return FALSE;
+   }
+}
+
 /*
  * External call to grab coaching report url if allowed
  *
