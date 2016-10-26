@@ -1,7 +1,7 @@
 <?php
 /**
  * LTI_Tool_Provider - PHP class to include in an external tool to handle connections with an LTI 1 compliant tool consumer
- * Copyright (C) 2013  Stephen P Vickers
+ * Copyright (C) 2014  Stephen P Vickers
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -26,9 +26,11 @@
  *   2.3.00   2-Jan-13  Updated Context to Resource_Link in method names
  *   2.3.01   2-Feb-13
  *   2.3.02  18-Feb-13
- *   2.3.03   5-Jun-13  Corrected errors with Consumer_Nonce_load and  Consumer_Nonce_save methods
+ *   2.3.03   5-Jun-13  Corrected errors with Consumer_Nonce_load and Consumer_Nonce_save methods
  *                      Fixed syntax errors with $now variable references
  *   2.3.04  13-Aug-13
+ *   2.3.05  29-Jul-14
+ *   2.3.06   5-Aug-14
 */
 
 ###
