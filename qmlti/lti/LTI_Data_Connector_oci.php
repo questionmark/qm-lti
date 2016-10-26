@@ -20,25 +20,15 @@
  * Contact: stephen@spvsoftwareproducts.com
  *
  * Version history:
- *   2.0.00  30-Jun-12  Initial release
- *   2.1.00   3-Jul-12  Added fields to tool consumer: consumer_guid, protected, last_access
- *   2.2.00  16-Oct-12
- *   2.3.00   2-Jan-13  Updated Context to Resource_Link in method names
- *                      Settings values now saved as JSON
- *   2.3.01   2-Feb-13
- *   2.3.02  18-Feb-13
- *   2.3.03   5-Jun-13
- *   2.3.04  13-Aug-13
- *   2.3.05  29-Jul-14  Added support for date and time formats
- *                      Added support of Oracle PDO driver
- *   2.3.06   5-Aug-14
+ *   2.3.05  29-Jul-14  Added to release
+ *   2.3.06   5-Aug-14  Fixed bug with loading CLOB field
 */
 
 ###
-###  Class to represent a PDO LTI Data Connector
+###  Class to represent a OCI (Oracle) LTI Data Connector
 ###
 
-class LTI_Data_Connector_PDO extends LTI_Data_Connector {
+class LTI_Data_Connector_oci extends LTI_Data_Connector {
 
   private $db = NULL;
   private $dbTableNamePrefix = '';
@@ -50,9 +40,7 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
 
     $this->db = $db;
     $this->dbTableNamePrefix = $dbTableNamePrefix;
-    if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'oci') {
-      $this->date_format = 'd-M-Y';
-    }
+    $this->date_format = 'd-M-Y';
 
   }
 
@@ -69,13 +57,13 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
     $sql = 'SELECT name, secret, lti_version, consumer_name, consumer_version, consumer_guid, css_path, protected, enabled, enable_from, enable_until, last_access, created, updated ' .
            'FROM ' .$this->dbTableNamePrefix . LTI_Data_Connector::CONSUMER_TABLE_NAME . ' ' .
            'WHERE consumer_key = :key';
-    $query = $this->db->prepare($sql);
+    $query = oci_parse($this->db, $sql);
     $key = $consumer->getKey();
-    $query->bindValue('key', $key, PDO::PARAM_STR);
-    $ok = $query->execute();
+    oci_bind_by_name($query, ':key', $key);
+    $ok = oci_execute($query);
 
     if ($ok) {
-      $row = $query->fetch(PDO::FETCH_ASSOC);
+      $row = oci_fetch_assoc($query);
       $ok = ($row !== FALSE);
     }
 
@@ -145,45 +133,45 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
              '(consumer_key, name, secret, lti_version, consumer_name, consumer_version, consumer_guid, css_path, protected, enabled, enable_from, enable_until, last_access, created, updated) ' .
              'VALUES (:key, :name, :secret, :lti_version, :consumer_name, :consumer_version, :consumer_guid, :css_path, ' .
              ':protected, :enabled, :enable_from, :enable_until, :last_access, :created, :updated)';
-      $query = $this->db->prepare($sql);
-      $query->bindValue('key', $key, PDO::PARAM_STR);
-      $query->bindValue('name', $consumer->name, PDO::PARAM_STR);
-      $query->bindValue('secret', $consumer->secret, PDO::PARAM_STR);
-      $query->bindValue('lti_version', $consumer->lti_version, PDO::PARAM_STR);
-      $query->bindValue('consumer_name', $consumer->consumer_name, PDO::PARAM_STR);
-      $query->bindValue('consumer_version', $consumer->consumer_version, PDO::PARAM_STR);
-      $query->bindValue('consumer_guid', $consumer->consumer_guid, PDO::PARAM_STR);
-      $query->bindValue('css_path', $consumer->css_path, PDO::PARAM_STR);
-      $query->bindValue('protected', $protected, PDO::PARAM_INT);
-      $query->bindValue('enabled', $enabled, PDO::PARAM_INT);
-      $query->bindValue('enable_from', $from, PDO::PARAM_STR);
-      $query->bindValue('enable_until', $until, PDO::PARAM_STR);
-      $query->bindValue('last_access', $last, PDO::PARAM_STR);
-      $query->bindValue('created', $now, PDO::PARAM_STR);
-      $query->bindValue('updated', $now, PDO::PARAM_STR);
+      $query = oci_parse($this->db, $sql);
+      oci_bind_by_name($query, ':key', $key);
+      oci_bind_by_name($query, ':name', $consumer->name);
+      oci_bind_by_name($query, ':secret', $consumer->secret);
+      oci_bind_by_name($query, ':lti_version', $consumer->lti_version);
+      oci_bind_by_name($query, ':consumer_name', $consumer->consumer_name);
+      oci_bind_by_name($query, ':consumer_version', $consumer->consumer_version);
+      oci_bind_by_name($query, ':consumer_guid', $consumer->consumer_guid);
+      oci_bind_by_name($query, ':css_path', $consumer->css_path);
+      oci_bind_by_name($query, ':protected', $protected);
+      oci_bind_by_name($query, ':enabled', $enabled);
+      oci_bind_by_name($query, ':enable_from', $from);
+      oci_bind_by_name($query, ':enable_until', $until);
+      oci_bind_by_name($query, ':last_access', $last);
+      oci_bind_by_name($query, ':created', $now);
+      oci_bind_by_name($query, ':updated', $now);
     } else {
       $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::CONSUMER_TABLE_NAME . ' ' .
              'SET name = :name, secret = :secret, lti_version = :lti_version, ' .
              'consumer_name = :consumer_name, consumer_version = :consumer_version, consumer_guid = :consumer_guid, css_path = :css_path, ' .
              'protected = :protected, enabled = :enabled, enable_from = :enable_from, enable_until = :enable_until, last_access = :last_access, updated = :updated ' .
              'WHERE consumer_key = :key';
-      $query = $this->db->prepare($sql);
-      $query->bindValue('key', $key, PDO::PARAM_STR);
-      $query->bindValue('name', $consumer->name, PDO::PARAM_STR);
-      $query->bindValue('secret', $consumer->secret, PDO::PARAM_STR);
-      $query->bindValue('lti_version', $consumer->lti_version, PDO::PARAM_STR);
-      $query->bindValue('consumer_name', $consumer->consumer_name, PDO::PARAM_STR);
-      $query->bindValue('consumer_version', $consumer->consumer_version, PDO::PARAM_STR);
-      $query->bindValue('consumer_guid', $consumer->consumer_guid, PDO::PARAM_STR);
-      $query->bindValue('css_path', $consumer->css_path, PDO::PARAM_STR);
-      $query->bindValue('protected', $protected, PDO::PARAM_INT);
-      $query->bindValue('enabled', $enabled, PDO::PARAM_INT);
-      $query->bindValue('enable_from', $from, PDO::PARAM_STR);
-      $query->bindValue('enable_until', $until, PDO::PARAM_STR);
-      $query->bindValue('last_access', $last, PDO::PARAM_STR);
-      $query->bindValue('updated', $now, PDO::PARAM_STR);
+      $query = oci_parse($this->db, $sql);
+      oci_bind_by_name($query, ':key', $key);
+      oci_bind_by_name($query, ':name', $consumer->name);
+      oci_bind_by_name($query, ':secret', $consumer->secret);
+      oci_bind_by_name($query, ':lti_version', $consumer->lti_version);
+      oci_bind_by_name($query, ':consumer_name', $consumer->consumer_name);
+      oci_bind_by_name($query, ':consumer_version', $consumer->consumer_version);
+      oci_bind_by_name($query, ':consumer_guid', $consumer->consumer_guid);
+      oci_bind_by_name($query, ':css_path', $consumer->css_path);
+      oci_bind_by_name($query, ':protected', $protected);
+      oci_bind_by_name($query, ':enabled', $enabled);
+      oci_bind_by_name($query, ':enable_from', $from);
+      oci_bind_by_name($query, ':enable_until', $until);
+      oci_bind_by_name($query, ':last_access', $last);
+      oci_bind_by_name($query, ':updated', $now);
     }
-    $ok = $query->execute();
+    $ok = oci_execute($query);
     if ($ok) {
       if (is_null($consumer->created)) {
         $consumer->created = $time;
@@ -203,41 +191,41 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
     $key = $consumer->getKey();
 // Delete any nonce values for this consumer
     $sql = 'DELETE FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::NONCE_TABLE_NAME . ' WHERE consumer_key = :key';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('key', $key, PDO::PARAM_STR);
-    $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':key', $key);
+    oci_execute($query);
 
 // Delete any outstanding share keys for resource links for this consumer
     $sql = 'DELETE FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_SHARE_KEY_TABLE_NAME . ' WHERE primary_consumer_key = :key';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('key', $key, PDO::PARAM_STR);
-    $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':key', $key);
+    oci_execute($query);
 
 // Delete any users in resource links for this consumer
     $sql = 'DELETE FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::USER_TABLE_NAME . ' WHERE consumer_key = :key';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('key', $key, PDO::PARAM_STR);
-    $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':key', $key);
+    oci_execute($query);
 
 // Update any resource links for which this consumer is acting as a primary resource link
     $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
            'SET primary_consumer_key = NULL, primary_context_id = NULL, share_approved = NULL ' .
            'WHERE primary_consumer_key = :key';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('key', $key, PDO::PARAM_STR);
-    $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':key', $key);
+    oci_execute($query);
 
 // Delete any resource links for this consumer
     $sql = 'DELETE FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' WHERE consumer_key = :key';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('key', $key, PDO::PARAM_STR);
-    $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':key', $key);
+    oci_execute($query);
 
 // Delete consumer
     $sql = 'DELETE FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::CONSUMER_TABLE_NAME . ' WHERE consumer_key = :key';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('key', $key, PDO::PARAM_STR);
-    $ok = $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':key', $key);
+    $ok = oci_execute($query);
 
     if ($ok) {
       $consumer->initialise();
@@ -258,14 +246,14 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
            'protected, enabled, enable_from, enable_until, last_access, created, updated ' .
            "FROM {$this->dbTableNamePrefix}" . LTI_Data_Connector::CONSUMER_TABLE_NAME . ' ' .
            'ORDER BY name';
-    $query = $this->db->prepare($sql);
+    $query = oci_parse($this->db, $sql);
     $ok = ($query !== FALSE);
 
     if ($ok) {
-      $ok = $query->execute();
+      $ok = oci_execute($query);
     }
     if ($ok) {
-      while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+      while ($row = oci_fetch_assoc($query)) {
         $row = array_change_key_case($row);
         $consumer = new LTI_Tool_Consumer($row['consumer_key'], $this);
         $consumer->name = $row['name'];
@@ -314,12 +302,12 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
            'primary_consumer_key, primary_context_id, share_approved, created, updated ' .
            'FROM ' .$this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
            'WHERE (consumer_key = :key) AND (context_id = :id)';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('key', $key, PDO::PARAM_STR);
-    $query->bindValue('id', $id, PDO::PARAM_STR);
-    $ok = $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':key', $key);
+    oci_bind_by_name($query, ':id', $id);
+    $ok = oci_execute($query);
     if ($ok) {
-      $row = $query->fetch(PDO::FETCH_ASSOC);
+      $row = oci_fetch_assoc($query);
       $ok = ($row !== FALSE);
     }
 
@@ -328,10 +316,11 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
       $resource_link->lti_context_id = $row['lti_context_id'];
       $resource_link->lti_resource_link_id = $row['lti_resource_id'];
       $resource_link->title = $row['title'];
-      if (is_string($row['settings'])) {
-        $resource_link->settings = json_decode($row['settings'], TRUE);
+      $settings = $row['settings']->load();
+      if (is_string($settings)) {
+        $resource_link->settings = json_decode($settings, TRUE);
         if (!is_array($resource_link->settings)) {
-          $resource_link->settings = unserialize($row['settings']);  // check for old serialized setting
+          $resource_link->settings = unserialize($settings);  // check for old serialized setting
         }
         if (!is_array($resource_link->settings)) {
           $resource_link->settings = array();
@@ -366,36 +355,36 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
              'primary_consumer_key, primary_context_id, share_approved, created, updated) ' .
              'VALUES (:key, :id, :lti_context_id, :lti_resource_id, :title, :settings, ' .
              ':primary_consumer_key, :primary_context_id, :share_approved, :created, :updated)';
-      $query = $this->db->prepare($sql);
-      $query->bindValue('key', $key, PDO::PARAM_STR);
-      $query->bindValue('id', $id, PDO::PARAM_STR);
-      $query->bindValue('lti_context_id', $resource_link->lti_context_id, PDO::PARAM_STR);
-      $query->bindValue('lti_resource_id', $resource_link->lti_resource_id, PDO::PARAM_STR);
-      $query->bindValue('title', $resource_link->title, PDO::PARAM_STR);
-      $query->bindValue('settings', $settingsValue, PDO::PARAM_STR);
-      $query->bindValue('primary_consumer_key', $resource_link->primary_consumer_key, PDO::PARAM_STR);
-      $query->bindValue('primary_context_id', $resource_link->primary_resource_link_id, PDO::PARAM_STR);
-      $query->bindValue('share_approved', $resource_link->share_approved, PDO::PARAM_INT);
-      $query->bindValue('created', $now, PDO::PARAM_STR);
-      $query->bindValue('updated', $now, PDO::PARAM_STR);
+      $query = oci_parse($this->db, $sql);
+      oci_bind_by_name($query, ':key', $key);
+      oci_bind_by_name($query, ':id', $id);
+      oci_bind_by_name($query, ':lti_context_id', $resource_link->lti_context_id);
+      oci_bind_by_name($query, ':lti_resource_id', $resource_link->lti_resource_id);
+      oci_bind_by_name($query, ':title', $resource_link->title);
+      oci_bind_by_name($query, ':settings', $settingsValue);
+      oci_bind_by_name($query, ':primary_consumer_key', $resource_link->primary_consumer_key);
+      oci_bind_by_name($query, ':primary_context_id', $resource_link->primary_resource_link_id);
+      oci_bind_by_name($query, ':share_approved', $resource_link->share_approved);
+      oci_bind_by_name($query, ':created', $now);
+      oci_bind_by_name($query, ':updated', $now);
     } else {
       $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
              'SET lti_context_id = :lti_context_id, lti_resource_id = :lti_resource_id, title = :title, settings = :settings, ' .
              'primary_consumer_key = :primary_consumer_key, primary_context_id = :primary_context_id, share_approved = :share_approved, updated = :updated ' .
              'WHERE (consumer_key = :key) AND (context_id = :id)';
-      $query = $this->db->prepare($sql);
-      $query->bindValue('key', $key, PDO::PARAM_STR);
-      $query->bindValue('id', $id, PDO::PARAM_STR);
-      $query->bindValue('lti_context_id', $resource_link->lti_context_id, PDO::PARAM_STR);
-      $query->bindValue('lti_resource_id', $resource_link->lti_resource_id, PDO::PARAM_STR);
-      $query->bindValue('title', $resource_link->title, PDO::PARAM_STR);
-      $query->bindValue('settings', $settingsValue, PDO::PARAM_STR);
-      $query->bindValue('primary_consumer_key', $resource_link->primary_consumer_key, PDO::PARAM_STR);
-      $query->bindValue('primary_context_id', $resource_link->primary_resource_link_id, PDO::PARAM_STR);
-      $query->bindValue('share_approved', $resource_link->share_approved, PDO::PARAM_INT);
-      $query->bindValue('updated', $now, PDO::PARAM_STR);
+      $query = oci_parse($this->db, $sql);
+      oci_bind_by_name($query, ':key', $key);
+      oci_bind_by_name($query, ':id', $id);
+      oci_bind_by_name($query, ':lti_context_id', $resource_link->lti_context_id);
+      oci_bind_by_name($query, ':lti_resource_id', $resource_link->lti_resource_id);
+      oci_bind_by_name($query, ':title', $resource_link->title);
+      oci_bind_by_name($query, ':settings', $settingsValue);
+      oci_bind_by_name($query, ':primary_consumer_key', $resource_link->primary_consumer_key);
+      oci_bind_by_name($query, ':primary_context_id', $resource_link->primary_resource_link_id);
+      oci_bind_by_name($query, ':share_approved', $resource_link->share_approved);
+      oci_bind_by_name($query, ':updated', $now);
     }
-    $ok = $query->execute();
+    $ok = oci_execute($query);
     if ($ok) {
       if (is_null($resource_link->created)) {
         $resource_link->created = $time;
@@ -417,19 +406,19 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
 // Delete any outstanding share keys for resource links for this consumer
     $sql = 'DELETE FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_SHARE_KEY_TABLE_NAME . ' ' .
            'WHERE (primary_consumer_key = :key) AND (primary_context_id = :id)';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('key', $key, PDO::PARAM_STR);
-    $query->bindValue('id', $id, PDO::PARAM_STR);
-    $ok = $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':key', $key);
+    oci_bind_by_name($query, ':id', $id);
+    $ok = oci_execute($query);
 
 // Delete users
     if ($ok) {
       $sql = 'DELETE FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::USER_TABLE_NAME . ' ' .
              'WHERE (consumer_key = :key) AND (context_id = :id)';
-      $query = $this->db->prepare($sql);
-      $query->bindValue('key', $key, PDO::PARAM_STR);
-      $query->bindValue('id', $id, PDO::PARAM_STR);
-      $ok = $query->execute();
+      $query = oci_parse($this->db, $sql);
+      oci_bind_by_name($query, ':key', $key);
+      oci_bind_by_name($query, ':id', $id);
+      $ok = oci_execute($query);
     }
 
 // Update any resource links for which this is the primary resource link
@@ -437,20 +426,20 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
       $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
              'SET primary_consumer_key = NULL, primary_context_id = NULL ' .
              'WHERE (primary_consumer_key = :key) AND (primary_context_id = :id)';
-      $query = $this->db->prepare($sql);
-      $query->bindValue('key', $key, PDO::PARAM_STR);
-      $query->bindValue('id', $id, PDO::PARAM_STR);
-      $ok = $query->execute();
+      $query = oci_parse($this->db, $sql);
+      oci_bind_by_name($query, ':key', $key);
+      oci_bind_by_name($query, ':id', $id);
+      $ok = oci_execute($query);
     }
 
 // Delete resource link
     if ($ok) {
       $sql = 'DELETE FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
              'WHERE (consumer_key = :key) AND (context_id = :id)';
-      $query = $this->db->prepare($sql);
-      $query->bindValue('key', $key, PDO::PARAM_STR);
-      $query->bindValue('id', $id, PDO::PARAM_STR);
-      $ok = $query->execute();
+      $query = oci_parse($this->db, $sql);
+      oci_bind_by_name($query, ':key', $key);
+      oci_bind_by_name($query, ':id', $id);
+      $ok = oci_execute($query);
     }
 
     if ($ok) {
@@ -485,11 +474,11 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
     }
     $key = $resource_link->getKey();
     $id = $resource_link->getId();
-    $query = $this->db->prepare($sql);
-    $query->bindValue('key', $key, PDO::PARAM_STR);
-    $query->bindValue('id', $id, PDO::PARAM_STR);
-    if ($query->execute()) {
-      while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':key', $key);
+    oci_bind_by_name($query, ':id', $id);
+    if (oci_execute($query)) {
+      while ($row = oci_fetch_assoc($query)) {
         $row = array_change_key_case($row);
         $user = new LTI_User($resource_link, $row['user_id']);
         $user->consumer_key = $row['consumer_key'];
@@ -520,11 +509,11 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
            'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
            'WHERE (primary_consumer_key = :key) AND (primary_context_id = :id) ' .
            'ORDER BY consumer_key';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('key', $key, PDO::PARAM_STR);
-    $query->bindValue('id', $id, PDO::PARAM_STR);
-    if ($query->execute()) {
-      while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':key', $key);
+    oci_bind_by_name($query, ':id', $id);
+    if (oci_execute($query)) {
+      while ($row = oci_fetch_assoc($query)) {
         $row = array_change_key_case($row);
         $share = new LTI_Resource_Link_Share();
         $share->consumer_key = $row['consumer_key'];
@@ -552,20 +541,20 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
 // Delete any expired nonce values
     $now = date("{$this->date_format} {$this->time_format}", time());
     $sql = 'DELETE FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::NONCE_TABLE_NAME . ' WHERE expires <= :now';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('now', $now, PDO::PARAM_STR);
-    $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':now', $now);
+    oci_execute($query);
 
 // Load the nonce
     $key = $nonce->getKey();
     $value = $nonce->getValue();
     $sql = 'SELECT value T FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::NONCE_TABLE_NAME . ' WHERE (consumer_key = :key) AND (value = :value)';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('key', $key, PDO::PARAM_STR);
-    $query->bindValue('value', $value, PDO::PARAM_STR);
-    $ok = $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':key', $key);
+    oci_bind_by_name($query, ':value', $value);
+    $ok = oci_execute($query);
     if ($ok) {
-      $row = $query->fetch(PDO::FETCH_ASSOC);
+      $row = oci_fetch_assoc($query);
       if ($row === FALSE) {
         $ok = FALSE;
       }
@@ -584,11 +573,11 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
     $value = $nonce->getValue();
     $expires = date("{$this->date_format} {$this->time_format}", $nonce->expires);
     $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::NONCE_TABLE_NAME . ' (consumer_key, value, expires) VALUES (:key, :value, :expires)';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('key', $key, PDO::PARAM_STR);
-    $query->bindValue('value', $value, PDO::PARAM_STR);
-    $query->bindValue('expires', $expires, PDO::PARAM_STR);
-    $ok = $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':key', $key);
+    oci_bind_by_name($query, ':value', $value);
+    oci_bind_by_name($query, ':expires', $expires);
+    $ok = oci_execute($query);
 
     return $ok;
 
@@ -607,20 +596,20 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
 // Clear expired share keys
     $now = date("{$this->date_format} {$this->time_format}", time());
     $sql = 'DELETE FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_SHARE_KEY_TABLE_NAME . ' WHERE expires <= :now';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('now', $now, PDO::PARAM_STR);
-    $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':now', $now);
+    oci_execute($query);
 
 // Load share key
     $id = $share_key->getId();
     $sql = 'SELECT share_key_id, primary_consumer_key, primary_context_id, auto_approve, expires ' .
            'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_SHARE_KEY_TABLE_NAME . ' ' .
            'WHERE share_key_id = :id';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('id', $id, PDO::PARAM_STR);
-    $ok = $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':id', $id);
+    $ok = oci_execute($query);
     if ($ok) {
-      $row = $query->fetch(PDO::FETCH_ASSOC);
+      $row = oci_fetch_assoc($query);
       $ok = ($row !== FALSE);
     }
 
@@ -651,14 +640,14 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
     $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_SHARE_KEY_TABLE_NAME . ' ' .
            '(share_key_id, primary_consumer_key, primary_context_id, auto_approve, expires) ' .
            'VALUES (:id, :primary_consumer_key, :primary_context_id, :approve, :expires)';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('id', $id, PDO::PARAM_STR);
-    $query->bindValue('primary_consumer_key', $share_key->primary_consumer_key, PDO::PARAM_STR);
-    $query->bindValue('primary_context_id', $share_key->primary_resource_link_id, PDO::PARAM_STR);
-    $query->bindValue('approve', $approve, PDO::PARAM_INT);
-    $query->bindValue('expires', $expires, PDO::PARAM_STR);
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':id', $id);
+    oci_bind_by_name($query, ':primary_consumer_key', $share_key->primary_consumer_key);
+    oci_bind_by_name($query, ':primary_context_id', $share_key->primary_resource_link_id);
+    oci_bind_by_name($query, ':approve', $approve);
+    oci_bind_by_name($query, ':expires', $expires);
 
-    return $query->execute();
+    return oci_execute($query);
 
   }
 
@@ -669,124 +658,12 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
 
     $id = $share_key->getId();
     $sql = 'DELETE FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_SHARE_KEY_TABLE_NAME . ' WHERE share_key_id = :id';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('id', $id, PDO::PARAM_STR);
-    $ok = $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':id', $id);
+    $ok = oci_execute($query);
     if ($ok) {
       $share_key->initialise();
     }
-
-    return $ok;
-
-  }
-
-###
-###  Coaching Config methods
-###
-
-###
-#    Checks to see if report config is already loaded for specific build
-###
-  public function ReportConfig_load($resource_link_id, $assessment_id) {
-
-    $sql = 'SELECT is_accessible ' .
-           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
-           'WHERE (context_id = :context) AND (assessment_id = :assessment)';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('context', $resource_link_id, PDO::PARAM_STR);
-    $query->bindValue('assessment', $assessment_id, PDO::PARAM_STR);
-    $ok = $query->execute();
-    if ($ok) {
-      $row = $query->fetch();
-      $ok = ($row !== FALSE);
-    }
-
-    return $ok;
-
-  }
-
-###
-#    Checks to see if report config is already loaded for specific build
-###
-  public function ReportConfig_loadAccessible($resource_link_id, $assessment_id) {
-
-    $sql = 'SELECT is_accessible ' .
-           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
-           'WHERE (context_id = :context) AND (assessment_id = :assessment)';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('context', $resource_link_id, PDO::PARAM_STR);
-    $query->bindValue('assessment', $assessment_id, PDO::PARAM_STR);
-    $ok = $query->execute();
-    if ($ok) {
-      $row = $query->fetch();
-      $is_accessible = $row['is_accessible'];
-    }
-
-    return $is_accessible;
-
-  }
-
-###
-#    Inserts the report configuration to the database
-###
-  public function ReportConfig_insert($resource_link_id, $assessment_id, $is_accessible) {
-
-    $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::REPORTS_TABLE_NAME . ' (context_id, ' .
-             'assessment_id, is_accessible) ' .
-             'VALUES (:context, :assessment, :accessible)';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('context', $resource_link_id, PDO::PARAM_STR);
-    $query->bindValue('assessment', $assessment_id, PDO::PARAM_STR);
-    $query->bindValue('accessible', $is_accessible, PDO::PARAM_BOOL);
-    $ok = $query->execute();
-
-    return $ok;
-
-  }
-
-###
-#    Updates the report configuration to the database
-###
-  public function ReportConfig_update($resource_link_id, $assessment_id, $is_accessible) {
-    
-    $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
-             'SET is_accessible = :accessible ' .
-             'WHERE (context_id = :context) AND (assessment_id = :assessment_id)';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('context', $resource_link_id, PDO::PARAM_STR);
-    $query->bindValue('assessment', $assessment_id, PDO::PARAM_STR);
-    $query->bindValue('accessible', $is_accessible, PDO::PARAM_BOOL);
-    $ok = $query->execute();
-
-    return $ok;
-
-
-  }
-
-###
-###  Result methods
-###
-
-###
-#    Saves the current result into the Results table.
-###
-  public function Results_save($outcome, $consumer, $resource_link, $participant) {
-
-    $time = time();
-    $now = date('Y-m-d H:i:s', $time);
-    $id = $resource_link->getId();
-
-    $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' (context_id, ' .
-             'assessment_id, customer_id, created, score, result_id) ' .
-             'VALUES (:context, :assessment, :customer, :created, :score, :result)';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('context', $id, PDO::PARAM_STR);
-    $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
-    $query->bindValue('customer', $participant, PDO::PARAM_STR);
-    $query->bindValue('created', $now, PDO::PARAM_STR);
-    $query->bindValue('score', $outcome->getValue(), PDO::PARAM_STR);
-    $query->bindValue('result', $outcome->getResultID(), PDO::PARAM_STR);
-    $ok = $query->execute();
 
     return $ok;
 
@@ -808,13 +685,13 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
     $sql = 'SELECT lti_result_sourcedid, created, updated ' .
            'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::USER_TABLE_NAME . ' ' .
            'WHERE (consumer_key = :key) AND (context_id = :id) AND (user_id = :user_id)';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('key', $key, PDO::PARAM_STR);
-    $query->bindValue('id', $id, PDO::PARAM_STR);
-    $query->bindValue('user_id', $userId, PDO::PARAM_STR);
-    $ok = $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':key', $key);
+    oci_bind_by_name($query, ':id', $id);
+    oci_bind_by_name($query, ':user_id', $userId);
+    $ok = oci_execute($query);
     if ($ok) {
-      $row = $query->fetch(PDO::FETCH_ASSOC);
+      $row = oci_fetch_assoc($query);
       $ok = ($row !== FALSE);
     }
 
@@ -848,13 +725,13 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
              'SET lti_result_sourcedid = :lti_result_sourcedid, updated = :now ' .
              'WHERE (consumer_key = :key) AND (context_id = :id) AND (user_id = :user_id)';
     }
-    $query = $this->db->prepare($sql);
-    $query->bindValue('key', $key, PDO::PARAM_STR);
-    $query->bindValue('id', $id, PDO::PARAM_STR);
-    $query->bindValue('user_id', $userId, PDO::PARAM_STR);
-    $query->bindValue('lti_result_sourcedid', $user->lti_result_sourcedid, PDO::PARAM_STR);
-    $query->bindValue('now', $now, PDO::PARAM_STR);
-    $ok = $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':key', $key);
+    oci_bind_by_name($query, ':id', $id);
+    oci_bind_by_name($query, ':user_id', $userId);
+    oci_bind_by_name($query, ':lti_result_sourcedid', $user->lti_result_sourcedid);
+    oci_bind_by_name($query, ':now', $now);
+    $ok = oci_execute($query);
     if ($ok) {
       if (is_null($user->created)) {
         $user->created = $time;
@@ -876,11 +753,11 @@ class LTI_Data_Connector_PDO extends LTI_Data_Connector {
     $userId = $user->getId(LTI_Tool_Provider::ID_SCOPE_ID_ONLY);
     $sql = 'DELETE FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::USER_TABLE_NAME . ' ' .
            'WHERE (consumer_key = :key) AND (context_id = :id) AND (user_id = :user_id)';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('key', $key, PDO::PARAM_STR);
-    $query->bindValue('id', $id, PDO::PARAM_STR);
-    $query->bindValue('user_id', $userId, PDO::PARAM_STR);
-    $ok = $query->execute();
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, ':key', $key);
+    oci_bind_by_name($query, ':id', $id);
+    oci_bind_by_name($query, ':user_id', $userId);
+    $ok = oci_execute($query);
 
     if ($ok) {
       $user->initialise();

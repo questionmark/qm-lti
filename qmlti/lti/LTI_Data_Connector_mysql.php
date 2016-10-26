@@ -1,7 +1,7 @@
 <?php
 /**
  * LTI_Tool_Provider - PHP class to include in an external tool to handle connections with an LTI 1 compliant tool consumer
- * Copyright (C) 2013  Stephen P Vickers
+ * Copyright (C) 2014  Stephen P Vickers
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -29,6 +29,8 @@
  *   2.3.02  18-Feb-13
  *   2.3.03   5-Jun-13
  *   2.3.04  13-Aug-13
+ *   2.3.05  29-Jul-14  Added support for date and time formats
+ *   2.3.06   5-Aug-14
 */
 
 ###
@@ -119,18 +121,18 @@ class LTI_Data_Connector_MySQL extends LTI_Data_Connector {
       $enabled = 0;
     }
     $time = time();
-    $now = date('Y-m-d H:i:s', $time);
+    $now = date("{$this->date_format} {$this->time_format}", $time);
     $from = NULL;
     if (!is_null($consumer->enable_from)) {
-      $from = date('Y-m-d H:i:s', $consumer->enable_from);
+      $from = date("{$this->date_format} {$this->time_format}", $consumer->enable_from);
     }
     $until = NULL;
     if (!is_null($consumer->enable_until)) {
-      $until = date('Y-m-d H:i:s', $consumer->enable_until);
+      $until = date("{$this->date_format} {$this->time_format}", $consumer->enable_until);
     }
     $last = NULL;
     if (!is_null($consumer->last_access)) {
-      $last = date('Y-m-d', $consumer->last_access);
+      $last = date($this->date_format, $consumer->last_access);
     }
     if (is_null($consumer->created)) {
       $sql = sprintf("INSERT INTO {$this->dbTableNamePrefix}" . LTI_Data_Connector::CONSUMER_TABLE_NAME . ' (consumer_key, name, ' .
@@ -185,7 +187,7 @@ class LTI_Data_Connector_MySQL extends LTI_Data_Connector {
 
 // Update any resource links for which this consumer is acting as a primary resource link
     $sql = sprintf("UPDATE {$this->dbTableNamePrefix}" . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
-                   'SET primary_consumer_key = NULL AND primary_context_id = NULL ' .
+                   'SET primary_consumer_key = NULL, primary_context_id = NULL, share_approved = NULL ' .
                    'WHERE primary_consumer_key = %s',
        LTI_Data_Connector::quoted($consumer->getKey()));
     $ok = mysql_query($sql);
@@ -305,7 +307,7 @@ class LTI_Data_Connector_MySQL extends LTI_Data_Connector {
       $approved = 0;
     }
     $time = time();
-    $now = date('Y-m-d H:i:s', $time);
+    $now = date("{$this->date_format} {$this->time_format}", $time);
     $settingsValue = serialize($resource_link->settings);
     if (is_null($resource_link->created)) {
       $sql = sprintf("INSERT INTO {$this->dbTableNamePrefix}" . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' (consumer_key, context_id, ' .
@@ -359,7 +361,7 @@ class LTI_Data_Connector_MySQL extends LTI_Data_Connector {
 // Update any resource links for which this is the primary resource link
     if ($ok) {
       $sql = sprintf("UPDATE {$this->dbTableNamePrefix}" . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
-                     'SET primary_consumer_key = NULL AND primary_context_id = NULL ' .
+                     'SET primary_consumer_key = NULL, primary_context_id = NULL ' .
                      'WHERE (primary_consumer_key = %s) AND (primary_context_id = %s)',
          LTI_Data_Connector::quoted($resource_link->getKey()), LTI_Data_Connector::quoted($resource_link->getId()));
       $ok = mysql_query($sql);
@@ -468,7 +470,7 @@ class LTI_Data_Connector_MySQL extends LTI_Data_Connector {
 #
 ### Delete any expired nonce values
 #
-    $now = date('Y-m-d H:i:s', time());
+    $now = date("{$this->date_format} {$this->time_format}", time());
     $sql = "DELETE FROM {$this->dbTableNamePrefix}" . LTI_Data_Connector::NONCE_TABLE_NAME . " WHERE expires <= '{$now}'";
     mysql_query($sql);
 
@@ -494,7 +496,7 @@ class LTI_Data_Connector_MySQL extends LTI_Data_Connector {
 ###
   public function Consumer_Nonce_save($nonce) {
 
-    $expires = date('Y-m-d H:i:s', $nonce->expires);
+    $expires = date("{$this->date_format} {$this->time_format}", $nonce->expires);
     $sql = sprintf("INSERT INTO {$this->dbTableNamePrefix}" . LTI_Data_Connector::NONCE_TABLE_NAME . " (consumer_key, value, expires) VALUES (%s, %s, '{$expires}')",
        LTI_Data_Connector::quoted($nonce->getKey()), LTI_Data_Connector::quoted($nonce->getValue()));
     $ok = mysql_query($sql);
@@ -516,7 +518,7 @@ class LTI_Data_Connector_MySQL extends LTI_Data_Connector {
     $ok = FALSE;
 
 // Clear expired share keys
-    $now = date('Y-m-d H:i:s', time());
+    $now = date("{$this->date_format} {$this->time_format}", time());
     $sql = "DELETE FROM {$this->dbTableNamePrefix}" . LTI_Data_Connector::RESOURCE_LINK_SHARE_KEY_TABLE_NAME . " WHERE expires <= '{$now}'";
     mysql_query($sql);
 
@@ -551,7 +553,7 @@ class LTI_Data_Connector_MySQL extends LTI_Data_Connector {
     } else {
       $approve = 0;
     }
-    $expires = date('Y-m-d H:i:s', $share_key->expires);
+    $expires = date("{$this->date_format} {$this->time_format}", $share_key->expires);
     $sql = sprintf("INSERT INTO {$this->dbTableNamePrefix}" . LTI_Data_Connector::RESOURCE_LINK_SHARE_KEY_TABLE_NAME . ' ' .
                    '(share_key_id, primary_consumer_key, primary_context_id, auto_approve, expires) ' .
                    "VALUES (%s, %s, %s, {$approve}, '{$expires}')",
@@ -718,7 +720,7 @@ class LTI_Data_Connector_MySQL extends LTI_Data_Connector {
   public function User_save($user) {
 
     $time = time();
-    $now = date('Y-m-d H:i:s', $time);
+    $now = date("{$this->date_format} {$this->time_format}", $time);
     if (is_null($user->created)) {
       $sql = sprintf("INSERT INTO {$this->dbTableNamePrefix}" . LTI_Data_Connector::USER_TABLE_NAME . ' (consumer_key, context_id, ' .
                      'user_id, lti_result_sourcedid, created, updated) ' .

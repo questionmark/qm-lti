@@ -151,7 +151,7 @@ function checkForm() {
     el.value = el.value.trim();
     var ok = el.value.length > 0;
     if (!ok) {
-      alert('Please enter a QMWISe Client ID');
+      alert('Please enter a QMWISe User Name');
       el.focus();
     }
   }
@@ -160,12 +160,9 @@ function checkForm() {
     el.value = el.value.trim();
     var ok = el.value.length > 0;
     if (!ok) {
-      alert('Please enter a QMWISe Checksum');
+      alert('Please enter a QMWISe Password');
       el.focus();
-    } else if (el.value.length != 32) {
-      alert('The checksum should have a length of 32 characters');
-      el.focus();
-    }
+    } 
   }
   return ok;
 }
@@ -201,7 +198,7 @@ EOD;
         </p>
         <div class="row">
           <div class="col1">
-            QMWISe Client ID: *
+            QMWISe User Name: *
           </div>
           <div class="col2">
             <img src="images/spacer.png" alt="" /><input type="text" id="id_qmwise_client_id" name="qmwise_client_id" value="<?php echo htmlentities($customer['qmwise_client_id']); ?>" size="20" maxlength="20" />
@@ -209,7 +206,7 @@ EOD;
         </div>
         <div class="row">
           <div class="col1">
-            QMWISe Checksum: *
+            QMWISe Password: *
           </div>
           <div class="col2">
             <img src="images/spacer.png" alt="" /><input type="password" id="id_qmwise_checksum" name="qmwise_checksum" value="<?php echo htmlentities($customer['qmwise_checksum']); ?>" size="50" maxlength="32" />&nbsp;
