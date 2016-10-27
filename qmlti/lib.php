@@ -157,12 +157,18 @@ EOD;
 
         $sql = <<< EOD
 CREATE TABLE [dbo].[{$consumer_table_name}] (
-  [consumer_key] VARCHAR(50) NOT NULL,
+  [name] VARCHAR(50) NOT NULL,
   [secret] VARCHAR(50) NOT NULL,
-  [consumer_name] VARCHAR(20) NOT NULL,
-  [customer_id] VARCHAR(25) NOT NULL,
-  [username_prefix] VARCHAR(10) NULL,
-  [last_access] DATE NULL,
+  [lti_version] VARCHAR(20) NOT NULL,
+  [consumer_name] VARCHAR(25) NOT NULL,
+  [consumer_version] VARCHAR(10),
+  [consumer_guid] VARCHAR(25),
+  [css_path] VARCHAR(25),
+  [protected] INT,
+  [enabled] INT,
+  [enable_from] DATETIME,
+  [enable_until] DATETIME,
+  [last_access] DATETIME NULL,
   [created] DATETIME NOT NULL,
   [updated] DATETIME NOT NULL,
  CONSTRAINT [PK_{$consumer_table_name}] PRIMARY KEY CLUSTERED ([consumer_key] ASC)
@@ -181,7 +187,13 @@ EOD;
 CREATE TABLE [dbo].[{$resource_link_table_name}] (
   [consumer_key] VARCHAR(50) NOT NULL DEFAULT '',
   [context_id] VARCHAR(100) NOT NULL,
+  [lti_context_id] VARCHAR(255),
+  [lti_resource_id] VARCHAR(255),
+  [title] VARCHAR(255),
   [settings] TEXT,
+  [primary_consumer_key] VARCHAR(255),
+  [primary_context_key] VARCHAR(255),
+  [share_approved] INT,
   [created] DATETIME,
   [updated] DATETIME,
  CONSTRAINT [PK_{$resource_link_table_name}] PRIMARY KEY CLUSTERED ([consumer_key] ASC, [context_id] ASC)
@@ -233,10 +245,11 @@ EOD;
 
         $sql = <<< EOD
 CREATE TABLE [dbo].[{$reports_table_name}] (
+  [consumer_key] VARCHAR(50) NOT NULL DEFAULT '',
   [context_id] VARCHAR(255),
   [assessment_id] VARCHAR(255),
   [is_accessible] BIT,
- CONSTRAINT [PK_{$reports_table_name}] PRIMARY KEY CLUSTERED ([context_id] ASC, [assessment_id] ASC, [is_accessible] ASC)
+ CONSTRAINT [PK_{$reports_table_name}] PRIMARY KEY CLUSTERED ([consumer_key] ASC, [context_id] ASC, [assessment_id] ASC)
 )
 EOD;
 
@@ -250,13 +263,14 @@ EOD;
 
         $sql = <<< EOD
 CREATE TABLE [dbo].[{$results_table_name}] (
+  [consumer_key] VARCHAR(50) NOT NULL DEFAULT '',
   [context_id] VARCHAR(255),
   [assessment_id] VARCHAR(255),
   [customer_id] VARCHAR(25),
   [created] DATETIME,
   [score] VARCHAR(255),
-  [result_id] VARCHAR(255),
- CONSTRAINT [PK_{$results_table_name}] PRIMARY KEY CLUSTERED ([context_id] ASC, [assessment_id] ASC, [result_id] ASC)
+  [result_id] INT,
+ CONSTRAINT [PK_{$results_table_name}] PRIMARY KEY CLUSTERED ([consumer_key] ASC, [result_id] ASC)
 )
 EOD;
 
@@ -293,11 +307,16 @@ EOD;
       if ($ok) {
         $sql = 'CREATE TABLE IF NOT EXISTS ' . TABLE_PREFIX . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
                '(consumer_key VARCHAR(50) NOT NULL DEFAULT \'\',' .
-               ' context_id VARCHAR(100),' .
+               ' lti_context_id VARCHAR(100),' .
+               ' lti_resource_id VARCHAR(255),' .
+               ' title VARCHAR(255),' .
                ' settings TEXT,' .
+               ' primary_consumer_key VARCHAR(255),' .
+               ' primary_context_key VARCHAR(255),' .
+               ' share_approved INT,' .
                ' created DATETIME,' .
                ' updated DATETIME, ' .
-               'PRIMARY KEY (consumer_key, context_id))';
+               'PRIMARY KEY (consumer_key, lti_context_id))';
         $ok = $db->exec($sql) !== FALSE;
       }
 
@@ -314,27 +333,30 @@ EOD;
         $sql = 'CREATE TABLE IF NOT EXISTS ' . TABLE_PREFIX . 'lti_outcome ' .
                '(result_sourcedid VARCHAR(255),' .
                ' score VARCHAR(255),' .
-               ' report_url VARCHAR(255),' .
                ' created DATETIME)';
         $ok = $db->exec($sql) !== FALSE;
       }
 
       if ($ok) {
         $sql = 'CREATE TABLE IF NOT EXISTS ' . TABLE_PREFIX .  LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
-               '(context_id VARCHAR(255),' .
+               '(consumer_key VARCHAR(50) NOT NULL DEFAULT \'\',' .
+               ' context_id VARCHAR(255),' .
                ' assessment_id VARCHAR(255),' .
-               ' is_accessible TINYINT)';
+               ' is_accessible TINYINT,' .
+               'PRIMARY KEY (consumer_key, context_id, assessment_id))';
         $ok = $db->exec($sql) !== FALSE;
       }
 
       if ($ok) {
         $sql = 'CREATE TABLE IF NOT EXISTS ' . TABLE_PREFIX . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
-               '(context_id VARCHAR(255),' .
+               '(consumer_key VARCHAR(50) NOT NULL DEFAULT \'\',' .
+               ' context_id VARCHAR(255),' .
                ' assessment_id VARCHAR(255),' .
                ' customer_id VARCHAR(25),' .
                ' created DATETIME,' .
                ' score VARCHAR(255),' .
-               ' result_id VARCHAR(255))';
+               ' result_id INT,' .
+               'PRIMARY KEY (consumer_key, result_id))';
         $ok = $db->exec($sql) !== FALSE;
       }
 
@@ -511,13 +533,14 @@ EOD;
  *
  * returns TRUE if coaching report is valid
  */
-function is_coaching_report_available($db, $resource_link_id, $assessment_id, $participant_name) {
+function is_coaching_report_available($db, $consumer_key, $resource_link_id, $assessment_id, $participant_name) {
   $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
-   if ($data_connector->ReportConfig_loadAccessible($resource_link_id, $assessment_id) == 1) {
-      $result_id = get_result_id($participant_name);
-      if (( $result_id != FALSE ) && (count( (array)$result_id) != 0 )) {
+   if ($data_connector->ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id)) {
+      if (get_result_id($participant_name) != FALSE) {
+        error_log("success");
         return TRUE;
       } else {
+        error_log("failures");
         return FALSE;
       }  
    } else {
@@ -530,9 +553,9 @@ function is_coaching_report_available($db, $resource_link_id, $assessment_id, $p
  *
  * returns the coaching report url
  */
- function get_coaching_report($db, $lti_outcome, $resource_link_id, $assessment_id) {
+ function get_coaching_report($db, $consumer_key, $lti_outcome, $resource_link_id, $assessment_id) {
    $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
-   if ($data_connector->ReportConfig_loadAccessible($resource_link_id, $assessment_id) == 1) {
+   if ($data_connector->ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id)) {
       return get_report_url($lti_outcome->getResultID());
    } else {
       return FALSE;
@@ -548,11 +571,17 @@ function is_coaching_report_available($db, $resource_link_id, $assessment_id, $p
 
     try {
       $soap_connection_id = perception_soapconnect_id();
-      $result_id = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_assessment_result_list_by_participant($participant_name);
+      $response = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_assessment_result_list_by_participant($participant_name);
     } catch (Exception $e) {
       log_error($e);
-      $result_id = FALSE;
+      return FALSE;
     } 
+
+    $result_id = $response->AssessmentResult;
+    // Prevents sending back empty array
+    if (count((array)$result_id) == 0) {
+      return FALSE;
+    }
 
     return $result_id;
 
@@ -600,11 +629,11 @@ function is_coaching_report_available($db, $resource_link_id, $assessment_id, $p
  *
  *   returns the URL or FALSE
  */
-  function get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url, $coaching_report) {
+  function get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url) {
 
     try {
       $soap_connection_id = perception_soapconnect_id();
-      $access = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url, $coaching_report);
+      $access = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url);
       $url = $access->URL;
     } catch (Exception $e) {
       log_error($e);
@@ -623,12 +652,12 @@ function is_coaching_report_available($db, $resource_link_id, $assessment_id, $p
  */
   function get_participant_by_name($username) {
 
-    $participant_details = FALSE;
     try {
       $soap_connection_id = perception_soapconnect_id();
       $participant_details = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_participant_by_name($username);
-      error_log(print_r($participant_details, true));
     } catch (Exception $e) {
+      log_error($e);
+      $participant_details = FALSE;
     }
 
     return $participant_details;
@@ -643,13 +672,13 @@ function is_coaching_report_available($db, $resource_link_id, $assessment_id, $p
  */
   function create_participant($username, $firstname, $lastname, $email) {
 
-    $participant_id = FALSE;
     try {
       $soap_connection_id = perception_soapconnect_id();
       $participant_details = $GLOBALS['perceptionsoap'][$soap_connection_id]->create_participant($username, $firstname, $lastname, $email);
       $participant_id = $participant_details->Participant_ID;
     } catch (Exception $e) {
       log_error($e);
+      $participant_id = FALSE;
     }
 
     return $participant_id;

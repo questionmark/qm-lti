@@ -12,7 +12,6 @@ Result_ID=%SESSION.RESULT%
 lti_consumer_key=lti_consumer_key
 lti_context_id=lti_context_id
 lti_result_id=lti_result_id
-coaching_report=coaching_report
 
 [Settings]
 HEADER=Content-Type: application/x-www-form-urlencoded

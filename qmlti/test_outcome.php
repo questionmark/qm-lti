@@ -53,7 +53,6 @@ require_once('lti/OAuth.php');
 
       $result_id = $_POST['sourcedid'];
       $score = $_POST['result_resultscore_textstring'];
-      $qm_resultid = $_POST['result_resultscore_resultid'];
 
       $codeMinor = 'Full success';
       $response = <<<EOD
@@ -91,7 +90,6 @@ EOD;
     $type = 'replaceResult';
     $result_id = $xml->imsx_POXBody->replaceResultRequest->resultRecord->sourcedGUID->sourcedId;
     $score = $xml->imsx_POXBody->replaceResultRequest->resultRecord->result->resultScore->textString;
-    $qm_resultid =  $xml->imsx_POXBody->replaceResultRequest->resultRecord->result->resultScore->resultID;
 
     $id = time();
     $codeMajor = 'success';
@@ -130,12 +128,11 @@ EOD;
   $now = date("Y-m-d H:i:s", $time);
 
   $sql = 'INSERT INTO ' . TABLE_PREFIX . 'lti_outcome ' .
-         '(result_sourcedid, score, created, report_url) VALUES (:id, :score, :created, :report)';
+         '(result_sourcedid, score, created) VALUES (:id, :score, :created)';
   $query = $db->prepare($sql);
   $query->bindValue('id', $result_id, PDO::PARAM_STR);
   $query->bindValue('score', $score, PDO::PARAM_STR);
   $query->bindValue('created', $now, PDO::PARAM_STR);
-  $query->bindValue('report', $qm_resultid, PDO::PARAM_STR);
   if (!$query->execute()) {
     error_log("Error saving outcome of {$score} for {$result_id}");
   } else {

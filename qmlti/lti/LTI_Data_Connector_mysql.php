@@ -595,9 +595,9 @@ class LTI_Data_Connector_MySQL extends LTI_Data_Connector {
     $now = date('Y-m-d H:i:s', $time);
     $id = $resource_link->getId();
     $ok = FALSE;
-    $sql = sprintf("INSERT INTO {$this->dbTableNamePrefix}" . LTI_Data_Connector::RESULTS_TABLE_NAME . ' (context_id, ' .
+    $sql = sprintf("INSERT INTO {$this->dbTableNamePrefix}" . LTI_Data_Connector::RESULTS_TABLE_NAME . ' (consumer_key, context_id, ' .
            'assessment_id, customer_id, created, score, result_id) ' .
-           'VALUES (%s, %s, %s, %s, %s, %s)', LTI_Data_Connector::quoted($id), LTI_Data_Connector::quoted($resource_link->getSetting('qmp_assessment_id')), LTI_Data_Connector::quoted($participant), LTI_Data_Connector::quoted($now), LTI_Data_Connector::quoted($outcome->getValue()), LTI_Data_Connector::quoted($outcome->getResultID));
+           'VALUES (%s, %s, %s, %s, %s, %s, %d)', LTI_Data_Connector::quoted($consumer->getKey()), LTI_Data_Connector::quoted($id), LTI_Data_Connector::quoted($resource_link->getSetting('qmp_assessment_id')), LTI_Data_Connector::quoted($participant), LTI_Data_Connector::quoted($now), LTI_Data_Connector::quoted($outcome->getValue()), LTI_Data_Connector::quoted($outcome->getResultID));
     $ok = mysql_query($sql);
     return $ok;
 
@@ -611,13 +611,13 @@ class LTI_Data_Connector_MySQL extends LTI_Data_Connector {
 ###
 #    Checks to see if report config is already loaded for specific build
 ###
-  public function ReportConfig_loadAccessible($resource_link_id, $assessment_id) {
+  public function ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id) {
 
     $ok = FALSE;
-    $is_accessible = FALSE;
+    $is_accessible = NULL;
     $sql = sprintf('SELECT is_accessible ' .
       "FROM {$this->dbTableNamePrefix}" . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' . 
-      'WHERE (context_id = %s) AND (assessment_id = %s)',
+      'WHERE (consumer_key = %s) AND (context_id = %s) AND (assessment_id = %s)', LTI_Data_Connector::quoted($consumer_key),
       LTI_Data_Connector::quoted($resource_link_id), LTI_Data_Connector::quoted($assessment_id));
     $rconfig = mysql_query($sql);
     if ($rconfig) {
@@ -633,38 +633,15 @@ class LTI_Data_Connector_MySQL extends LTI_Data_Connector {
   }
 
 ###
-#    Checks to see if report config is already loaded for specific build
-###
-  public function ReportConfig_load($resource_link_id, $assessment_id) {
-
-    $ok = FALSE;
-    $sql = sprintf('SELECT * ' .
-      "FROM {$this->dbTableNamePrefix}" . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' . 
-      'WHERE (context_id = %s) AND (assessment_id = %s)',
-      LTI_Data_Connector::quoted($resource_link_id), LTI_Data_Connector::quoted($assessment_id));
-    $rconfig = mysql_query($sql);
-    if ($rconfig) {
-      $row = mysql_fetch_object($rconfig);
-      if ($row) {
-        $ok = TRUE;
-      }
-    }
-
-    return $ok;
-
-  }
-
-###
 #    Inserts the report configuration to the database
 ###
-  public function ReportConfig_insert($resource_link_id, $assessment_id, $is_accessible) {
+  public function ReportConfig_insert($consumer_key, $resource_link_id, $assessment_id, $is_accessible) {
 
     if (is_null($user->created)) {
-      $sql = sprintf("INSERT INTO {$this->dbTableNamePrefix}" . LTI_Data_Connector::REPORTS_TABLE_NAME . ' (context_id, ' .
+      $sql = sprintf("INSERT INTO {$this->dbTableNamePrefix}" . LTI_Data_Connector::REPORTS_TABLE_NAME . ' (consumer_key, context_id, ' .
                      'assessment_id, is_accessible) ' .
-                     "VALUES (%s, %s, %s)",
-         LTI_Data_Connector::quoted($resource_link_id), LTI_Data_Connector::quoted($assessment_id),
-         LTI_Data_Connector::quoted($is_accessible));
+                     "VALUES (%s, %s, %s, %d)", LTI_Data_Connector::quoteed($consumer_key),
+         LTI_Data_Connector::quoted($resource_link_id), LTI_Data_Connector::quoted($assessment_id), $is_accessible);
     } 
     $ok = mysql_query($sql);
     return $ok;
@@ -674,12 +651,11 @@ class LTI_Data_Connector_MySQL extends LTI_Data_Connector {
 ###
 #    Updates the report configuration to the database
 ###
-  public function ReportConfig_update($resource_link_id, $assessment_id, $is_accessible) {
+  public function ReportConfig_update($consumer_key, $resource_link_id, $assessment_id, $is_accessible) {
     $sql = sprintf("UPDATE {$this->dbTableNamePrefix}" . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
-                   "SET is_accessible = %s " .
-                   'WHERE (context_id = %s) AND (assessment_id = %s)',
-      LTI_Data_Connector::quoted($resource_link_id), LTI_Data_Connector::quoted($assessment_id),
-      LTI_Data_Connector::quoted($is_accessible));
+                   "SET is_accessible = %d " .
+                   'WHERE (consumer_key = %s) AND (context_id = %s) AND (assessment_id = %s)',
+                   $is_accessible, LTI_Data_Connector::quoted($consumer_key), LTI_Data_Connector::quoted($resource_link_id), LTI_Data_Connector::quoted($assessment_id));
   }
 
 

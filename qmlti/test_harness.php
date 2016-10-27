@@ -282,7 +282,7 @@ EOD;
         <br><br>
 
         <?php
-  $sql = 'SELECT result_sourcedid, score, created, report_url ' .
+  $sql = 'SELECT result_sourcedid, score, created ' .
          'FROM ' . TABLE_PREFIX . 'lti_outcome ' .
          'ORDER BY created DESC';
   $query = $db->prepare($sql);
@@ -302,7 +302,6 @@ EOD;
             <td class="AssessmentAuthor">Result SourcedId</td>
             <td class="AssessmentAuthor">Score</td>
             <td class="Created">Created</td>
-            <td class="ReportURL">Report URL</td>
           </tr>
 <?php
     do {
@@ -311,7 +310,6 @@ EOD;
             <td>&nbsp;<?php echo $row['result_sourcedid']; ?></td>
             <td>&nbsp;<?php echo $row['score']; ?></td>
             <td>&nbsp;<?php echo $row['created']; ?></td>
-            <td>&nbsp;<?php echo $row['report_url']; ?></td>
           </tr>
 <?php
       $row = $query->fetch();
@@ -342,7 +340,7 @@ EOD;
 
           <table class="DataTable" cellpadding="0" cellspacing="0">
           <tr class="GridHeader">
-            <td class="ContextID">Context ID</td>
+            <td class="ContextID">Resource Link ID</td>
             <td class="AssessmentID">Assessment ID</td>
             <td class="IsAccessible">Is Accessible</td>
           </tr>
@@ -384,7 +382,7 @@ EOD;
 
           <table class="DataTable" cellpadding="0" cellspacing="0">
           <tr class="GridHeader">
-            <td>Context ID</td>
+            <td>Resource Link ID</td>
             <td>Assessment ID</td>
             <td>Customer Name</td>
             <td>Created</td>

@@ -192,14 +192,14 @@ class PerceptionSoap {
   public function get_assessment($assessment_id) {
 
     try {
-      $assessment = $this->soap->GetAssessment(array(
+      $response = $this->soap->GetAssessment(array(
         "Assessment_ID" => $assessment_id
       ));
     } catch(SoapFault $e) {
       throw new QMWiseException($e);
     }
 
-    return $assessment->Assessment;
+    return $response->Assessment;
 
   }
 
@@ -228,28 +228,28 @@ class PerceptionSoap {
   public function get_assessment_result_list_by_assessment($assessment_id) {
 
     try {
-      $list = $this->soap->GetAssessmentResultListByAssessment(array(
+      $response = $this->soap->GetAssessmentResultListByAssessment(array(
         "Assessment_ID" => $assessment_id
       ));
     } catch(SoapFault $e) {
       throw new QMWiseException($e);
     }
 
-    return $list->AssessmentResultList; 
+    return $response->AssessmentResultList; 
 
   }
 
   public function get_assessment_result_list_by_participant($participant_name) {
 
     try {
-      $list = $this->soap->GetAssessmentResultListByParticipant(array(
+      $response = $this->soap->GetAssessmentResultListByParticipant(array(
         "Participant_Name" => $participant_name
       ));
     } catch (SoapFault $e) {
       throw new QMWiseException($e);
     }
 
-    return $list->AssessmentResultList;
+    return $response->AssessmentResultList;
   }
 
   public function get_access_administrator($username) {
@@ -281,7 +281,7 @@ class PerceptionSoap {
    * Perception doesn't check for one and just adds its own questionmark and
    * query string at the end.
    */
-  public function get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url, $coaching_report) {
+  public function get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url) {
 
     try {
       $access_assessment = $this->soap->GetAccessAssessmentNotify(array(
@@ -295,7 +295,6 @@ class PerceptionSoap {
             array("Name" => "lti_consumer_key", "Value" => $consumer_key),
             array("Name" => "lti_context_id", "Value" => $resource_link_id),
             array("Name" => "lti_result_id", "Value" => $result_id),
-            array("Name" => "coaching_report", "Value" => $coaching_report),
             array("Name" => "CALLBACK", "Value" => 1)
           )
         )
@@ -334,14 +333,14 @@ class PerceptionSoap {
   public function get_participant_by_name($username) {
 
     try {
-      $participant = $this->soap->GetParticipantByName(array(
+      $response = $this->soap->GetParticipantByName(array(
         'Participant_Name' => $username
       ));
     } catch(SoapFault $e) {
       throw new QMWiseException($e);
     }
 
-    return $participant->Participant;
+    return $response->Participant;
 
   }
 

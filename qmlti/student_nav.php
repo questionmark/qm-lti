@@ -27,6 +27,7 @@
 */
 
 require_once('lib.php');
+require_once('model.php');
 require_once('LTI_Data_Connector_qmp.php');
 
   $db = open_db();
@@ -34,86 +35,28 @@ require_once('LTI_Data_Connector_qmp.php');
   session_name(SESSION_NAME);
   session_start();
 
-// Get data from session
-  $consumer_key = $_SESSION['consumer_key'];
-  $resource_link_id = $_SESSION['resource_link_id'];
-  $assessment_id = $_SESSION['assessment_id'];
-  $username = $_SESSION['username'];
-  $firstname = $_SESSION['firstname'];
-  $lastname = $_SESSION['lastname'];
-  $participant_name = "{$firstname} {$lastname}";
-  $email = $_SESSION['email'];
-  $return_url = $_SESSION['lti_return_url'];
-  if (!$return_url) {
-    $return_url = get_root_url() . 'return.php';
-  }
+  $student = new Student();
+  $student->checkValid();
 
-  $coachingReport = $_SESSION['coaching_report'];
-  $isStudent = $_SESSION['isStudent'];
-
-  $notify_url = get_root_url() . 'notify.php';
-  $result_id = $_SESSION['result_id'];
-
-  // Ensure this is a student, an assessment has been defined and the LMS will accept an outcome
-  if (!$isStudent) {
-    $_SESSION['error'] = 'Not a student';
-  } else if (!$assessment_id) {
-    $_SESSION['error'] = 'No assignment selected';
-  } else if (!$result_id) {
-    $_SESSION['error'] = 'No grade book column';
-  }
-
-// Activate SOAP Connection.
+  // Activate SOAP Connection.
   if (!isset($_SESSION['error'])) {
     perception_soapconnect();
   }
 
-  // An action was previously selected
   if (isset($_POST['action'])) {
-    if ($_POST['action'] == 'Launch Assessment') {
-      // start assessment
-      $redirect =  get_root_url() . 'student.php';
-      header("Location: {$redirect}");
-    } else if ($_POST['action'] == 'View Coaching Report') {
-      // view coaching report
-      $resultIDs = get_result_id($participant_name);
-      if ( is_array($resultIDs->AssessmentResult)) {
-        $coachingreport = get_report_url($resultIDs->AssessmentResult[0]->Result->Result_ID);
-      } else {
-        $coachingreport = get_report_url($resultIDs->AssessmentResult->Result->Result_ID);
-      }
-      header("Location: {$coachingreport->URL}");
-    }
+    $student->identifyAction($_POST['action']);
   }
+  $student->createParticipant();
 
-// Create participant if it doesn't exist
-  if (!isset($_SESSION['error']) && (($participant_details = get_participant_by_name($username)) !== FALSE)) {
-    $participant_id = $participant_details->Participant_ID;
-  } else if (!isset($_SESSION['error'])) {
-    $participant_id = create_participant($username, $firstname, $lastname, $email);
-  }
-
-// Get coaching report availability
-  $bool_coaching_report = is_coaching_report_available($db, $resource_link_id, $assessment_id, $participant_name);
-
-// Get assessment URL
-  if (!isset($_SESSION['error'])) {
-    $url = get_access_assessment_notify($assessment_id, "${firstname} ${lastname}", $consumer_key, $resource_link_id, $result_id,
-       $notify_url, $return_url, $coachingReport);
-  }
-
-  // Get assessment
-  $assessment = '';
-  if (!isset($_SESSION['error'])) {
-    $assessment = get_assessment($assessment_id);
-  }
+  $bool_coaching_report = $student->isCoachingReportAvailable($db);
+  $assessment = $student->getAssessment();
 
   if (isset($_SESSION['error'])) {
-    $url = "error.php";
+   header("Location: error.php");
   }
 
-  # header("Location: {$url}");
   page_header();
+
 ?>
 <h1>Student Portal</h1>
 <form action="student_nav.php" method="POST">

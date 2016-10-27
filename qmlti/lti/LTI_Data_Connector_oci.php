@@ -671,6 +671,97 @@ class LTI_Data_Connector_oci extends LTI_Data_Connector {
 
 
 ###
+###  Result methods
+###
+
+###
+#    Saves the current result into the Results table.
+###
+  public function Results_save($outcome, $consumer, $resource_link, $participant) {
+
+    $time = time();
+    $now = date('Y-m-d H:i:s', $time);
+    $id = $resource_link->getId();
+
+    $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' (consumer_key, context_id, ' .
+             'assessment_id, customer_id, created, score, result_id) ' .
+             'VALUES (:consumer, :context, :assessment, :customer, :created, :score, :result)';
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, 'consumer', $consumer->getKey());
+    oci_bind_by_name($query, 'context', $id);
+    oci_bind_by_name($query, 'assessment', $resource_link->getSetting('qmp_assessment_id'));
+    oci_bind_by_name($query, 'customer', $participant);
+    oci_bind_by_name($query, 'created', $now);
+    oci_bind_by_name($query, 'score', $outcome->getValue());
+    oci_bind_by_name($query, 'result', $outcome->getResultID());
+    $ok = oci_execute($query);
+
+    return $ok;
+  }
+
+###
+#    Checks to see if report config is already loaded for specific build
+###
+  public function ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id) {
+
+    $sql = 'SELECT is_accessible ' .
+           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
+           'WHERE (consumer_key = :consumer) AND (context_id = :context) AND (assessment_id = :assessment)';
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, 'consumer', $consumer_key);
+    oci_bind_by_name($query, 'context', $resource_link_id);
+    oci_bind_by_name($query, 'assessment', $assessment_id);
+    $ok = oci_execute($query);
+    if ($ok) {
+      $row = oci_fetch_assoc($query);
+      $is_accessible = $row['is_accessible'];
+    }
+    if (!$ok) {
+      return NULL;
+    }
+    return $is_accessible;
+
+  }
+
+###
+#    Inserts the report configuration to the database
+###
+  public function ReportConfig_insert($consumer_key, $resource_link_id, $assessment_id, $is_accessible) {
+
+    $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::REPORTS_TABLE_NAME . ' (consumer_key, context_id, ' .
+             'assessment_id, is_accessible) ' .
+             'VALUES (:consumer, :context, :assessment, :accessible)';
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, 'consumer', $consumer_key);
+    oci_bind_by_name($query, 'context', $resource_link_id);
+    oci_bind_by_name($query, 'assessment', $assessment_id);
+    oci_bind_by_name($query, 'accessible', $is_accessible);
+    $ok = oci_execute($query);
+
+    return $ok;
+
+  }
+
+###
+#    Updates the report configuration to the database
+###
+  public function ReportConfig_update($consumer_key, $resource_link_id, $assessment_id, $is_accessible) {
+    
+    $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
+             'SET is_accessible = :accessible ' .
+             'WHERE (consumer_key = :consumer) AND (context_id = :context) AND (assessment_id = :assessment)';
+    $query = oci_parse($this->db, $sql);
+    oci_bind_by_name($query, 'consumer', $consumer_key);
+    oci_bind_by_name($query, 'context', $resource_link_id);
+    oci_bind_by_name($query, 'assessment', $assessment_id);
+    oci_bind_by_name($query, 'accessible', $is_accessible);
+    $ok = oci_execute($query);
+    
+    return $ok;
+
+  }
+
+###
 ###  LTI_User methods
 ###
 

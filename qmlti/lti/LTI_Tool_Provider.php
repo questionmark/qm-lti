@@ -233,10 +233,6 @@ class LTI_Tool_Provider {
 #
     if ($this->authenticate()) {
       $this->doCallback();
-      error_log("Callback successful.");
-    } else {
-      error_log( "Error authenticating." );
-      error_log( $this->reason ); 
     }
     $this->result();
 
@@ -353,7 +349,6 @@ class LTI_Tool_Provider {
     if (!$this->isOK && isset($this->callbackHandler['error'])) {
       $ok = call_user_func($this->callbackHandler['error'], $this);
     }
-    # error_log( print_r( $this, true ) );
     if (!$ok) {
       if (!$this->isOK) {
       #
@@ -390,11 +385,7 @@ class LTI_Tool_Provider {
         header("Location: {$this->redirectURL}");
         exit;
       } else if (!is_null($this->output)) {
-        if ($this->output == "student.php" || $this->output == "staff.php") {
-          header("Location: {$this->output}");
-        } else {
-          echo $this->output;
-        } 
+        header("Location: {$this->output}");
       }
     }
 
@@ -1372,7 +1363,7 @@ class LTI_Resource_Link {
     if (!is_null($user)) {
       $source_resource_link = $user->getResourceLink();
       $sourcedid = $user->lti_result_sourcedid;
-      $resultid = '';
+      $resultid = NULL;
     }
 #
 ### Use LTI 1.1 service in preference to extension service if it is available
@@ -1421,7 +1412,6 @@ class LTI_Resource_Link {
           <resultScore>
             <language>{$lti_outcome->language}</language>
             <textString>{$value}</textString>
-            <resultID>{$resultid}</resultID>
           </resultScore>
         </result>
 EOF;
@@ -3176,34 +3166,37 @@ abstract class LTI_Data_Connector {
  */
   abstract public function Resource_Link_Share_Key_delete($share_key);
 /**
- * Loads is_accessible parameter.
+ * Loads the isAccessible parameter if available
  *
- * @param String Resource Link object
- * @param String Assessment to match parameter
+ * @param String consumer_key
+ * @param String context
+ * @param String assessment_id
  *
- * @return boolean is_accessible
+ * @return boolean isAccessible parameter, NULL if unavailable
  */
-  abstract public function ReportConfig_load($resource_link_id, $assessment_id);
+  abstract public function ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id);
 /**
  * Inserts new report into database.
  *
+ * @param String consumer_key
  * @param String context
  * @param String assessment_id
  * @param Boolean is_accessible 
  *
  * @return boolean True if the configuration was successfully inserted
  */
-  abstract public function ReportConfig_insert($resource_link_id, $assessment_id, $is_accessible);
+  abstract public function ReportConfig_insert($consumer_key, $resource_link_id, $assessment_id, $is_accessible);
 /**
  * Updates existing report configuration entry with new accessible boolean.
  * 
+ * @param String consumer_key
  * @param String context
  * @param String assessment_id
  * @param Boolean is_accessible
  * 
  * @return boolean True if the configuration was successfully updated
  */
-  abstract public function ReportConfig_update($resource_link_id, $assessment_id, $is_accessible);
+  abstract public function ReportConfig_update($consumer_key, $resource_link_id, $assessment_id, $is_accessible);
 /**
  * Load user object.
  *

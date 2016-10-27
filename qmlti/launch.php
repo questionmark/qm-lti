@@ -111,7 +111,6 @@ require_once('LTI_Data_Connector_qmp.php');
       $tool_provider->reason = 'Missing data';
     }
 
-
     return $ok;
 
   }

@@ -36,10 +36,10 @@ require_once('lti/OAuth.php');
   $params['lti_message_type'] = 'basic-lti-launch-request';
   $params['lti_version'] = 'LTI-1p0';
   if (!empty($_SESSION['outcome'])) {
-    $params['lis_outcome_service_url'] = get_root_url() . 'outcome.php';
+    $params['lis_outcome_service_url'] = get_root_url() . 'test_outcome.php';
   }
   if (!empty($_SESSION['outcomes'])) {
-    $params['ext_ims_lis_basic_outcome_url'] = get_root_url() . 'outcome.php';
+    $params['ext_ims_lis_basic_outcome_url'] = get_root_url() . 'test_outcome.php';
   }
 
   $params['launch_presentation_return_url'] = get_root_url() . 'test_harness.php';

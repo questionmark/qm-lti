@@ -27,61 +27,25 @@
 */
 
 require_once('lib.php');
+require_once('model.php');
 
   session_name(SESSION_NAME);
   session_start();
 
-// Get data from session
-  $consumer_key = $_SESSION['consumer_key'];
-  $resource_link_id = $_SESSION['resource_link_id'];
-  $assessment_id = $_SESSION['assessment_id'];
-  $username = $_SESSION['username'];
-  $firstname = $_SESSION['firstname'];
-  $lastname = $_SESSION['lastname'];
-  $email = $_SESSION['email'];
-  $return_url = $_SESSION['lti_return_url'];
-  if (!$return_url) {
-    $return_url = get_root_url() . 'return.php';
-  }
+  $student = new Student();
+  $student->checkValid();
 
-  $coachingReport = $_SESSION['coaching_report'];
-  $isStudent = $_SESSION['isStudent'];
-
-  $notify_url = get_root_url() . 'notify.php';
-  $result_id = $_SESSION['result_id'];
-
-  // Ensure this is a student, an assessment has been defined and the LMS will accept an outcome
-  if (!$isStudent) {
-    $_SESSION['error'] = 'Not a student';
-  } else if (!$assessment_id) {
-    $_SESSION['error'] = 'No assignment selected';
-  } else if (!$result_id) {
-    $_SESSION['error'] = 'No grade book column';
-  }
-
-// Activate SOAP Connection.
+  // Activate SOAP Connection.
   if (!isset($_SESSION['error'])) {
     perception_soapconnect();
   }
 
-// Create participant
-  if (!isset($_SESSION['error']) && (($participant_details = get_participant_by_name($username)) !== FALSE)) {
-    $participant_id = $participant_details->Participant_ID;
-  } else if (!isset($_SESSION['error'])) {
-    $participant_id = create_participant($username, $firstname, $lastname, $email);
-  }
-
-// Get assessment URL
-  if (!isset($_SESSION['error'])) {
-    $url = get_access_assessment_notify($assessment_id, "${firstname} {$lastname}", $consumer_key, $resource_link_id, $result_id,
-       $notify_url, $return_url, $coachingReport);
-  }
-
+  $student->createParticipant();
+  $url = $student->getAccessAssessmentNotify();
   if (isset($_SESSION['error'])) {
     $url = "error.php";
-    error_log( print_r( $_SESSION['error'], true ) );
   }
-
+  
   header("Location: {$url}");
 
 ?>

@@ -816,12 +816,12 @@ class LTI_Data_Connector_MySQLi extends LTI_Data_Connector {
     $id = $resource_link->getId();
     $ok = FALSE;
     
-    $sql = "INSERT INTO {$this->dbTableNamePrefix}" . LTI_Data_Connector::RESULTS_TABLE_NAME . ' (context_id, ' .
+    $sql = "INSERT INTO {$this->dbTableNamePrefix}" . LTI_Data_Connector::RESULTS_TABLE_NAME . ' (consumer_key, context_id, ' .
            'assessment_id, customer_id, created, score, result_id) ' .
-           'VALUES (?, ?, ?, ?, ?, ?)';
+           'VALUES (?, ?, ?, ?, ?, ?, ?)';
     $result = $this->db->prepare($sql);
     if ($result) {
-      $ok = $result->bind_param('ssssss', $id, $resource_link->getSetting('qmp_assessment_id'), $participant, $now, $outcome->getValue(), $outcome->getResultID());
+      $ok = $result->bind_param('ssssssi', $consumer->getKey(), $id, $resource_link->getSetting('qmp_assessment_id'), $participant, $now, $outcome->getValue(), $outcome->getResultID());
     }
     if ($result && $ok) {
       $ok = $result->execute();
@@ -842,16 +842,16 @@ class LTI_Data_Connector_MySQLi extends LTI_Data_Connector {
 ###
 #    Checks to see if report config is already loaded for specific build
 ###
-  public function ReportConfig_load($resource_link_id, $assessment_id) {
+  public function ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id) {
 
     $ok = FALSE;
-    $is_accessible = FALSE;
-    $sql = 'SELECT is_accessible' .
+    $is_accessible = NULL;
+    $sql = 'SELECT is_accessible ' .
            "FROM {$this->dbTableNamePrefix}" . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
-           'WHERE( context_id = ?) AND ( assessment_id = ?)';
+           'WHERE (consumer_key = ?) ( context_id = ?) AND ( assessment_id = ?)';
     $result = $this->db->prepare($sql);
     if ($result) {
-      $ok = $result->bind_param('ss', $context_id, $assessment_id);
+      $ok = $result->bind_param('sss', $consumer_key, $context_id, $assessment_id);
     }
     if ($result && $ok) {
       if ($result->execute()) {
@@ -866,36 +866,8 @@ class LTI_Data_Connector_MySQLi extends LTI_Data_Connector {
       $result->close();
     }
 
-    return $ok;
-
-  }
-
-
-###
-#    Checks to see if report config is already loaded for specific build
-###
-  public function ReportConfig_loadAccessible($resource_link_id, $assessment_id) {
-
-    $ok = FALSE;
-    $is_accessible = FALSE;
-    $sql = 'SELECT is_accessible' .
-           "FROM {$this->dbTableNamePrefix}" . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
-           'WHERE( context_id = ?) AND ( assessment_id = ?)';
-    $result = $this->db->prepare($sql);
-    if ($result) {
-      $ok = $result->bind_param('ss', $context_id, $assessment_id);
-    }
-    if ($result && $ok) {
-      if ($result->execute()) {
-        if ($result->bind_result($is_accessible)) {
-          if ($result->fetch()) {
-            $ok = TRUE;
-          }
-        }
-      }
-    }
-    if ($result) {
-      $result->close();
+    if (!$ok) {
+      $is_accessible = NULL;
     }
 
     return $is_accessible;
@@ -906,15 +878,15 @@ class LTI_Data_Connector_MySQLi extends LTI_Data_Connector {
 ###
 #    Inserts the report configuration to the database
 ###
-  public function ReportConfig_insert($resource_link_id, $assessment_id, $is_accessible) {
+  public function ReportConfig_insert($consumer_key, $resource_link_id, $assessment_id, $is_accessible) {
 
     $ok = FALSE;
-    $sql = "INSERT INTO {$this->dbTableNamePrefix}" . LTI_Data_Connector::REPORTS_TABLE_NAME . ' (context_id, ' .
+    $sql = "INSERT INTO {$this->dbTableNamePrefix}" . LTI_Data_Connector::REPORTS_TABLE_NAME . ' (consumer_key, context_id, ' .
            'assessment_id, is_accessible) ' .
-           'VALUES (?, ?, ?)';
+           'VALUES (?, ?, ?, ?)';
     $result = $this->db->prepare($sql);
     if ($result) {
-      $ok = $result->bind_param('ssi', $resource_link_id, $assessment_id, $is_accessible);
+      $ok = $result->bind_param('sssi', $consumer_key, $resource_link_id, $assessment_id, $is_accessible);
     }
     if ($result && $ok) {
       $ok = $result->execute();
@@ -930,17 +902,17 @@ class LTI_Data_Connector_MySQLi extends LTI_Data_Connector {
 ###
 #    Updates the report configuration to the database
 ###
-  public function ReportConfig_update($resource_link_id, $assessment_id, $is_accessible) {
+  public function ReportConfig_update($consumer_key, $resource_link_id, $assessment_id, $is_accessible) {
     
     $ok = FALSE;
 
     $sql = "UPDATE {$this->dbTableNamePrefix}" . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
        'SET is_accessible = ? ' .
-       'WHERE (context_id = ?) AND (assessment_id = ?)';
+       'WHERE (consumer_key = ?) AND (context_id = ?) AND (assessment_id = ?)';
 
     $result = $this->db->prepare($sql);
     if ($result) {
-      $ok = $result->bind_param('iss', $is_accessible, $resource_link_id, $assessment_id );
+      $ok = $result->bind_param('isss', $is_accessible, $consumer_key, $resource_link_id, $assessment_id );
     }
     if ($result && $ok) {
       $ok = $result->execute();

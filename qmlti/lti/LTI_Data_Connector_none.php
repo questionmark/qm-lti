@@ -203,16 +203,7 @@ class LTI_Data_Connector_None extends LTI_Data_Connector {
 ###
 #    Checks to see if report config is already loaded for specific build
 ###
-  public function ReportConfig_load($resource_link_id, $assessment_id) {
-
-    return TRUE;
-
-  }
-
-###
-#    Checks to see if report config is already loaded for specific build
-###
-  public function ReportConfig_loadAccessible($resource_link_id, $assessment_id) {
+  public function ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id) {
 
     return TRUE;
 
@@ -222,7 +213,7 @@ class LTI_Data_Connector_None extends LTI_Data_Connector {
 ###
 #    Inserts the report configuration to the database
 ###
-  public function ReportConfig_insert($resource_link_id, $assessment_id, $is_accessible) {
+  public function ReportConfig_insert($consumer_key, $resource_link_id, $assessment_id, $is_accessible) {
 
     return TRUE;
 
@@ -231,7 +222,7 @@ class LTI_Data_Connector_None extends LTI_Data_Connector {
 ###
 #    Updates the report configuration to the database
 ###
-  public function ReportConfig_update($resource_link_id, $assessment_id, $is_accessible) {
+  public function ReportConfig_update($consumer_key, $resource_link_id, $assessment_id, $is_accessible) {
     
     return TRUE;
 

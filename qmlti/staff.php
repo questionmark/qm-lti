@@ -85,12 +85,10 @@ require_once('LTI_Data_Connector_qmp.php');
     $assessment_id = $_SESSION['assessment_id'];
 
     // Insert / Update Coaching Reports index
-    if ($data_connector->ReportConfig_load($resource_link_id, $assessment_id)) {
-      error_log("Updating coaching report configuration with {$resource_link_id}, {$assessment_id}, {$intCoaching}.");
-      $save = $data_connector->ReportConfig_update($resource_link_id, $assessment_id, $intCoaching);
+    if ($data_connector->ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id) != NULL) {
+      $save = $data_connector->ReportConfig_update($consumer_key, $resource_link_id, $assessment_id, $intCoaching);
     } else {
-      error_log("Inserting coaching report configuration with {$resource_link_id}, {$assessment_id}, {$intCoaching}.");
-      $save = $data_connector->ReportConfig_insert($resource_link_id, $assessment_id, $intCoaching);
+      $save = $data_connector->ReportConfig_insert($consumer_key, $resource_link_id, $assessment_id, $intCoaching);
     }
   }
 
