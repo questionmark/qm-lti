@@ -331,7 +331,6 @@ class PerceptionSoap {
    * we are especially interested in participant id
    */
   public function get_participant_by_name($username) {
-
     try {
       $response = $this->soap->GetParticipantByName(array(
         'Participant_Name' => $username
@@ -339,7 +338,6 @@ class PerceptionSoap {
     } catch(SoapFault $e) {
       throw new QMWiseException($e);
     }
-
     return $response->Participant;
 
   }

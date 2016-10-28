@@ -569,11 +569,17 @@ function is_coaching_report_available($db, $consumer_key, $resource_link_id, $as
     try {
       $soap_connection_id = perception_soapconnect_id();
       $response = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_assessment_result_list_by_participant($participant_name);
-      $result_id = $response->AssessmentResult;
     } catch (Exception $e) {
       log_error($e);
       return FALSE;
     } 
+
+    // Empty stdClass object
+    if (count((array)$response) == 0) {
+      return FALSE;
+    }
+    $result_id = $response->AssessmentResult;
+    
     // Prevents sending back empty array
     if (count((array)$result_id) == 0) {
       return FALSE;
@@ -652,7 +658,6 @@ function is_coaching_report_available($db, $consumer_key, $resource_link_id, $as
       $soap_connection_id = perception_soapconnect_id();
       $participant_details = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_participant_by_name($username);
     } catch (Exception $e) {
-      log_error($e);
       $participant_details = FALSE;
     }
 
