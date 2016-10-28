@@ -47,7 +47,6 @@ require_once('LTI_Data_Connector_qmp.php');
 
 // process validated connection
   function doLaunch($tool_provider) {
-
     global $db;
 
     if (defined('QMWISE_URL')) {

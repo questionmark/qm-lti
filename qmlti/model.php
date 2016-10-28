@@ -101,22 +101,4 @@
 
   }
 
-  class Staff_Main {
-
-
-
-  }
-
-  class Staff_Results {
-
-
-
-
-  }
-
-
-
-
-
-
 ?>

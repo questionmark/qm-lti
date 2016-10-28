@@ -1051,7 +1051,6 @@ class LTI_Resource_Link {
  * Free text outcome type.
  */
   const EXT_TYPE_TEXT = 'freetext';
-
 /**
  * Context ID as supplied in the last connection request.
  */
@@ -1147,7 +1146,7 @@ class LTI_Resource_Link {
   public function __construct($consumer, $id) {
 
     $this->consumer = $consumer;
-    $this->id = $id;
+    $this->lti_resource_id = $id;
     if (!empty($id)) {
       $this->load();
     } else {
@@ -1161,8 +1160,8 @@ class LTI_Resource_Link {
  */
   public function initialise() {
 
-    $this->lti_context_id = NULL;
-    $this->lti_resource_id = NULL;
+    $this->lti_context_id = '';
+    $this->lti_resource_id = '';
     $this->title = '';
     $this->settings = array();
     $this->group_sets = NULL;
@@ -1229,9 +1228,7 @@ class LTI_Resource_Link {
  * @return string ID for this resource link.
  */
   public function getId() {
-
-    return $this->id;
-
+    return $this->lti_resource_id;
   }
 
 /**

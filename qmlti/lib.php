@@ -230,7 +230,6 @@ CREATE TABLE [dbo].[{$outcome_table_name}] (
   [result_sourcedid] VARCHAR(255),
   [score] VARCHAR(255),
   [created] DATETIME,
-  [report_url] VARCHAR(255),
  CONSTRAINT [PK_{$outcome_table_name}] PRIMARY KEY CLUSTERED ([result_sourcedid] ASC, [score] ASC, [created] ASC)
 )
 EOD;
@@ -537,10 +536,8 @@ function is_coaching_report_available($db, $consumer_key, $resource_link_id, $as
   $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
    if ($data_connector->ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id)) {
       if (get_result_id($participant_name) != FALSE) {
-        error_log("success");
         return TRUE;
       } else {
-        error_log("failures");
         return FALSE;
       }  
    } else {
@@ -572,12 +569,11 @@ function is_coaching_report_available($db, $consumer_key, $resource_link_id, $as
     try {
       $soap_connection_id = perception_soapconnect_id();
       $response = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_assessment_result_list_by_participant($participant_name);
+      $result_id = $response->AssessmentResult;
     } catch (Exception $e) {
       log_error($e);
       return FALSE;
     } 
-
-    $result_id = $response->AssessmentResult;
     // Prevents sending back empty array
     if (count((array)$result_id) == 0) {
       return FALSE;
@@ -810,7 +806,6 @@ EOD;
     }
 
     $_SESSION[$name] = $value;
-
   }
 
 
@@ -818,7 +813,6 @@ EOD;
  * Initialise a named value in the user session if it does not already exist
  */
   function init_session($name, $value) {
-
     if (!isset($_SESSION[$name])) {
       $_SESSION[$name] = $value;
     }
@@ -830,7 +824,6 @@ EOD;
  * Initialise dummy data in the user session
  */
   function init_data() {
-
     init_session('url', get_root_url() . 'launch.php');
     if (defined('CONSUMER_KEY')) {
       init_session('key', CONSUMER_KEY);
