@@ -27,7 +27,7 @@
 */
 
 require_once('lib.php');
-require_once('model.php');
+require_once('app/Model/student.php');
 
   session_name(SESSION_NAME);
   session_start();

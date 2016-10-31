@@ -73,6 +73,8 @@ require_once('LTI_Data_Connector_qmp.php');
     exit;
   }
 
+  $coaching_url = get_report_url($result->Result->Result_ID)->URL;
+
   page_header();
   include_once("app/View/staff_results.php");
   page_footer();

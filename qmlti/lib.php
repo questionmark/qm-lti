@@ -157,6 +157,7 @@ EOD;
 
         $sql = <<< EOD
 CREATE TABLE [dbo].[{$consumer_table_name}] (
+  [consumer_key] VARCHAR(50) NOT NULL,
   [name] VARCHAR(50) NOT NULL,
   [secret] VARCHAR(50) NOT NULL,
   [lti_version] VARCHAR(20) NOT NULL,
