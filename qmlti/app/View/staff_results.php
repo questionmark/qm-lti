@@ -26,7 +26,7 @@
           <td><?php echo "{$result->Result->Time_Taken}s"; ?></td>
           <td><?php echo str_replace('T', ' ', $result->Result->When_Finished); ?>
           </td>
-          <td><a href="<?php echo $coaching_url; ?>">View Now</a></td>
+          <td><a href="<?php echo $result->Result->URL; ?>">View Now</a></td>
         </tr>
 <?php
     }
