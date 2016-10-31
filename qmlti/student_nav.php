@@ -27,7 +27,7 @@
 */
 
 require_once('lib.php');
-require_once('model.php');
+require_once('app/Model/student.php');
 require_once('LTI_Data_Connector_qmp.php');
 
   $db = open_db();

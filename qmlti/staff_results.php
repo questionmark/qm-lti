@@ -67,11 +67,15 @@ require_once('LTI_Data_Connector_qmp.php');
   }
 
   $results = get_assessment_result_list_by_assessment($assessment_id)->AssessmentResult;
+  foreach ($results as $result) {
+    $result->Result->URL = get_report_url($result->Result->Result_ID)->URL;
+  }
 
   if (!$ok) {
     header('Location: error.php');
     exit;
   }
+
 
   page_header();
   include_once("app/View/staff_results.php");
