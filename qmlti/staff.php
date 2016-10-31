@@ -43,9 +43,12 @@ require_once('LTI_Data_Connector_qmp.php');
   $isStudent = $_SESSION['isStudent'];
   $coachingReport = $_SESSION['coaching_report'];
   $assessment_id = $_SESSION['assessment_id'];
+  $multipleResults = $_SESSION['multiple_results'];
+  $arr_results = [ "Best", "Worst", "Newest", "Latest" ];
 
   $coaching_check = '';
   
+
   // checks if a coaching report setting is already set
   if (isset($coachingReport)) {
     if ($coachingReport) {
@@ -72,6 +75,10 @@ require_once('LTI_Data_Connector_qmp.php');
     }
   } 
 
+  if (isset($_POST['id_multipleresult'])) {
+    $multipleResults = $_POST['id_multipleresult'];
+  }
+
   if (isset($_POST['assessment'])) {
 
     $_SESSION['assessment_id'] = htmlentities($_POST['assessment']);
@@ -80,6 +87,7 @@ require_once('LTI_Data_Connector_qmp.php');
     $resource_link = new LTI_Resource_Link($consumer, $resource_link_id);
     $resource_link->setSetting(ASSESSMENT_SETTING, $_SESSION['assessment_id']);
     $resource_link->setSetting(COACHING_REPORT, $coachingReport);
+    $resource_link->setSetting(MULTIPLE_RESULTS, $multipleResults);
     $resource_link->save();
 
     $assessment_id = $_SESSION['assessment_id'];

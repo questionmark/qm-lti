@@ -46,6 +46,7 @@ require_once('lti/LTI_Tool_Provider.php');
   define('MAX_EMAIL_LENGTH', 255);  // maximum length of a email address in QM
   define('ASSESSMENT_SETTING', 'qmp_assessment_id');
   define('COACHING_REPORT', 'qmp_coaching_reports');
+  define('MULTIPLE_RESULTS', 'qmp_multiple_results');
 // LTI roles supported
   $LTI_ROLES = array('a' => 'Administrator',
                      'd' => 'ContentDeveloper',
@@ -157,6 +158,7 @@ EOD;
 
         $sql = <<< EOD
 CREATE TABLE [dbo].[{$consumer_table_name}] (
+  [consumer_key] VARCHAR(50) NOT NULL,
   [name] VARCHAR(50) NOT NULL,
   [secret] VARCHAR(50) NOT NULL,
   [lti_version] VARCHAR(20) NOT NULL,
