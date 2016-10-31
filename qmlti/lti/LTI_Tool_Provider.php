@@ -1,7 +1,7 @@
 <?php
 /**
  * LTI_Tool_Provider - PHP class to include in an external tool to handle connections with an LTI 1 compliant tool consumer
- * Copyright (C) 2015  Stephen P Vickers
+ * Copyright (C) 2014  Stephen P Vickers
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -45,18 +45,6 @@
  *                      Accepts messages with an lti_version of LTI-2p0
  *                      Added data connector for Oracle
  *   2.3.06   5-Aug-14  Fixed bug with OCI data connector
- *   2.4.00  10-Apr-15  Added class methods as alternatives to callbacks
- *                      Added methods for generating signed auto-submit forms for LTI messages
- *                      Added classes for Content-item objects
- *                      Added support for unofficial ConfigureLaunchRequest and DashboardRequest messages
- *   2.5.00  20-May-15  Added LTI_HTTP_Message class to handle the sending of HTTP requests
- *                      Added workflow for automatically assigning resource link ID on first launch of a content-item message created link
- *                      Enhanced checking of parameter values
- *                      Added mediaTypes and documentTargets properties to LTI_Tool_Provider class for ContentItemSelectionRequest messages
- *   2.5.01  11-Mar-16  Fixed bug with saving User before ResourceLink in LTI_Tool_Provider->authenticate()
- *                      Fixed bug with creating a MySQL data connector when a database connector is passed to getDataConnector()
- *                      Added check in OAuth.php that query string is set before extracting the GET parameters
- *                      Added check for incorrect version being passed in lti_version parameter
  */
 
 /**
@@ -68,31 +56,17 @@ require_once('OAuth.php');
  * Class to represent an LTI Tool Provider
  *
  * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
+ * @version 2.3.06
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
  */
 class LTI_Tool_Provider {
 
-/**
- * Default connection error message.
- */
   const CONNECTION_ERROR_MESSAGE = 'Sorry, there was an error connecting you to the application.';
 
 /**
- * LTI version 1 for messages.
- *
- * @deprecated Use LTI_VERSION1 instead
- * @see LTI_Tool_Provider::LTI_VERSION1
+ * LTI version for messages.
  */
   const LTI_VERSION = 'LTI-1p0';
-/**
- * LTI version 1 for messages.
- */
-  const LTI_VERSION1 = 'LTI-1p0';
-/**
- * LTI version 2 for messages.
- */
-  const LTI_VERSION2 = 'LTI-2p0';
 /**
  * Use ID value only.
  */
@@ -115,110 +89,93 @@ class LTI_Tool_Provider {
   const ID_SCOPE_SEPARATOR = ':';
 
 /**
- *  @var boolean True if the last request was successful.
+ *  True if the last request was successful.
  */
   public $isOK = TRUE;
+
 /**
- *  @var LTI_Tool_Consumer Tool Consumer object.
+ *  LTI_Tool_Consumer object.
  */
   public $consumer = NULL;
 /**
- *  @var string Return URL provided by tool consumer.
+ *  Return URL provided by tool consumer.
  */
   public $return_url = NULL;
 /**
- *  @var LTI_User User object.
+ *  LTI_User object.
  */
   public $user = NULL;
 /**
- *  @var LTI_Resource_Link Resource link object.
+ *  LTI_Resource_Link object.
  */
   public $resource_link = NULL;
 /**
- *  @var LTI_Context Resource link object.
+ *  LTI_Context object.
  *
  *  @deprecated Use resource_link instead
  *  @see LTI_Tool_Provider::$resource_link
  */
   public $context = NULL;
 /**
- *  @var LTI_Data_Connector Data connector object.
+ *  Data connector object.
  */
   public $data_connector = NULL;
 /**
- *  @var string Default email domain.
+ *  Default email domain.
  */
   public $defaultEmail = '';
 /**
- *  @var int Scope to use for user IDs.
+ *  Scope to use for user IDs.
  */
   public $id_scope = self::ID_SCOPE_ID_ONLY;
 /**
- *  @var boolean Whether shared resource link arrangements are permitted.
+ *  True if shared resource link arrangements are permitted.
  */
   public $allowSharing = FALSE;
 /**
- *  @var string Message for last request processed
+ *  Message for last request processed.
  */
   public $message = self::CONNECTION_ERROR_MESSAGE;
 /**
- *  @var string Error message for last request processed.
+ *  Error message for last request processed.
  */
   public $reason = NULL;
 /**
- *  @var array Details for error message relating to last request processed.
+ *  Error message for last request processed.
  */
   public $details = array();
 
 /**
- *  @var string URL to redirect user to on successful completion of the request.
+ *  URL to redirect user to on successful completion of the request.
  */
-  protected $redirectURL = NULL;
+  private $redirectURL = NULL;
 /**
- *  @var string URL to redirect user to on successful completion of the request.
- */
-  protected $mediaTypes = NULL;
-/**
- *  @var string URL to redirect user to on successful completion of the request.
- */
-  protected $documentTargets = NULL;
-/**
- *  @var string HTML to be displayed on a successful completion of the request.
- */
-  protected $output = NULL;
-/**
- *  @var string HTML to be displayed on an unsuccessful completion of the request and no return URL is available.
- */
-  protected $error_output = NULL;
-/**
- *  @var boolean Whether debug messages explaining the cause of errors are to be returned to the tool consumer.
- */
-  protected $debugMode = FALSE;
-
-/**
- *  @var array Callback functions for handling requests.
+ *  Callback functions for handling requests.
  */
   private $callbackHandler = NULL;
 /**
- *  @var array LTI parameter constraints for auto validation checks.
+ *  HTML to be displayed on successful completion of the request.
+ */
+  private $output = NULL;
+/**
+ *  URL to redirect user to if the request is not successful.
+ */
+  private $error = NULL;
+/**
+ *  True if debug messages explaining the cause of errors are to be returned to the tool consumer.
+ */
+  private $debugMode = FALSE;
+/**
+ *  Array of LTI parameter constraints for auto validation checks.
  */
   private $constraints = NULL;
 /**
- *  @var array List of supported message types and associated callback type names
+ *  List of supported message types and associated callback methods
  */
   private $messageTypes = array('basic-lti-launch-request' => 'launch',
-                                'ConfigureLaunchRequest' => 'configure',
-                                'DashboardRequest' => 'dashboard',
                                 'ContentItemSelectionRequest' => 'content-item');
 /**
- *  @var array List of supported message types and associated class methods
- */
-  private $methodNames = array('basic-lti-launch-request' => 'onLaunch',
-                               'ConfigureLaunchRequest' => 'onConfigure',
-                               'DashboardRequest' => 'onDashboard',
-                               'ContentItemSelectionRequest' => 'onContentItem');
-/**
- *  @var array Names of LTI parameters to be retained in the settings property.
+ *  Names of LTI parameters to be retained in the settings property.
  */
   private $lti_settings_names = array('ext_resource_link_content', 'ext_resource_link_content_signature',
                                       'lis_result_sourcedid', 'lis_outcome_service_url',
@@ -227,95 +184,55 @@ class LTI_Tool_Provider {
                                       'ext_ims_lti_tool_setting', 'ext_ims_lti_tool_setting_id', 'ext_ims_lti_tool_setting_url');
 
 /**
- * @var array Permitted LTI versions for messages.
+ * Permitted LTI versions for messages.
  */
-  private $LTI_VERSIONS = array(self::LTI_VERSION1, self::LTI_VERSION2);
+  private $LTI_VERSIONS = array(self::LTI_VERSION, 'LTI-2p0');
 
 /**
  * Class constructor
  *
- * @param mixed   $data_connector  Object containing a database connection object (optional, default is a blank prefix and MySQL)
- * @param mixed   $callbackHandler String containing name of callback function for launch request, or associative array of callback functions for each request type
+ * @param mixed   $callbackHandler String containing name of callback function for connect request, or associative array of callback functions for each request type
+ * @param mixed   $data_connector  String containing table name prefix, or database connection object, or array containing one or both values (optional, default is a blank prefix and MySQL)
  */
-  function __construct($data_connector = '', $callbackHandler = NULL) {
+  function __construct($callbackHandler, $data_connector = '') {
 
-// For backward compatibility the parameters may be in the opposite order, but the recommended practice is to just pass a data connector object and
-// override the callback class methods instead of using callback method names.
-
-    $reverse = FALSE;
-    if (!is_string($data_connector) || (!is_null($callbackHandler) && !is_string($callbackHandler))) {
-      if (is_object($callbackHandler)) {
-        $reverse = TRUE;
-      } else if (is_array($data_connector) && array_diff_key($data_connector ,array_keys(array_keys($data_connector)))) {
-        $reverse = TRUE;
-      } else if (!is_array($data_connector) && is_array($callbackHandler)) {
-        $reverse = TRUE;
-      }
-    } else if (!is_null($callbackHandler) && empty($callbackHandler)) {
-      $reverse = TRUE;
-    }
-    if ($reverse) {
-      $temp = $callbackHandler;
-      $callbackHandler = $data_connector;
-      $data_connector = $temp;
-    }
-    $this->constraints = array();
-    $this->context = &$this->resource_link;
-    $this->callbackHandler = array();
-    if (is_array($callbackHandler)) {
+    if (!is_array($callbackHandler)) {
+      $this->callbackHandler['launch'] = $callbackHandler;
+    } else {
       $this->callbackHandler = $callbackHandler;
       if (isset($this->callbackHandler['connect']) && !isset($this->callbackHandler['launch'])) {  // for backward compatibility
         $this->callbackHandler['launch'] = $this->callbackHandler['connect'];
         unset($this->callbackHandler['connect']);
       }
-    } else if (!empty($callbackHandler)) {
-      $this->callbackHandler['launch'] = $callbackHandler;
     }
-    $this->data_connector = LTI_Data_Connector::getDataConnector($data_connector);
-    $this->isOK = !is_null($this->data_connector);
-#
-### Set debug mode
-#
-    $this->debugMode = isset($_POST['custom_debug']) && (strtolower($_POST['custom_debug']) == 'true');
-#
-### Set return URL if available
-#
-    if (isset($_POST['launch_presentation_return_url'])) {
-      $this->return_url = $_POST['launch_presentation_return_url'];
-    } else if (isset($_POST['content_item_return_url'])) {
-      $this->return_url = $_POST['content_item_return_url'];
-    }
+    $this->data_connector = $data_connector;
+    $this->constraints = array();
+    $this->context = &$this->resource_link;
 
   }
 
 /**
- * Process an incoming request
- *
- * @deprecated Use handle_request instead
- * @see LTI_Tool_Provider::$handle_request
+ * Process a launch request
  *
  * @return mixed Returns TRUE or FALSE, a redirection URL or HTML
  */
   public function execute() {
 
-    $this->handle_request();
-
-  }
-
-/**
- * Process an incoming request
- *
- * @return mixed Returns TRUE or FALSE, a redirection URL or HTML
- */
-  public function handle_request() {
-
+#
+### Initialise data connector
+#
+    $this->data_connector = LTI_Data_Connector::getDataConnector($this->data_connector);
+#
+### Set return URL if available
+#
+    if (isset($_POST['launch_presentation_return_url'])) {
+      $this->return_url = $_POST['launch_presentation_return_url'];
+    }
 #
 ### Perform action
 #
-    if ($this->isOK) {
-      if ($this->authenticate()) {
-        $this->doCallback();
-      }
+    if ($this->authenticate()) {
+      $this->doCallback();
     }
     $this->result();
 
@@ -324,16 +241,15 @@ class LTI_Tool_Provider {
 /**
  * Add a parameter constraint to be checked on launch
  *
- * @param string $name          Name of parameter to be checked
- * @param boolean $required     True if parameter is required (optional, default is TRUE)
- * @param int $max_length       Maximum permitted length of parameter value (optional, default is NULL)
- * @param array $message_types  Array of message types to which the constraint applies (default is all)
+ * @param string Name of parameter to be checked
+ * @param boolean True if parameter is required
+ * @param int Maximum permitted length of parameter value (optional, default is NULL)
  */
-  public function setParameterConstraint($name, $required = TRUE, $max_length = NULL, $message_types = NULL) {
+  public function setParameterConstraint($name, $required, $max_length = NULL) {
 
     $name = trim($name);
     if (strlen($name) > 0) {
-      $this->constraints[$name] = array('required' => $required, 'max_length' => $max_length, 'messages' => $message_types);
+      $this->constraints[$name] = array('required' => $required, 'max_length' => $max_length);
     }
 
   }
@@ -361,7 +277,7 @@ class LTI_Tool_Provider {
  *
  * @return array Array of roles
  */
-  public static function parseRoles($rolesString) {
+  static function parseRoles($rolesString) {
 
     $rolesArray = explode(',', $rolesString);
     $roles = array();
@@ -379,113 +295,6 @@ class LTI_Tool_Provider {
 
   }
 
-/**
- * Generate a web page containing an auto-submitted form of parameters.
- *
- * @param string $url     URL to which the form should be submitted
- * @param array  $params  Array of form parameters
- * @param string $target  Name of target (optional)
- */
-  public static function sendForm($url, $params, $target = '') {
-
-    $page = <<< EOD
-<html>
-<head>
-<title>IMS LTI message</title>
-<script type="text/javascript">
-//<![CDATA[
-function doOnLoad() {
-  document.forms[0].submit();
-}
-
-window.onload=doOnLoad;
-//]]>
-</script>
-</head>
-<body>
-<form action="{$url}" method="post" target="" encType="application/x-www-form-urlencoded">
-
-EOD;
-
-    foreach($params as $key => $value ) {
-      $key = htmlentities($key, ENT_COMPAT | ENT_HTML401, 'UTF-8');
-      $value = htmlentities($value, ENT_COMPAT | ENT_HTML401, 'UTF-8');
-      $page .= <<< EOD
-  <input type="hidden" name="{$key}" value="{$value}" />
-
-EOD;
-
-    }
-
-    $page .= <<< EOD
-</form>
-</body>
-</html>
-EOD;
-
-    return $page;
-
-  }
-
-###
-###  PROTECTED METHODS
-###
-
-/**
- * Process a valid launch request
- *
- * @return boolean True if no error
- */
-  protected function onLaunch() {
-
-    $this->doCallbackMethod();
-
-  }
-
-/**
- * Process a valid configure request
- *
- * @return boolean True if no error
- */
-  protected function onConfigure() {
-
-    $this->doCallbackMethod();
-
-  }
-
-/**
- * Process a valid dashboard request
- *
- * @return boolean True if no error
- */
-  protected function onDashboard() {
-
-    $this->doCallbackMethod();
-
-  }
-
-/**
- * Process a valid content-item request
- *
- * @return boolean True if no error
- */
-  protected function onContentItem() {
-
-    $this->doCallbackMethod();
-
-  }
-
-/**
- * Process a response to an invalid request
- *
- * @return boolean True if no further error processing required
- */
-  protected function onError() {
-
-    $this->doCallbackMethod('error');
-
-  }
-
 ###
 ###  PRIVATE METHODS
 ###
@@ -499,26 +308,7 @@ EOD;
  */
   private function doCallback() {
 
-    $method = $this->methodNames[$_POST['lti_message_type']];
-    $this->$method();
-
-  }
-
-/**
- * Call any callback function for the requested action.
- *
- * This function may set the redirectURL and output properties.
- *
- * @param string  $type             Callback type
- *
- * @return boolean True if no error reported
- */
-  private function doCallbackMethod($type = NULL) {
-
-    $callback = $type;
-    if (is_null($callback)) {
-      $callback = $this->messageTypes[$_POST['lti_message_type']];
-    }
+    $callback = $this->messageTypes[$_POST['lti_message_type']];
     if (isset($this->callbackHandler[$callback])) {
       $result = call_user_func($this->callbackHandler[$callback], $this);
 
@@ -537,10 +327,12 @@ EOD;
       } else if (is_bool($result)) {
         $this->isOK = $result;
       }
-    } else if (is_null($type) && $this->isOK) {
+    } else if ($this->isOK) {
       $this->isOK = FALSE;
       $this->reason = 'Message type not supported.';
     }
+
+    return $this->isOK;
 
   }
 
@@ -554,8 +346,8 @@ EOD;
   private function result() {
 
     $ok = FALSE;
-    if (!$this->isOK) {
-      $ok = $this->onError();
+    if (!$this->isOK && isset($this->callbackHandler['error'])) {
+      $ok = call_user_func($this->callbackHandler['error'], $this);
     }
     if (!$ok) {
       if (!$this->isOK) {
@@ -563,41 +355,31 @@ EOD;
 ### If not valid, return an error message to the tool consumer if a return URL is provided
 #
         if (!empty($this->return_url)) {
-          $error_url = $this->return_url;
-          if (strpos($error_url, '?') === FALSE) {
-            $error_url .= '?';
+          $this->error = $this->return_url;
+          if (strpos($this->error, '?') === FALSE) {
+            $this->error .= '?';
           } else {
-            $error_url .= '&';
+            $this->error .= '&';
           }
           if ($this->debugMode && !is_null($this->reason)) {
-            $error_url .= 'lti_errormsg=' . urlencode("Debug error: $this->reason");
+            $this->error .= 'lti_errormsg=' . urlencode("Debug error: $this->reason");
           } else {
-            $error_url .= 'lti_errormsg=' . urlencode($this->message);
+            $this->error .= 'lti_errormsg=' . urlencode($this->message);
             if (!is_null($this->reason)) {
-              $error_url .= '&lti_errorlog=' . urlencode("Debug error: $this->reason");
+              $this->error .= '&lti_errorlog=' . urlencode("Debug error: $this->reason");
             }
           }
-          if (!is_null($this->consumer) && isset($_POST['lti_message_type']) && ($_POST['lti_message_type'] === 'ContentItemSelectionRequest')) {
-            $form_params = array();
-            if (isset($_POST['data'])) {
-              $form_params['data'] = $_POST['data'];
-            }
-            $version = (isset($_POST['lti_version'])) ? $_POST['lti_version'] : LTI_Tool_Provider::LTI_VERSION1;
-            $form_params = $this->consumer->signParameters($error_url, 'ContentItemSelection', $version, $form_params);
-            $page = LTI_Tool_Provider::sendForm($error_url, $form_params);
-            echo $page;
-          } else {
-            header("Location: {$error_url}");
-          }
+        } else if ($this->debugMode) {
+          $this->error = $this->reason;
+        }
+        if (is_null($this->error)) {
+          $this->error = $this->message;
+        }
+        if ((substr($this->error, 0, 7) == 'http://') || (substr($this->error, 0, 8) == 'https://')) {
+          header("Location: {$this->error}");
           exit;
         } else {
-          if (!is_null($this->error_output)) {
-            echo $this->error_output;
-          } else if ($this->debugMode && !empty($this->reason)) {
-            echo "Debug error: {$this->reason}";
-          } else {
-            echo "Error: {$this->message}";
-          }
+          echo "Error: {$this->error}";
         }
       } else if (!is_null($this->redirectURL)) {
         header("Location: {$this->redirectURL}");
@@ -619,86 +401,41 @@ EOD;
   private function authenticate() {
 
 #
+### Set debug mode
+#
+    $this->debugMode = isset($_POST['custom_debug']) && (strtolower($_POST['custom_debug']) == 'true');
+#
 ### Get the consumer
 #
     $doSaveConsumer = FALSE;
-// Check all required launch parameters
-    $this->isOK = isset($_POST['lti_message_type']) && array_key_exists($_POST['lti_message_type'], $this->messageTypes);
+// Check all required launch parameter constraints
+    $this->isOK = isset($_POST['oauth_consumer_key']);
     if (!$this->isOK) {
-      $this->reason = 'Invalid or missing lti_message_type parameter.';
-    }
-    if ($this->isOK) {
-      $this->isOK = isset($_POST['lti_version']) && in_array($_POST['lti_version'], $this->LTI_VERSIONS);
-      if (!$this->isOK) {
-        $this->reason = 'Invalid or missing lti_version parameter.';
+      $this->reason = 'Missing consumer key.';
+    } else {
+      $this->isOK = isset($_POST['lti_message_type']) && array_key_exists($_POST['lti_message_type'], $this->messageTypes);
+      if ($this->debugMode && !$this->isOK) {
+        $this->reason = 'Invalid or missing lti_message_type parameter.';
       }
     }
     if ($this->isOK) {
-      if (($_POST['lti_message_type'] == 'basic-lti-launch-request') || ($_POST['lti_message_type'] == 'DashboardRequest')) {
-        $this->isOK = isset($_POST['resource_link_id']) && (strlen(trim($_POST['resource_link_id'])) > 0);
-        if (!$this->isOK) {
-          $this->reason = 'Missing resource link ID.';
-        }
-      } else if ($_POST['lti_message_type'] == 'ContentItemSelectionRequest') {
-        if (isset($_POST['accept_media_types']) && (strlen(trim($_POST['accept_media_types'])) > 0)) {
-          $mediaTypes = array_filter(explode(',', str_replace(' ', '', $_POST['accept_media_types'])), 'strlen');
-          $mediaTypes = array_unique($mediaTypes);
-          $this->isOK = count($mediaTypes) > 0;
-          if (!$this->isOK) {
-            $this->reason = 'No accept_media_types found.';
-          } else {
-            $this->mediaTypes = $mediaTypes;
-          }
-        } else {
-          $this->isOK = FALSE;
-        }
-        if ($this->isOK && isset($_POST['accept_presentation_document_targets']) && (strlen(trim($_POST['accept_presentation_document_targets'])) > 0)) {
-          $documentTargets = array_filter(explode(',', str_replace(' ', '', $_POST['accept_presentation_document_targets'])), 'strlen');
-          $documentTargets = array_unique($documentTargets);
-          $this->isOK = count($documentTargets) > 0;
-          if (!$this->isOK) {
-            $this->reason = 'Missing or empty accept_presentation_document_targets parameter.';
-          } else {
-            foreach ($documentTargets as $documentTarget) {
-              $this->isOK = $this->checkValue($documentTarget, array('embed', 'frame', 'iframe', 'window', 'popup', 'overlay', 'none'),
-                 'Invalid value in accept_presentation_document_targets parameter: %s.');
-              if (!$this->isOK) {
-                break;
-              }
-            }
-            if ($this->isOK) {
-              $this->documentTargets = $documentTargets;
-            }
-          }
-        } else {
-          $this->isOK = FALSE;
-        }
-        if ($this->isOK) {
-          $this->isOK = isset($_POST['content_item_return_url']) && (strlen(trim($_POST['content_item_return_url'])) > 0);
-          if (!$this->isOK) {
-            $this->reason = 'Missing content_item_return_url parameter.';
-          }
-        }
+      $this->isOK = isset($_POST['lti_version']) && in_array($_POST['lti_version'], $this->LTI_VERSIONS);
+      if ($this->debugMode && !$this->isOK) {
+        $this->reason = 'Invalid or missing lti_version parameter.';
+      }
+    }
+    if ($this->isOK && ($_POST['lti_message_type'] != 'ContentItemSelectionRequest')) {
+      $this->isOK = isset($_POST['resource_link_id']) && (strlen(trim($_POST['resource_link_id'])) > 0);
+      if ($this->debugMode && !$this->isOK) {
+        $this->reason = 'Missing resource link ID.';
       }
     }
 // Check consumer key
     if ($this->isOK) {
-      $this->isOK = isset($_POST['oauth_consumer_key']);
-      if (!$this->isOK) {
-        $this->reason = 'Missing consumer key.';
-      }
-    }
-    if ($this->isOK) {
       $this->consumer = new LTI_Tool_Consumer($_POST['oauth_consumer_key'], $this->data_connector);
       $this->isOK = !is_null($this->consumer->created);
-      if (!$this->isOK) {
-        $this->reason = 'Invalid consumer key.';
-      }
-    }
-    if ($this->isOK && isset($this->consumer->lti_version)) {
-      $this->isOK = $this->consumer->lti_version == $_POST['lti_version'];
       if ($this->debugMode && !$this->isOK) {
-        $this->reason = 'Incorrect lti_version parameter.';
+        $this->reason = 'Invalid consumer key.';
       }
     }
     $now = time();
@@ -741,19 +478,19 @@ EOD;
       if (!is_null($this->consumer->consumer_guid)) {
         $this->isOK = isset($_POST['tool_consumer_instance_guid']) && !empty($_POST['tool_consumer_instance_guid']) &&
            ($this->consumer->consumer_guid == $_POST['tool_consumer_instance_guid']);
-        if (!$this->isOK) {
+        if ($this->debugMode && !$this->isOK) {
           $this->reason = 'Request is from an invalid tool consumer.';
         }
       } else {
         $this->isOK = isset($_POST['tool_consumer_instance_guid']);
-        if (!$this->isOK) {
+        if ($this->debugMode && !$this->isOK) {
           $this->reason = 'A tool consumer GUID must be included in the launch request.';
         }
       }
     }
     if ($this->isOK) {
       $this->isOK = $this->consumer->enabled;
-      if (!$this->isOK) {
+      if ($this->debugMode && !$this->isOK) {
         $this->reason = 'Tool consumer has not been enabled by the tool provider.';
       }
     }
@@ -761,60 +498,30 @@ EOD;
       $this->isOK = is_null($this->consumer->enable_from) || ($this->consumer->enable_from <= $now);
       if ($this->isOK) {
         $this->isOK = is_null($this->consumer->enable_until) || ($this->consumer->enable_until > $now);
-        if (!$this->isOK) {
+        if ($this->debugMode && !$this->isOK) {
           $this->reason = 'Tool consumer access has expired.';
         }
-      } else {
+      } else if ($this->debugMode) {
         $this->reason = 'Tool consumer access is not yet available.';
       }
     }
 
 #
-### Validate other message parameter values
-#
-    if ($this->isOK) {
-      if ($_POST['lti_message_type'] != 'ContentItemSelectionRequest') {
-        if (isset($_POST['launch_presentation_document_target'])) {
-          $this->isOK = $this->checkValue($_POST['launch_presentation_document_target'], array('embed', 'frame', 'iframe', 'window', 'popup', 'overlay'),
-             'Invalid value for launch_presentation_document_target parameter: %s.');
-        }
-      } else {
-        if (isset($_POST['accept_unsigned'])) {
-          $this->isOK = $this->checkValue($_POST['accept_unsigned'], array('true', 'false'), 'Invalid value for accept_unsigned parameter: %s.');
-        }
-        if ($this->isOK && isset($_POST['accept_multiple'])) {
-          $this->isOK = $this->checkValue($_POST['accept_multiple'], array('true', 'false'), 'Invalid value for accept_multiple parameter: %s.');
-        }
-        if ($this->isOK && isset($_POST['accept_copy_advice'])) {
-          $this->isOK = $this->checkValue($_POST['accept_copy_advice'], array('true', 'false'), 'Invalid value for accept_copy_advice parameter: %s.');
-        }
-        if ($this->isOK && isset($_POST['auto_create'])) {
-          $this->isOK = $this->checkValue($_POST['auto_create'], array('true', 'false'), 'Invalid value for auto_create parameter: %s.');
-        }
-        if ($this->isOK && isset($_POST['can_confirm'])) {
-          $this->isOK = $this->checkValue($_POST['can_confirm'], array('true', 'false'), 'Invalid value for can_confirm parameter: %s.');
-        }
-      }
-    }
-
-#
-### Validate message parameter constraints
+### Validate launch parameters
 #
     if ($this->isOK) {
       $invalid_parameters = array();
       foreach ($this->constraints as $name => $constraint) {
-        if (empty($constraint['messages']) || in_array($_POST['lti_message_type'], $constraint['messages'])) {
-          $ok = TRUE;
-          if ($constraint['required']) {
-            if (!isset($_POST[$name]) || (strlen(trim($_POST[$name])) <= 0)) {
-              $invalid_parameters[] = "{$name} (missing)";
-              $ok = FALSE;
-            }
+        $ok = TRUE;
+        if ($constraint['required']) {
+          if (!isset($_POST[$name]) || (strlen(trim($_POST[$name])) <= 0)) {
+            $invalid_parameters[] = $name;
+            $ok = FALSE;
           }
-          if ($ok && !is_null($constraint['max_length']) && isset($_POST[$name])) {
-            if (strlen(trim($_POST[$name])) > $constraint['max_length']) {
-              $invalid_parameters[] = "{$name} (too long)";
-            }
+        }
+        if ($ok && !is_null($constraint['max_length']) && isset($_POST[$name])) {
+          if (strlen(trim($_POST[$name])) > $constraint['max_length']) {
+            $invalid_parameters[] = $name;
           }
         }
       }
@@ -831,11 +538,7 @@ EOD;
 ### Set the request context/resource link
 #
       if (isset($_POST['resource_link_id'])) {
-        $content_item_id = '';
-        if (isset($_POST['custom_content_item_id'])) {
-          $content_item_id = $_POST['custom_content_item_id'];
-        }
-        $this->resource_link = new LTI_Resource_Link($this->consumer, trim($_POST['resource_link_id']), $content_item_id);
+        $this->resource_link = new LTI_Resource_Link($this->consumer, trim($_POST['resource_link_id']));
         if (isset($_POST['context_id'])) {
           $this->resource_link->lti_context_id = trim($_POST['context_id']);
         }
@@ -874,32 +577,43 @@ EOD;
             $this->resource_link->setSetting($name, $value);
           }
         }
-      }
 #
 ### Set the user instance
 #
-      $user_id = '';
-      if (isset($_POST['user_id'])) {
-        $user_id = trim($_POST['user_id']);
-      }
-      $this->user = new LTI_User($this->resource_link, $user_id);
+        $user_id = '';
+        if (isset($_POST['user_id'])) {
+          $user_id = trim($_POST['user_id']);
+        }
+        $this->user = new LTI_User($this->resource_link, $user_id);
 #
 ### Set the user name
 #
-      $firstname = (isset($_POST['lis_person_name_given'])) ? $_POST['lis_person_name_given'] : '';
-      $lastname = (isset($_POST['lis_person_name_family'])) ? $_POST['lis_person_name_family'] : '';
-      $fullname = (isset($_POST['lis_person_name_full'])) ? $_POST['lis_person_name_full'] : '';
-      $this->user->setNames($firstname, $lastname, $fullname);
+        $firstname = (isset($_POST['lis_person_name_given'])) ? $_POST['lis_person_name_given'] : '';
+        $lastname = (isset($_POST['lis_person_name_family'])) ? $_POST['lis_person_name_family'] : '';
+        $fullname = (isset($_POST['lis_person_name_full'])) ? $_POST['lis_person_name_full'] : '';
+        $this->user->setNames($firstname, $lastname, $fullname);
 #
 ### Set the user email
 #
-      $email = (isset($_POST['lis_person_contact_email_primary'])) ? $_POST['lis_person_contact_email_primary'] : '';
-      $this->user->setEmail($email, $this->defaultEmail);
+        $email = (isset($_POST['lis_person_contact_email_primary'])) ? $_POST['lis_person_contact_email_primary'] : '';
+        $this->user->setEmail($email, $this->defaultEmail);
 #
 ### Set the user roles
 #
-      if (isset($_POST['roles'])) {
-        $this->user->roles = LTI_Tool_Provider::parseRoles($_POST['roles']);
+        if (isset($_POST['roles'])) {
+          $this->user->roles = LTI_Tool_Provider::parseRoles($_POST['roles']);
+        }
+#
+### Save the user instance
+#
+        if (isset($_POST['lis_result_sourcedid'])) {
+          if ($this->user->lti_result_sourcedid != $_POST['lis_result_sourcedid']) {
+            $this->user->lti_result_sourcedid = $_POST['lis_result_sourcedid'];
+            $this->user->save();
+          }
+        } else if (!empty($this->user->lti_result_sourcedid)) {
+          $this->user->delete();
+        }
       }
 #
 ### Initialise the consumer and check for changes
@@ -934,9 +648,9 @@ EOD;
           $this->consumer->consumer_guid = $_POST['tool_consumer_instance_guid'];
           $doSaveConsumer = TRUE;
         } else if (!$this->consumer->protected) {
-          if ($this->consumer->consumer_guid != $_POST['tool_consumer_instance_guid']) {
+          $doSaveConsumer = ($this->consumer->consumer_guid != $_POST['tool_consumer_instance_guid']);
+          if ($doSaveConsumer) {
             $this->consumer->consumer_guid = $_POST['tool_consumer_instance_guid'];
-            $doSaveConsumer = TRUE;
           }
         }
       }
@@ -970,17 +684,6 @@ EOD;
 ### Persist changes to resource link
 #
       $this->resource_link->save();
-#
-### Save the user instance
-#
-      if (isset($_POST['lis_result_sourcedid'])) {
-        if ($this->user->lti_result_sourcedid != $_POST['lis_result_sourcedid']) {
-          $this->user->lti_result_sourcedid = $_POST['lis_result_sourcedid'];
-          $this->user->save();
-        }
-      } else if (!empty($this->user->lti_result_sourcedid)) {
-        $this->user->delete();
-      }
     }
 
     return $this->isOK;
@@ -1075,22 +778,6 @@ EOD;
 
   }
 
-/**
- * Validate a parameter value from an array of permitted values.
- *
- * @return boolean True if value is valid
- */
-  private function checkValue($value, $values, $reason) {
-
-    $ok = in_array($value, $values);
-    if (!$ok && !empty($reason)) {
-      $this->reason = sprintf($reason, $value);
-    }
-
-    return $ok;
-
-  }
-
 }
 
 
@@ -1098,82 +785,82 @@ EOD;
  * Class to represent a tool consumer
  *
  * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
+ * @version 2.3.06
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
  */
 class LTI_Tool_Consumer {
 
 /**
- * @var string Local name of tool consumer.
+ * Local name of tool consumer.
  */
   public $name = NULL;
 /**
- * @var string Shared secret.
+ * Shared secret.
  */
   public $secret = NULL;
 /**
- * @var string LTI version (as reported by last tool consumer connection).
+ * LTI version (as reported by last tool consumer connection).
  */
   public $lti_version = NULL;
 /**
- * @var string Name of tool consumer (as reported by last tool consumer connection).
+ * Name of tool consumer (as reported by last tool consumer connection).
  */
   public $consumer_name = NULL;
 /**
- * @var string Tool consumer version (as reported by last tool consumer connection).
+ * Tool consumer version (as reported by last tool consumer connection).
  */
   public $consumer_version = NULL;
 /**
- * @var string Tool consumer GUID (as reported by first tool consumer connection).
+ * Tool consumer GUID (as reported by first tool consumer connection).
  */
   public $consumer_guid = NULL;
 /**
- * @var string Optional CSS path (as reported by last tool consumer connection).
+ * Optional CSS path (as reported by last tool consumer connection).
  */
   public $css_path = NULL;
 /**
- * @var boolean Whether the tool consumer instance is protected by matching the consumer_guid value in incoming requests.
+ * True if the tool consumer instance is protected by matching the consumer_guid value in incoming requests.
  */
   public $protected = FALSE;
 /**
- * @var boolean Whether the tool consumer instance is enabled to accept incoming connection requests.
+ * True if the tool consumer instance is enabled to accept incoming connection requests.
  */
   public $enabled = FALSE;
 /**
- * @var object Date/time from which the the tool consumer instance is enabled to accept incoming connection requests.
+ * Date/time from which the the tool consumer instance is enabled to accept incoming connection requests.
  */
   public $enable_from = NULL;
 /**
- * @var object Date/time until which the tool consumer instance is enabled to accept incoming connection requests.
+ * Date/time until which the tool consumer instance is enabled to accept incoming connection requests.
  */
   public $enable_until = NULL;
 /**
- * @var object Date of last connection from this tool consumer.
+ * Date of last connection from this tool consumer.
  */
   public $last_access = NULL;
 /**
- * @var int Default scope to use when generating an Id value for a user.
+ * Default scope to use when generating an Id value for a user.
  */
   public $id_scope = LTI_Tool_Provider::ID_SCOPE_ID_ONLY;
 /**
- * @var string Default email address (or email domain) to use when no email address is provided for a user.
+ * Default email address (or email domain) to use when no email address is provided for a user.
  */
   public $defaultEmail = '';
 /**
- * @var object Date/time when the object was created.
+ * Date/time when the object was created.
  */
   public $created = NULL;
 /**
- * @var object Date/time when the object was last updated.
+ * Date/time when the object was last updated.
  */
   public $updated = NULL;
 
 /**
- * @var string Consumer key value.
+ * Consumer key value.
  */
   private $key = NULL;
 /**
- * @var mixed Data connector object or string.
+ * Data connector object or string.
  */
   private $data_connector = NULL;
 
@@ -1285,54 +972,6 @@ class LTI_Tool_Consumer {
 
   }
 
-/**
- * Add the OAuth signature to an LTI message.
- *
- * @param string  $url         URL for message request
- * @param string  $type        LTI message type
- * @param string  $version     LTI version
- * @param array   $params      Message parameters
- *
- * @return array Array of signed message parameters
- */
-  public function signParameters($url, $type, $version, $params) {
-
-    if (!empty($url)) {
-// Check for query parameters which need to be included in the signature
-      $query_params = array();
-      $query_string = parse_url($url, PHP_URL_QUERY);
-      if (!is_null($query_string)) {
-        $query_items = explode('&', $query_string);
-        foreach ($query_items as $item) {
-          if (strpos($item, '=') !== FALSE) {
-            list($name, $value) = explode('=', $item);
-            $query_params[urldecode($name)] = urldecode($value);
-          } else {
-            $query_params[urldecode($item)] = '';
-          }
-        }
-      }
-      $params = $params + $query_params;
-// Add standard parameters
-      $params['lti_version'] = $version;
-      $params['lti_message_type'] = $type;
-      $params['oauth_callback'] = 'about:blank';
-// Add OAuth signature
-      $hmac_method = new OAuthSignatureMethod_HMAC_SHA1();
-      $consumer = new OAuthConsumer($this->getKey(), $this->secret, NULL);
-      $req = OAuthRequest::from_consumer_and_token($consumer, NULL, 'POST', $url, $params);
-      $req->sign_request($hmac_method, $consumer, NULL);
-      $params = $req->get_parameters();
-// Remove parameters being passed on the query string
-      foreach (array_keys($query_params) as $name) {
-        unset($params[$name]);
-      }
-    }
-
-    return $params;
-
-  }
-
 ###
 ###  PRIVATE METHOD
 ###
@@ -1365,7 +1004,7 @@ class LTI_Tool_Consumer {
  * Class to represent a tool consumer resource link
  *
  * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
+ * @version 2.3.06
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
  */
 class LTI_Resource_Link {
@@ -1413,111 +1052,99 @@ class LTI_Resource_Link {
   const EXT_TYPE_TEXT = 'freetext';
 
 /**
- * @var string Context ID as supplied in the last connection request.
+ * Context ID as supplied in the last connection request.
  */
   public $lti_context_id = NULL;
 /**
- * @var string Resource link ID as supplied in the last connection request.
+ * Resource link ID as supplied in the last connection request.
  */
   public $lti_resource_id = NULL;
 /**
- * @var string Context title.
+ * Context title.
  */
   public $title = NULL;
 /**
- * @var array Setting values (LTI parameters, custom parameters and local parameters).
+ * Associative array of setting values (LTI parameters, custom parameters and local parameters).
  */
   public $settings = NULL;
 /**
- * @var array User group sets (NULL if the consumer does not support the groups enhancement)
+ * Associative array of user group sets (NULL if the consumer does not support the groups enhancement)
  */
   public $group_sets = NULL;
 /**
- * @var array User groups (NULL if the consumer does not support the groups enhancement)
+ * Associative array of user groups (NULL if the consumer does not support the groups enhancement)
  */
   public $groups = NULL;
 /**
- * @var string Request for last service request.
+ * Request for last service request.
  */
   public $ext_request = NULL;
 /**
- * @var array Request headers for last service request.
+ * Request headers for last service request.
  */
   public $ext_request_headers = NULL;
 /**
- * @var string Response from last service request.
+ * Response from last service request.
  */
   public $ext_response = NULL;
 /**
- * @var array Response header from last service request.
+ * Response header from last service request.
  */
   public $ext_response_headers = NULL;
 /**
- * @var string Consumer key value for resource link being shared (if any).
+ * Consumer key value for resource link being shared (if any).
  */
   public $primary_consumer_key = NULL;
 /**
- * @var string ID value for resource link being shared (if any).
+ * ID value for resource link being shared (if any).
  */
   public $primary_resource_link_id = NULL;
 /**
- * @var boolean Whether the sharing request has been approved by the primary resource link.
+ * True if the sharing request has been approved by the primary resource link.
  */
   public $share_approved = NULL;
 /**
- * @var object Date/time when the object was created.
+ * Date/time when the object was created.
  */
   public $created = NULL;
 /**
- * @var object Date/time when the object was last updated.
+ * Date/time when the object was last updated.
  */
   public $updated = NULL;
 
 /**
- * @var LTI_Tool_Consumer Tool Consumer for this resource link.
+ * LTI_Tool_Consumer object for this resource link.
  */
   private $consumer = NULL;
 /**
- * @var string ID for this resource link.
+ * ID for this resource link.
  */
   private $id = NULL;
 /**
- * @var string Previous ID for this resource link.
- */
-  private $previous_id = NULL;
-/**
- * @var boolean Whether the settings value have changed since last saved.
+ * True if the settings value have changed since last saved.
  */
   private $settings_changed = FALSE;
 /**
- * @var string XML document for the last extension service request.
+ * The XML document for the last extension service request.
  */
   private $ext_doc = NULL;
 /**
- * @var array XML node array for the last extension service request.
+ * The XML node array for the last extension service request.
  */
   private $ext_nodes = NULL;
 
 /**
  * Class constructor.
  *
- * @param string $consumer         Consumer key value
- * @param string $id               Resource link ID value
- * @param string $current_id       Current ID of resource link (optional, default is NULL)
+ * @param string $consumer Consumer key value
+ * @param string $id       Resource link ID value
  */
-  public function __construct($consumer, $id, $current_id = NULL) {
+  public function __construct($consumer, $id) {
 
     $this->consumer = $consumer;
     $this->id = $id;
-    $this->previous_id = $this->id;
     if (!empty($id)) {
       $this->load();
-      if (is_null($this->created) && !empty($current_id)) {
-        $this->id = $current_id;
-        $this->load();
-        $this->id = $id;
-        $this->previous_id = $current_id;
-      }
     } else {
       $this->initialise();
     }
@@ -1595,19 +1222,11 @@ class LTI_Resource_Link {
 /**
  * Get resource link ID.
  *
- * @param string $previous   TRUE if previous ID value is to be returned (optional, default is FALSE)
- *
  * @return string ID for this resource link.
  */
-  public function getId($previous = FALSE) {
+  public function getId() {
 
-    if ($previous) {
-      $id = $this->previous_id;
-    } else {
-      $id = $this->id;
-    }
-
-    return $id;
+    return $this->id;
 
   }
 
@@ -2168,21 +1787,44 @@ EOF;
   private function doService($type, $url, $params) {
 
     $ok = FALSE;
-    $this->ext_request = NULL;
-    $this->ext_request_headers = '';
     $this->ext_response = NULL;
-    $this->ext_response_headers = '';
     if (!empty($url)) {
-      $params = $this->consumer->signParameters($url, $type, $this->consumer->lti_version, $params);
+// Check for query parameters which need to be included in the signature
+      $query_params = array();
+      $query_string = parse_url($url, PHP_URL_QUERY);
+      if (!is_null($query_string)) {
+        $query_items = explode('&', $query_string);
+        foreach ($query_items as $item) {
+          if (strpos($item, '=') !== FALSE) {
+            list($name, $value) = explode('=', $item);
+            $query_params[$name] = $value;
+          } else {
+            $query_params[$name] = '';
+          }
+        }
+      }
+      $params = $params + $query_params;
+// Add standard parameters
+      $params['oauth_consumer_key'] = $this->consumer->getKey();
+      $params['lti_version'] = LTI_Tool_Provider::LTI_VERSION;
+      $params['lti_message_type'] = $type;
+// Add OAuth signature
+      $hmac_method = new OAuthSignatureMethod_HMAC_SHA1();
+      $consumer = new OAuthConsumer($this->consumer->getKey(), $this->consumer->secret, NULL);
+      $req = OAuthRequest::from_consumer_and_token($consumer, NULL, 'POST', $url, $params);
+      $req->sign_request($hmac_method, $consumer, NULL);
+      $params = $req->get_parameters();
+// Remove parameters being passed on the query string
+      foreach (array_keys($query_params) as $name) {
+        unset($params[$name]);
+      }
 // Connect to tool consumer
-      $http = new LTI_HTTP_Message($url, 'POST', $params);
+      $this->ext_response = $this->do_post_request($url, $params);
 // Parse XML response
-      if ($http->send()) {
-        $this->ext_response = $http->response;
-        $this->ext_response_headers = $http->response_headers;
+      if ($this->ext_response) {
         try {
           $this->ext_doc = new DOMDocument();
-          $this->ext_doc->loadXML($http->response);
+          $this->ext_doc->loadXML($this->ext_response);
           $this->ext_nodes = $this->domnode_to_array($this->ext_doc->documentElement);
           if (isset($this->ext_nodes['statusinfo']['codemajor']) && ($this->ext_nodes['statusinfo']['codemajor'] == 'Success')) {
             $ok = TRUE;
@@ -2190,8 +1832,6 @@ EOF;
         } catch (Exception $e) {
         }
       }
-      $this->ext_request = $http->request;
-      $this->ext_request_headers = $http->request_headers;
     }
 
     return $ok;
@@ -2210,13 +1850,10 @@ EOF;
   private function doLTI11Service($type, $url, $xml) {
 
     $ok = FALSE;
-    $this->ext_request = NULL;
-    $this->ext_request_headers = '';
     $this->ext_response = NULL;
-    $this->ext_response_headers = '';
     if (!empty($url)) {
       $id = uniqid();
-      $xmlRequest = <<< EOD
+      $xmlRequest = <<<EOF
 <?xml version = "1.0" encoding = "UTF-8"?>
 <imsx_POXEnvelopeRequest xmlns = "http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0">
   <imsx_POXHeader>
@@ -2231,7 +1868,7 @@ EOF;
     </{$type}Request>
   </imsx_POXBody>
 </imsx_POXEnvelopeRequest>
-EOD;
+EOF;
 // Calculate body hash
       $hash = base64_encode(sha1($xmlRequest, TRUE));
       $params = array('oauth_body_hash' => $hash);
@@ -2245,14 +1882,12 @@ EOD;
       $header = $req->to_header();
       $header .= "\nContent-Type: application/xml";
 // Connect to tool consumer
-      $http = new LTI_HTTP_Message($url, 'POST', $xmlRequest, $header);
+      $this->ext_response = $this->do_post_request($url, $xmlRequest, $header);
 // Parse XML response
-      if ($http->send()) {
-        $this->ext_response = $http->response;
-        $this->ext_response_headers = $http->response_headers;
+      if ($this->ext_response) {
         try {
           $this->ext_doc = new DOMDocument();
-          $this->ext_doc->loadXML($http->response);
+          $this->ext_doc->loadXML($this->ext_response);
           $this->ext_nodes = $this->domnode_to_array($this->ext_doc->documentElement);
           if (isset($this->ext_nodes['imsx_POXHeader']['imsx_POXResponseHeaderInfo']['imsx_statusInfo']['imsx_codeMajor']) &&
               ($this->ext_nodes['imsx_POXHeader']['imsx_POXResponseHeaderInfo']['imsx_statusInfo']['imsx_codeMajor'] == 'success')) {
@@ -2261,11 +1896,76 @@ EOD;
         } catch (Exception $e) {
         }
       }
-      $this->ext_request = $http->request;
-      $this->ext_request_headers = $http->request_headers;
     }
 
     return $ok;
+
+  }
+
+/**
+ * Get the response from an HTTP POST request.
+ *
+ * @param string $url    URL to send request to
+ * @param array  $params Associative array of parameter values to be passed
+ * @param string $header Values to include in the request header (optional, default is none)
+ *
+ * @return string response contents, empty if the request was not successfull
+ */
+  private function do_post_request($url, $params, $header = NULL) {
+
+    $ok = FALSE;
+    if (is_array($params)) {
+      $data = http_build_query($params);
+    } else {
+      $data = $params;
+    }
+    $this->ext_request = $data;
+    $resp = '';
+// Try using curl if available
+    if (function_exists('curl_init')) {
+      $ch = curl_init();
+      curl_setopt($ch, CURLOPT_URL, $url);
+      if (!empty($header)) {
+        $headers = explode("\n", $header);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+      }
+      curl_setopt($ch, CURLOPT_POST, TRUE);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+      curl_setopt($ch, CURLINFO_HEADER_OUT, TRUE);
+      curl_setopt($ch, CURLOPT_HEADER, TRUE);
+      curl_setopt($ch, CURLOPT_SSLVERSION,3);
+      $ch_resp = curl_exec($ch);
+      $ok = $ch_resp !== FALSE;
+      if ($ok) {
+        $ch_resp = str_replace("\r\n", "\n", $ch_resp);
+        $ch_resp_split = explode("\n\n", $ch_resp, 2);
+        $this->ext_response_headers = $ch_resp_split[0];
+        $resp = $ch_resp_split[1];
+        $ok = curl_getinfo($ch, CURLINFO_HTTP_CODE) < 400;
+      }
+      $this->ext_request_headers = str_replace("\r\n", "\n", curl_getinfo($ch, CURLINFO_HEADER_OUT));
+      curl_close($ch);
+    } else {
+// Try using fopen if curl was not available or did not work (could have been an SSL certificate issue)
+      $opts = array('method' => 'POST',
+                    'content' => $data
+                   );
+      if (!empty($header)) {
+        $opts['header'] = $header;
+      }
+      $ctx = stream_context_create(array('http' => $opts));
+      $fp = @fopen($url, 'rb', false, $ctx);
+      if ($fp) {
+        $resp = @stream_get_contents($fp);
+        $ok = $resp !== FALSE;
+      }
+      $this->ext_request_headers = '';
+      $this->ext_response_headers = '';
+    }
+    $response = $resp;
+
+    return $response;
 
   }
 
@@ -2278,14 +1978,14 @@ EOD;
  */
   private function domnode_to_array($node) {
 
-    $output = '';
+    $output = array();
     switch ($node->nodeType) {
       case XML_CDATA_SECTION_NODE:
       case XML_TEXT_NODE:
         $output = trim($node->textContent);
         break;
       case XML_ELEMENT_NODE:
-        for ($i = 0; $i < $node->childNodes->length; $i++) {
+        for ($i=0, $m=$node->childNodes->length; $i<$m; $i++) {
           $child = $node->childNodes->item($i);
           $v = $this->domnode_to_array($child);
           if (isset($child->tagName)) {
@@ -2331,7 +2031,7 @@ EOD;
  * @see LTI_Resource_Link
  *
  * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
+ * @version 2.3.06
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
  */
 class LTI_Context extends LTI_Resource_Link {
@@ -2364,40 +2064,40 @@ class LTI_Context extends LTI_Resource_Link {
  * Class to represent an outcome
  *
  * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
+ * @version 2.3.06
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
  */
 class LTI_Outcome {
 
 /**
- * @var string Language value.
+ * Language value.
  */
   public $language = NULL;
 /**
- * @var string Outcome status value.
+ * Outcome status value.
  */
   public $status = NULL;
 /**
- * @var object Outcome date value.
+ * Outcome date value.
  */
   public $date = NULL;
 /**
- * @var string Outcome type value.
+ * Outcome type value.
  */
   public $type = NULL;
 /**
- * @var string Outcome data source value.
+ * Outcome data source value.
  */
   public $data_source = NULL;
 
 /**
- * @var string Result sourcedid.
+ * Result sourcedid.
  *
  * @deprecated Use User object instead
  */
   private $sourcedid = NULL;
 /**
- * @var string Outcome value.
+ * Outcome value.
  */
   private $value = NULL;
 
@@ -2459,7 +2159,7 @@ class LTI_Outcome {
  * Class to represent a tool consumer nonce
  *
  * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
+ * @version 2.3.06
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
  */
 class LTI_Consumer_Nonce {
@@ -2475,11 +2175,11 @@ class LTI_Consumer_Nonce {
   public  $expires = NULL;
 
 /**
- * @var LTI_Tool_Consumer Tool Consumer to which this nonce applies.
+ * LTI_Tool_Consumer object to which this nonce applies.
  */
   private $consumer = NULL;
 /**
- * @var string Nonce value.
+ * Nonce value.
  */
   private $value = NULL;
 
@@ -2559,7 +2259,7 @@ class LTI_Consumer_Nonce {
  * Class to represent a tool consumer resource link share key
  *
  * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
+ * @version 2.3.06
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
  */
 class LTI_Resource_Link_Share_Key {
@@ -2582,36 +2282,36 @@ class LTI_Resource_Link_Share_Key {
   const MAX_SHARE_KEY_LENGTH = 32;
 
 /**
- * @var string Consumer key for resource link being shared.
+ * Consumer key for resource link being shared.
  */
   public $primary_consumer_key = NULL;
 /**
- * @var string ID for resource link being shared.
+ * ID for resource link being shared.
  */
   public $primary_resource_link_id = NULL;
 /**
- * @var int Length of share key.
+ * Length of share key.
  */
   public $length = NULL;
 /**
- * @var int Life of share key.
+ * Life of share key.
  */
   public $life = NULL;  // in hours
 /**
- * @var boolean Whether the sharing arrangement should be automatically approved when first used.
+ * True if the sharing arrangement should be automatically approved when first used.
  */
   public $auto_approve = FALSE;
 /**
- * @var object Date/time when the share key expires.
+ * Date/time when the share key expires.
  */
   public $expires = NULL;
 
 /**
- * @var string Share key value.
+ * Share key value.
  */
   private $id = NULL;
 /**
- * @var LTI_Data_Connector Data connector.
+ * Data connector.
  */
   private $data_connector = NULL;
 
@@ -2727,7 +2427,7 @@ class LTI_Resource_Link_Share_Key {
  * @see LTI_Resource_Link_Share_Key
  *
  * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
+ * @version 2.3.06
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
  */
 class LTI_Context_Share_Key extends LTI_Resource_Link_Share_Key {
@@ -2760,25 +2460,25 @@ class LTI_Context_Share_Key extends LTI_Resource_Link_Share_Key {
  * Class to represent a tool consumer resource link share
  *
  * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
+ * @version 2.3.06
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
  */
 class LTI_Resource_Link_Share {
 
 /**
- * @var string Consumer key value.
+ * Consumer key value.
  */
   public $consumer_key = NULL;
 /**
- * @var string Resource link ID value.
+ * Resource link ID value.
  */
   public $resource_link_id = NULL;
 /**
- * @var string Title of sharing context.
+ * Title of sharing context.
  */
   public $title = NULL;
 /**
- * @var boolean Whether sharing request is to be automatically approved on first use.
+ * True if sharing request is to be automatically approved on first use.
  */
   public $approved = NULL;
 
@@ -2798,7 +2498,7 @@ class LTI_Resource_Link_Share {
  * @see LTI_Resource_Link_Share
  *
  * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
+ * @version 2.3.06
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
  */
 class LTI_Context_Share extends LTI_Resource_Link_Share {
@@ -2828,58 +2528,58 @@ class LTI_Context_Share extends LTI_Resource_Link_Share {
  * Class to represent a tool consumer user
  *
  * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
+ * @version 2.3.06
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
  */
 class LTI_User {
 
 /**
- * @var string User's first name.
+ * User's first name.
  */
   public $firstname = '';
 /**
- * @var string User's last name (surname or family name).
+ * User's last name (surname or family name).
  */
   public $lastname = '';
 /**
- * @var string User's fullname.
+ * User's fullname.
  */
   public $fullname = '';
 /**
- * @var string User's email address.
+ * User's email address.
  */
   public $email = '';
 /**
- * @var array Roles for user.
+ * Array of roles for user.
  */
   public $roles = array();
 /**
- * @var array Groups for user.
+ * Array of groups for user.
  */
   public $groups = array();
 /**
- * @var string User's result sourcedid.
+ * User's result sourcedid.
  */
   public $lti_result_sourcedid = NULL;
 /**
- * @var object Date/time the record was created.
+ * Date/time the record was created.
  */
   public $created = NULL;
 /**
- * @var object Date/time the record was last updated.
+ * Date/time the record was last updated.
  */
   public $updated = NULL;
 
 /**
- * @var LTI_Resource_Link Resource link object.
+ * LTI_Resource_Link object.
  */
   private $resource_link = NULL;
 /**
- * @var LTI_Context Resource link object.
+ * LTI_Context object.
  */
   private $context = NULL;
 /**
- * @var string User ID value.
+ * User ID value.
  */
   private $id = NULL;
 
@@ -2924,9 +2624,7 @@ class LTI_User {
   public function load() {
 
     $this->initialise();
-    if (!is_null($this->resource_link)) {
-      $this->resource_link->getConsumer()->getDataConnector()->User_load($this);
-    }
+    $this->resource_link->getConsumer()->getDataConnector()->User_load($this);
 
   }
 
@@ -2937,7 +2635,7 @@ class LTI_User {
  */
   public function save() {
 
-    if (!empty($this->lti_result_sourcedid) && !is_null($this->resource_link)) {
+    if (!empty($this->lti_result_sourcedid)) {
       $ok = $this->resource_link->getConsumer()->getDataConnector()->User_save($this);
     } else {
       $ok = TRUE;
@@ -2954,13 +2652,7 @@ class LTI_User {
  */
   public function delete() {
 
-    if (!is_null($this->resource_link)) {
-      $ok = $this->resource_link->getConsumer()->getDataConnector()->User_delete($this);
-    } else {
-      $ok = TRUE;
-    }
-
-    return $ok;
+    return $this->resource_link->getConsumer()->getDataConnector()->User_delete($this);
 
   }
 
@@ -2999,11 +2691,7 @@ class LTI_User {
   public function getId($id_scope = NULL) {
 
     if (empty($id_scope)) {
-      if (!is_null($this->resource_link)) {
-        $id_scope = $this->resource_link->getConsumer()->id_scope;
-      } else {
-        $id_scope = LTI_Tool_Provider::ID_SCOPE_ID_ONLY;
-      }
+      $id_scope = $this->resource_link->getConsumer()->id_scope;
     }
     switch ($id_scope) {
       case LTI_Tool_Provider::ID_SCOPE_GLOBAL:
@@ -3148,349 +2836,16 @@ class LTI_User {
 
 
 /**
- * Class to represent a content-item image object
- *
- * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
- * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
- */
-class LTI_Content_Item_Image {
-
-/**
- * Class constructor.
- *
- * @param string $id      URL of image
- * @param int    $height  Height of image in pixels (optional)
- * @param int    $width   Width of image in pixels (optional)
- */
-  function __construct($id, $height = NULL, $width = NULL) {
-
-    $this->{'@id'} = $id;
-    if (!is_null($height)) {
-      $this->height = $height;
-    }
-    if (!is_null($width)) {
-      $this->width = $width;
-    }
-
-  }
-
-}
-
-
-/**
- * Class to represent a content-item object
- *
- * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
- * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
- */
-class LTI_Content_Item {
-
-/**
- * Media type for LTI launch links.
- */
-  const LTI_LINK_MEDIA_TYPE = 'application/vnd.ims.lti.v1.ltilink';
-
-/**
- * Class constructor.
- *
- * @param string $type Class type of content-item
- * @param LTI_Content_Item_Placement $placementAdvice  Placement object for item (optional)
- * @param string $id   URL of content-item (optional)
- */
-  function __construct($type, $placementAdvice = NULL, $id = NULL) {
-
-    $this->{'@type'} = $type;
-    if (is_object($placementAdvice) && (count(get_object_vars($placementAdvice)) > 0)) {
-      $this->placementAdvice = $placementAdvice;
-    }
-    if (!empty($id)) {
-      $this->{'@id'} = $id;
-    }
-
-  }
-
-/**
- * Set a URL value for the content-item.
- *
- * @param string $url  URL value
- */
-  public function setUrl($url) {
-
-    if (!empty($url)) {
-      $this->url = $url;
-    } else {
-      unset($this->url);
-    }
-
-  }
-
-/**
- * Set a media type value for the content-item.
- *
- * @param string $mediaType  Media type value
- */
-  public function setMediaType($mediaType) {
-
-    if (!empty($mediaType)) {
-      $this->mediaType = $mediaType;
-    } else {
-      unset($this->mediaType);
-    }
-
-  }
-
-/**
- * Set a title value for the content-item.
- *
- * @param string $title  Title value
- */
-  public function setTitle($title) {
-
-    if (!empty($title)) {
-      $this->title = $title;
-    } else if (isset($this->title)) {
-      unset($this->title);
-    }
-
-  }
-
-/**
- * Set a link text value for the content-item.
- *
- * @param string $text  Link text value
- */
-  public function setText($text) {
-
-    if (!empty($text)) {
-      $this->text = $text;
-    } else if (isset($this->text)) {
-      unset($this->text);
-    }
-
-  }
-
-/**
- * Wrap the content items to form a complete application/vnd.ims.lti.v1.contentitems+json media type instance.
- *
- * @param mixed $items  An array of content items or a single item
- */
-  public static function toJson($items) {
-
-    $data = array();
-    if (!is_array($items)) {
-      $data[] = json_encode($items);
-    } else {
-      foreach ($items as $item) {
-        $data[] = json_encode($item);
-      }
-    }
-    $json = '{ "@context" : "http://purl.imsglobal.org/ctx/lti/v1/ContentItem", "@graph" : [' . implode(", ", $data) . '] }';
-
-    return $json;
-
-  }
-
-}
-
-
-/**
- * Class to represent a content-item placement object
- *
- * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
- * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
- */
-class LTI_Content_Item_Placement {
-
-/**
- * Class constructor.
- *
- * @param int $displayWidth       Width of item location
- * @param int $displayHeight      Height of item location
- * @param string $documentTarget  Location to open content in
- * @param string $windowTarget    Name of window target
- */
-  function __construct($displayWidth, $displayHeight, $documentTarget, $windowTarget) {
-
-    if (!empty($displayWidth)) {
-      $this->displayWidth = $displayWidth;
-    }
-    if (!empty($displayHeight)) {
-      $this->displayHeight = $displayHeight;
-    }
-    if (!empty($documentTarget)) {
-      $this->documentTarget = $documentTarget;
-    }
-    if (!empty($windowTarget)) {
-      $this->windowTarget = $windowTarget;
-    }
-
-  }
-
-}
-
-
-/**
  * Class to represent an OAuth datastore
  *
  * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
- * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
- */
-class LTI_HTTP_Message {
-
-/**
- * @var request Request body.
- */
-  public $request = NULL;
-
-/**
- * @var request_headers Request headers.
- */
-  public $request_headers = '';
-
-/**
- * @var response Response body.
- */
-  public $response = NULL;
-
-/**
- * @var response_headers Response headers.
- */
-  public $response_headers = '';
-
-/**
- * @var status Status of response (0 if undetermined).
- */
-  public $status = 0;
-
-/**
- * @var error Error message
- */
-  public $error = '';
-
-/**
- * @var url Request URL.
- */
-  private $url = NULL;
-
-/**
- * @var method Request method.
- */
-  private $method = NULL;
-
-/**
- * Class constructor.
- *
- * @param string $url     URL to send request to
- * @param string $method  Request method to use (optional, default is GET)
- * @param mixed  $params  Associative array of parameter values to be passed or message body (optional, default is none)
- * @param string $header  Values to include in the request header (optional, default is none)
- */
-  function __construct($url, $method = 'GET', $params = NULL, $header = NULL) {
-
-    $this->url = $url;
-    $this->method = strtoupper($method);
-    if (is_array($params)) {
-      $this->request = http_build_query($params);
-    } else {
-      $this->request = $params;
-    }
-    if (!empty($header)) {
-      $this->request_headers = explode("\n", $header);
-    }
-
-  }
-
-/**
- * Send the request to the target URL.
- *
- * @return boolean TRUE if the request was successful
- */
-  public function send() {
-
-    $ok = FALSE;
-// Try using curl if available
-    if (function_exists('curl_init')) {
-      $ch = curl_init();
-      curl_setopt($ch, CURLOPT_URL, $this->url);
-      if (!empty($this->request_headers)) {
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->request_headers);
-      } else {
-        curl_setopt($ch, CURLOPT_HEADER, 0);
-      }
-      if ($this->method == 'POST') {
-        curl_setopt($ch, CURLOPT_POST, TRUE);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $this->request);
-      } else if ($this->method != 'GET') {
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $this->method);
-        if (!is_null($this->request)) {
-          curl_setopt($ch, CURLOPT_POSTFIELDS, $this->request);
-        }
-      }
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-      curl_setopt($ch, CURLINFO_HEADER_OUT, TRUE);
-      curl_setopt($ch, CURLOPT_HEADER, TRUE);
-      curl_setopt($ch, CURLOPT_SSLVERSION,3);
-      $ch_resp = curl_exec($ch);
-      $ok = $ch_resp !== FALSE;
-      if ($ok) {
-        $ch_resp = str_replace("\r\n", "\n", $ch_resp);
-        $ch_resp_split = explode("\n\n", $ch_resp, 2);
-        if ((count($ch_resp_split) > 1) && (substr($ch_resp_split[1], 0, 5) == 'HTTP/')) {
-          $ch_resp_split = explode("\n\n", $ch_resp_split[1], 2);
-        }
-        $this->response_headers = $ch_resp_split[0];
-        $resp = $ch_resp_split[1];
-        $this->status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $ok = $this->status < 400;
-        if (!$ok) {
-          $this->error = curl_error($ch);
-        }
-      }
-      $this->request_headers = str_replace("\r\n", "\n", curl_getinfo($ch, CURLINFO_HEADER_OUT));
-      curl_close($ch);
-      $this->response = $resp;
-    } else {
-// Try using fopen if curl was not available
-      $opts = array('method' => $this->method,
-                    'content' => $this->request
-                   );
-      if (!empty($this->request_headers)) {
-        $opts['header'] = $this->request_headers;
-      }
-      try {
-        $ctx = stream_context_create(array('http' => $opts));
-        $fp = @fopen($this->url, 'rb', false, $ctx);
-        if ($fp) {
-          $resp = @stream_get_contents($fp);
-          $ok = $resp !== FALSE;
-        }
-      } catch (Exception $e) {
-        $ok = FALSE;
-      }
-    }
-
-    return $ok;
-
-  }
-
-}
-
-
-/**
- * Class to represent an OAuth datastore
- *
- * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
+ * @version 2.3.06
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
  */
 class LTI_OAuthDataStore extends OAuthDataStore {
 
 /**
- * @var LTI_Tool_Provider Tool Provider object.
+ * LTI_Tool_Provider object.
  */
   private $tool_provider = NULL;
 
@@ -3530,7 +2885,7 @@ class LTI_OAuthDataStore extends OAuthDataStore {
  */
   function lookup_token($consumer, $token_type, $token) {
 
-    return new OAuthToken($consumer, '');
+    return new OAuthToken($consumer, "");
 
   }
 
@@ -3595,7 +2950,7 @@ class LTI_OAuthDataStore extends OAuthDataStore {
  * Abstract class to provide a connection to a persistent store for LTI objects
  *
  * @author  Stephen P Vickers <stephen@spvsoftwareproducts.com>
- * @version 2.5.00
+ * @version 2.3.06
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
  */
 abstract class LTI_Data_Connector {
@@ -3607,7 +2962,6 @@ abstract class LTI_Data_Connector {
 /**
  * Default name for database table used to store resource links.
  */
-  const CONTEXT_TABLE_NAME = 'lti_context';
   const RESOURCE_LINK_TABLE_NAME = 'lti_context';
 /**
  * Default name for database table used to store users.
@@ -3623,11 +2977,11 @@ abstract class LTI_Data_Connector {
   const NONCE_TABLE_NAME = 'lti_nonce';
 
 /**
- * @var string SQL date format (default = 'Y-m-d')
+ * SQL date format (default = 'Y-m-d')
  */
   protected $date_format = 'Y-m-d';
 /**
- * @var string SQL time format (default = 'H:i:s')
+ * SQL time format (default = 'H:i:s')
  */
   protected $time_format = 'H:i:s';
 
@@ -3793,55 +3147,50 @@ abstract class LTI_Data_Connector {
  */
   static function getDataConnector($data_connector, $db = NULL, $type = NULL) {
 
-    if (!is_null($data_connector)) {
-      if (!is_object($data_connector) || !is_subclass_of($data_connector, get_class())) {
-        $prefix = NULL;
-        if (is_string($data_connector)) {
-          $prefix = $data_connector;
-        } else if (is_array($data_connector)) {
-          for ($i = 0; $i < min(count($data_connector), 3); $i++) {
-            if (is_string($data_connector[$i])) {
-              if (is_null($prefix)) {
-                $prefix = $data_connector[$i];
-              } else if (is_null($type)) {
-                $type = $data_connector[$i];
-              }
-            } else if (is_null($db)) {
-              $db = $data_connector[$i];
+    if (!is_object($data_connector) || !is_subclass_of($data_connector, get_class())) {
+      $prefix = NULL;
+      if (is_string($data_connector)) {
+        $prefix = $data_connector;
+      } else if (is_array($data_connector)) {
+        for ($i = 0; $i < min(count($data_connector), 3); $i++) {
+          if (is_string($data_connector[$i])) {
+            if (is_null($prefix)) {
+              $prefix = $data_connector[$i];
+            } else if (is_null($type)) {
+              $type = $data_connector[$i];
             }
-          }
-        } else if (is_object($data_connector)) {
-          $db = $data_connector;
-        }
-        if (is_null($prefix)) {
-          $prefix = '';
-        }
-        if (!is_null($db)) {
-          if (is_string($db)) {
-            $type = $db;
-            $db = NULL;
-          } else if (is_null($type)) {
-            if (is_object($db)) {
-              $type = get_class($db);
-            } else {
-              $type = 'mysql';
-            }
+          } else if (is_null($db)) {
+            $db = $data_connector[$i];
           }
         }
-        if (is_null($type)) {
-          $type = 'mysql';
-        }
-        $type = strtolower($type);
-        if ($type == 'mysql') {
+      } else if (is_object($data_connector)) {
+        $db = $data_connector;
+      }
+      if (is_null($prefix)) {
+        $prefix = '';
+      }
+      if (!is_null($db)) {
+        if (is_string($db)) {
+          $type = $db;
           $db = NULL;
+        } else if (is_null($type)) {
+          if (is_object($db)) {
+            $type = get_class($db);
+          } else {
+            $type = 'mysql';
+          }
         }
-        $type = "LTI_Data_Connector_{$type}";
-        require_once("{$type}.php");
-        if (is_null($db)) {
-          $data_connector = new $type($prefix);
-        } else {
-          $data_connector = new $type($db, $prefix);
-        }
+      }
+      if (is_null($type)) {
+        $type = 'mysql';
+      }
+      $type = strtolower($type);
+      $type = "LTI_Data_Connector_{$type}";
+      require_once("{$type}.php");
+      if (is_null($db)) {
+        $data_connector = new $type($prefix);
+      } else {
+        $data_connector = new $type($db, $prefix);
       }
     }
 
