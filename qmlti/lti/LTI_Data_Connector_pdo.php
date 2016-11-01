@@ -534,61 +534,6 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
   }
 
 ###
-#    Gets latest result for participant given assessment id
-###
-  public function Results_getLatestResult($consumer, $resource_link, $participant) {
-      
-    $id = $resource_link->getId();
-    $sql = 'SELECT result_id ' .
-           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
-           'WHERE (assessment_id = :assessment) AND (customer_id = :customer) AND (consumer_key = :consumer) ' .
-           'AND (context_id = :context)';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
-    $query->bindValue('customer', $participant, PDO::PARAM_STR);
-    $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
-    $query->bindValue('context', $id, PDO::PARAM_STR);
-    $ok = $query->execute();
-    if ($ok) {
-      $row = $query->fetch();
-      $result_id = $row['result_id'];
-    }
-    if (!$ok) {
-      return FALSE;
-    }
-    return $result_id;
-  }
-
-###
-#    Gets latest result for participant given assessment id
-###
-  public function Results_getScore($consumer, $resource_link, $participant, $order) {
-      
-    $id = $resource_link->getId();
-    $sql = 'SELECT score ' .
-           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
-           'WHERE (assessment_id = :assessment) AND (customer_id = :customer) AND (consumer_key = :consumer) ' .
-           'AND (context_id = :context)' .
-           'ORDER BY score ' . $order . ' ' . 
-           'LIMIT 1 ';
-    $query = $this->db->prepare($sql);
-    $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
-    $query->bindValue('customer', $participant, PDO::PARAM_STR);
-    $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
-    $query->bindValue('context', $id, PDO::PARAM_STR);
-    $ok = $query->execute();
-    if ($ok) {
-      $row = $query->fetch();
-      $score = $row['score'];
-    }
-    if (!$ok) {
-      return FALSE;
-    }
-    return $score;
-  }
-
-
-###
 ###  Coaching Config methods
 ###
 

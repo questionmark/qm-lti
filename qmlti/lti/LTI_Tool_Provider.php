@@ -1161,7 +1161,6 @@ class LTI_Resource_Link {
   public function initialise() {
 
     $this->lti_context_id = '';
-    $this->lti_resource_id = '';
     $this->title = '';
     $this->settings = array();
     $this->group_sets = NULL;
@@ -1305,7 +1304,7 @@ class LTI_Resource_Link {
  * @return boolean True if this resource link supports the Outcomes service (either the LTI 1.1 or extension service)
  */
   public function hasOutcomesService() {
-
+    
     $url = $this->getSetting('ext_ims_lis_basic_outcome_url') . $this->getSetting('lis_outcome_service_url');
 
     return !empty($url);
@@ -1654,7 +1653,7 @@ EOF;
       }
 
     }
-
+    
     return $response;
 
   }

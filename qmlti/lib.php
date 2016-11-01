@@ -548,6 +548,62 @@ function is_coaching_report_available($db, $consumer_key, $resource_link_id, $as
 }
 
 /*
+ * Boolean check to identify if result is oldest
+ * i.e. if a result is already in the database, return FALSE
+ *
+ * returns TRUE if result is oldest
+ */
+function is_oldest_result($db, $consumer, $resource_link, $participant_name) {
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+  if (!($data_connector->Results_getLatestResult($consumer, $resource_link, $participant_name))) {
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
+/*
+ * Boolean check to identify if result is oldest
+ * i.e. if a result is already in the database, return FALSE
+ *
+ * returns TRUE if result is oldest
+ */
+function is_worst_result($db, $consumer, $resource_link, $participant_name, $score) {
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+  $worst_score = $data_connector->Results_getScore($consumer, $resource_link, $participant_name, 'ASC');
+  if (!$worst_score) {
+    return FALSE;
+  } else {
+    if ($score <= $worst_score) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+  }
+}
+
+/*
+ * Boolean check to identify if result is oldest
+ * i.e. if a result is already in the database, return FALSE
+ *
+ * returns TRUE if result is oldest
+ */
+function is_best_result($db, $consumer, $resource_link, $participant_name, $score) {
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+  $best_score = $data_connector->Results_getScore($consumer, $resource_link, $participant_name, 'DESC');
+  if (!$best_score) {
+    return FALSE;
+  } else {
+    if ($score >= $best_score) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+  }
+}
+
+
+/*
  * External call to grab coaching report url if allowed
  *
  * returns the coaching report url

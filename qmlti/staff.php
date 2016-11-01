@@ -44,7 +44,7 @@ require_once('LTI_Data_Connector_qmp.php');
   $coachingReport = $_SESSION['coaching_report'];
   $assessment_id = $_SESSION['assessment_id'];
   $multipleResults = $_SESSION['multiple_results'];
-  $arr_results = [ "Best", "Worst", "Newest", "Latest" ];
+  $arr_results = [ "Best", "Worst", "Newest", "Oldest" ];
 
   $coaching_check = '';
   
