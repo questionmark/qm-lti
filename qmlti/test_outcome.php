@@ -50,8 +50,10 @@ require_once('lti/OAuth.php');
       $ok = FALSE;
     }
     if ($ok) {
+
       $result_id = $_POST['sourcedid'];
       $score = $_POST['result_resultscore_textstring'];
+
       $codeMinor = 'Full success';
       $response = <<<EOD
 <message_response>
@@ -84,9 +86,11 @@ EOD;
 
     $rawbody = file_get_contents("php://input");
     $xml = new SimpleXMLElement($rawbody);
+
     $type = 'replaceResult';
     $result_id = $xml->imsx_POXBody->replaceResultRequest->resultRecord->sourcedGUID->sourcedId;
     $score = $xml->imsx_POXBody->replaceResultRequest->resultRecord->result->resultScore->textString;
+
     $id = time();
     $codeMajor = 'success';
     $codeMinor = 'Outcome updated';
@@ -117,6 +121,7 @@ EOD;
   if (!$ok) {
     $result_id = 'ERROR';
     $score = '';
+    $qm_resultid = 'ERROR';
   }
 
   $time = time();
@@ -130,6 +135,8 @@ EOD;
   $query->bindValue('created', $now, PDO::PARAM_STR);
   if (!$query->execute()) {
     error_log("Error saving outcome of {$score} for {$result_id}");
+  } else {
+    error_log("Successfully saved outcome of {$score} for {$result_id}");
   }
 
   header('Content-Type: application/xml');

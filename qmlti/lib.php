@@ -45,6 +45,7 @@ require_once('lti/LTI_Tool_Provider.php');
   define('MAX_NAME_LENGTH', 50);  // maximum length of a username in QM
   define('MAX_EMAIL_LENGTH', 255);  // maximum length of a email address in QM
   define('ASSESSMENT_SETTING', 'qmp_assessment_id');
+  define('COACHING_REPORT', 'qmp_coaching_reports');
 // LTI roles supported
   $LTI_ROLES = array('a' => 'Administrator',
                      'd' => 'ContentDeveloper',
@@ -157,11 +158,18 @@ EOD;
         $sql = <<< EOD
 CREATE TABLE [dbo].[{$consumer_table_name}] (
   [consumer_key] VARCHAR(50) NOT NULL,
+  [name] VARCHAR(50) NOT NULL,
   [secret] VARCHAR(50) NOT NULL,
-  [consumer_name] VARCHAR(20) NOT NULL,
-  [customer_id] VARCHAR(25) NOT NULL,
-  [username_prefix] VARCHAR(10) NULL,
-  [last_access] DATE NULL,
+  [lti_version] VARCHAR(20) NOT NULL,
+  [consumer_name] VARCHAR(25) NOT NULL,
+  [consumer_version] VARCHAR(10),
+  [consumer_guid] VARCHAR(25),
+  [css_path] VARCHAR(25),
+  [protected] INT,
+  [enabled] INT,
+  [enable_from] DATETIME,
+  [enable_until] DATETIME,
+  [last_access] DATETIME NULL,
   [created] DATETIME NOT NULL,
   [updated] DATETIME NOT NULL,
  CONSTRAINT [PK_{$consumer_table_name}] PRIMARY KEY CLUSTERED ([consumer_key] ASC)
@@ -180,10 +188,16 @@ EOD;
 CREATE TABLE [dbo].[{$resource_link_table_name}] (
   [consumer_key] VARCHAR(50) NOT NULL DEFAULT '',
   [context_id] VARCHAR(100) NOT NULL,
+  [lti_context_id] VARCHAR(255),
+  [lti_resource_id] VARCHAR(255),
+  [title] VARCHAR(255),
   [settings] TEXT,
+  [primary_consumer_key] VARCHAR(255),
+  [primary_context_key] VARCHAR(255),
+  [share_approved] INT,
   [created] DATETIME,
   [updated] DATETIME,
- CONSTRAINT [PK_{$resource_link_table_name}] PRIMARY KEY CLUSTERED ([consumer_key] ASC, [context_id] ASC)
+ CONSTRAINT [PK_{$resource_link_table_name}] PRIMARY KEY CLUSTERED ([consumer_key] ASC, [lti_resource_id] ASC)
 )
 EOD;
 
@@ -220,6 +234,45 @@ CREATE TABLE [dbo].[{$outcome_table_name}] (
  CONSTRAINT [PK_{$outcome_table_name}] PRIMARY KEY CLUSTERED ([result_sourcedid] ASC, [score] ASC, [created] ASC)
 )
 EOD;
+ 
+//        $ok = $db->exec($sql) !== FALSE;
+        $db->exec($sql);
+
+      }
+
+      $reports_table_name = TABLE_PREFIX . LTI_Data_Connector::REPORTS_TABLE_NAME;
+      if ($ok && !sqlsrv_table_exists($db, $reports_table_name)) {
+
+        $sql = <<< EOD
+CREATE TABLE [dbo].[{$reports_table_name}] (
+  [consumer_key] VARCHAR(50) NOT NULL DEFAULT '',
+  [context_id] VARCHAR(255),
+  [assessment_id] VARCHAR(255),
+  [is_accessible] BIT,
+ CONSTRAINT [PK_{$reports_table_name}] PRIMARY KEY CLUSTERED ([consumer_key] ASC, [context_id] ASC, [assessment_id] ASC)
+)
+EOD;
+
+//        $ok = $db->exec($sql) !== FALSE;
+        $db->exec($sql);
+
+      }
+
+      $results_table_name = TABLE_PREFIX . LTI_Data_Connector::RESULTS_TABLE_NAME;
+      if ($ok && !sqlsrv_table_exists($db, $results_table_name)) {
+
+        $sql = <<< EOD
+CREATE TABLE [dbo].[{$results_table_name}] (
+  [consumer_key] VARCHAR(50) NOT NULL DEFAULT '',
+  [context_id] VARCHAR(255),
+  [assessment_id] VARCHAR(255),
+  [customer_id] VARCHAR(25),
+  [created] DATETIME,
+  [score] VARCHAR(255),
+  [result_id] INT,
+ CONSTRAINT [PK_{$results_table_name}] PRIMARY KEY CLUSTERED ([consumer_key] ASC, [result_id] ASC)
+)
+EOD;
 
 //        $ok = $db->exec($sql) !== FALSE;
         $db->exec($sql);
@@ -254,11 +307,16 @@ EOD;
       if ($ok) {
         $sql = 'CREATE TABLE IF NOT EXISTS ' . TABLE_PREFIX . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
                '(consumer_key VARCHAR(50) NOT NULL DEFAULT \'\',' .
-               ' context_id VARCHAR(100),' .
+               ' lti_context_id VARCHAR(100),' .
+               ' lti_resource_id VARCHAR(255),' .
+               ' title VARCHAR(255),' .
                ' settings TEXT,' .
+               ' primary_consumer_key VARCHAR(255),' .
+               ' primary_context_key VARCHAR(255),' .
+               ' share_approved INT,' .
                ' created DATETIME,' .
                ' updated DATETIME, ' .
-               'PRIMARY KEY (consumer_key, context_id))';
+               'PRIMARY KEY (consumer_key, lti_resource_id))';
         $ok = $db->exec($sql) !== FALSE;
       }
 
@@ -276,6 +334,29 @@ EOD;
                '(result_sourcedid VARCHAR(255),' .
                ' score VARCHAR(255),' .
                ' created DATETIME)';
+        $ok = $db->exec($sql) !== FALSE;
+      }
+
+      if ($ok) {
+        $sql = 'CREATE TABLE IF NOT EXISTS ' . TABLE_PREFIX .  LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
+               '(consumer_key VARCHAR(50) NOT NULL DEFAULT \'\',' .
+               ' context_id VARCHAR(255),' .
+               ' assessment_id VARCHAR(255),' .
+               ' is_accessible TINYINT,' .
+               'PRIMARY KEY (consumer_key, context_id, assessment_id))';
+        $ok = $db->exec($sql) !== FALSE;
+      }
+
+      if ($ok) {
+        $sql = 'CREATE TABLE IF NOT EXISTS ' . TABLE_PREFIX . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
+               '(consumer_key VARCHAR(50) NOT NULL DEFAULT \'\',' .
+               ' context_id VARCHAR(255),' .
+               ' assessment_id VARCHAR(255),' .
+               ' customer_id VARCHAR(25),' .
+               ' created DATETIME,' .
+               ' score VARCHAR(255),' .
+               ' result_id INT,' .
+               'PRIMARY KEY (consumer_key, result_id))';
         $ok = $db->exec($sql) !== FALSE;
       }
 
@@ -408,6 +489,25 @@ EOD;
 
   }
 
+/*
+ * SOAP call to get an assessment's details 
+ *
+ *   returns the assessment or FALSE
+ */
+  function get_assessment($assessment_id) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $assessment = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_assessment($assessment_id);
+    } catch (Exception $e) {
+      log_error($e);
+      $assessment = FALSE;
+    }
+
+    return $assessment;
+
+  }
+
 
 /*
  * SOAP call to get a list of assessments availalble to an administrator account
@@ -427,6 +527,105 @@ EOD;
     return $assessments;
 
   }
+
+/* 
+ * Boolean check for coaching report availability
+ *
+ * returns TRUE if coaching report is valid
+ */
+function is_coaching_report_available($db, $consumer_key, $resource_link_id, $assessment_id, $participant_name) {
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+   if ($data_connector->ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id)) {
+      if (get_result_id($participant_name) != FALSE) {
+        return TRUE;
+      } else {
+        return FALSE;
+      }  
+   } else {
+      return FALSE;
+   }
+}
+
+/*
+ * External call to grab coaching report url if allowed
+ *
+ * returns the coaching report url
+ */
+ function get_coaching_report($db, $consumer_key, $lti_outcome, $resource_link_id, $assessment_id) {
+   $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+   if ($data_connector->ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id)) {
+      return get_report_url($lti_outcome->getResultID());
+   } else {
+      return FALSE;
+   }
+ }
+
+/*
+ * External call to grab most recent result ID
+ *
+ *   returns the result id or FALSE
+ */
+  function get_result_id($participant_name) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $response = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_assessment_result_list_by_participant($participant_name);
+    } catch (Exception $e) {
+      log_error($e);
+      return FALSE;
+    } 
+
+    // Empty stdClass object
+    if (count((array)$response) == 0) {
+      return FALSE;
+    }
+    $result_id = $response->AssessmentResult;
+    
+    // Prevents sending back empty array
+    if (count((array)$result_id) == 0) {
+      return FALSE;
+    }
+
+    return $result_id;
+
+  }
+
+/*
+ * SOAP call to get coaching report URL given a result ID
+ *
+ *   returns the coaching report url or FALSE
+ */
+  function get_report_url($report_id) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $report_url = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_report_url($report_id);
+    } catch (Exception $e) {
+      log_error($e);
+      $report_url = FALSE;
+    }
+
+    return $report_url;
+
+  }
+
+/*
+ * SOAP call to get all result IDs from an assessment for all participants
+ * 
+ *   returns an array of resultIDs
+ */
+  function get_assessment_result_list_by_assessment($assessment_id) {
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $assessment_results = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_assessment_result_list_by_assessment($assessment_id);
+    } catch (Exception $e) {
+      log_error($e);
+      $assessment_results = FALSE;
+    }
+
+    return $assessment_results;
+  }
+
 
 /*
  * SOAP call to get a direct URL to an assessment for a participant which includes the notify option
@@ -456,11 +655,11 @@ EOD;
  */
   function get_participant_by_name($username) {
 
-    $participant_details = FALSE;
     try {
       $soap_connection_id = perception_soapconnect_id();
       $participant_details = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_participant_by_name($username);
     } catch (Exception $e) {
+      $participant_details = FALSE;
     }
 
     return $participant_details;
@@ -475,13 +674,13 @@ EOD;
  */
   function create_participant($username, $firstname, $lastname, $email) {
 
-    $participant_id = FALSE;
     try {
       $soap_connection_id = perception_soapconnect_id();
       $participant_details = $GLOBALS['perceptionsoap'][$soap_connection_id]->create_participant($username, $firstname, $lastname, $email);
       $participant_id = $participant_details->Participant_ID;
     } catch (Exception $e) {
       log_error($e);
+      $participant_id = FALSE;
     }
 
     return $participant_id;
@@ -566,7 +765,7 @@ EOD;
       $html .= <<<EOD
   <div id="FooterWrapper">
     <span id="Copyright">
-      <a id="lnkCopyright" href="http://www.questionmark.com" target="_blank">Copyright &copy;2012 Questionmark Computing Ltd.</a>
+      <a id="lnkCopyright" href="http://www.questionmark.com" target="_blank">Copyright &copy;2016 Questionmark Computing Ltd.</a>
     </span>
   </div>
 </div>
@@ -613,7 +812,6 @@ EOD;
     }
 
     $_SESSION[$name] = $value;
-
   }
 
 
@@ -621,7 +819,6 @@ EOD;
  * Initialise a named value in the user session if it does not already exist
  */
   function init_session($name, $value) {
-
     if (!isset($_SESSION[$name])) {
       $_SESSION[$name] = $value;
     }
@@ -633,7 +830,6 @@ EOD;
  * Initialise dummy data in the user session
  */
   function init_data() {
-
     init_session('url', get_root_url() . 'launch.php');
     if (defined('CONSUMER_KEY')) {
       init_session('key', CONSUMER_KEY);

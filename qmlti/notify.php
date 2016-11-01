@@ -35,7 +35,9 @@ require_once('LTI_Data_Connector_qmp.php');
   $consumer_key = $_POST['lti_consumer_key'];
   $resource_link_id = $_POST['lti_context_id'];
   $result_id = $_POST['lti_result_id'];
+  $report_id = $_POST['Result_ID'];
   $score = $_POST['Percentage_Score'];
+  $participant = $_POST['Participant'];
 
 // Initialise tool consumer and resource link objects
   $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
@@ -43,12 +45,14 @@ require_once('LTI_Data_Connector_qmp.php');
   $resource_link = new LTI_Resource_Link($consumer, $resource_link_id);
 
   if ($resource_link->hasOutcomesService()) {
-// Save result
+    // Save result
     $outcome = new LTI_Outcome($result_id);
     $outcome->setValue($score);
+    $outcome->setResultID($report_id);
     $outcome->type = 'percentage';
-    if (!$resource_link->doOutcomesService(LTI_Resource_Link::EXT_WRITE, $outcome)) {
-      error_log("Error saving outcome of {$score} for {$result_id}");
+    if ($resource_link->doOutcomesService(LTI_Resource_Link::EXT_WRITE, $outcome)) {
+      error_log("Successfully passed outcome of {$score} for {$result_id}");
+      $outcome->saveToResult($consumer, $resource_link, $participant);
     }
   }
 

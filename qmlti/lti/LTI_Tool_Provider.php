@@ -217,7 +217,6 @@ class LTI_Tool_Provider {
  * @return mixed Returns TRUE or FALSE, a redirection URL or HTML
  */
   public function execute() {
-
 #
 ### Initialise data connector
 #
@@ -228,6 +227,7 @@ class LTI_Tool_Provider {
     if (isset($_POST['launch_presentation_return_url'])) {
       $this->return_url = $_POST['launch_presentation_return_url'];
     }
+
 #
 ### Perform action
 #
@@ -344,16 +344,16 @@ class LTI_Tool_Provider {
  * @return string Output to be displayed (redirection, or display HTML or message)
  */
   private function result() {
-
+    
     $ok = FALSE;
     if (!$this->isOK && isset($this->callbackHandler['error'])) {
       $ok = call_user_func($this->callbackHandler['error'], $this);
     }
     if (!$ok) {
       if (!$this->isOK) {
-#
-### If not valid, return an error message to the tool consumer if a return URL is provided
-#
+      #
+      ### If not valid, return an error message to the tool consumer if a return URL is provided
+      #
         if (!empty($this->return_url)) {
           $this->error = $this->return_url;
           if (strpos($this->error, '?') === FALSE) {
@@ -385,7 +385,7 @@ class LTI_Tool_Provider {
         header("Location: {$this->redirectURL}");
         exit;
       } else if (!is_null($this->output)) {
-        echo $this->output;
+        header("Location: {$this->output}");
       }
     }
 
@@ -905,6 +905,7 @@ class LTI_Tool_Consumer {
     $this->created = NULL;
     $this->updated = NULL;
 
+
   }
 
 /**
@@ -1050,7 +1051,6 @@ class LTI_Resource_Link {
  * Free text outcome type.
  */
   const EXT_TYPE_TEXT = 'freetext';
-
 /**
  * Context ID as supplied in the last connection request.
  */
@@ -1095,6 +1095,10 @@ class LTI_Resource_Link {
  * Consumer key value for resource link being shared (if any).
  */
   public $primary_consumer_key = NULL;
+/**
+ * Boolean configuration for participant access to coaching reports
+ */
+  public $bool_coaching_reports = FALSE;
 /**
  * ID value for resource link being shared (if any).
  */
@@ -1142,7 +1146,7 @@ class LTI_Resource_Link {
   public function __construct($consumer, $id) {
 
     $this->consumer = $consumer;
-    $this->id = $id;
+    $this->lti_resource_id = $id;
     if (!empty($id)) {
       $this->load();
     } else {
@@ -1156,8 +1160,8 @@ class LTI_Resource_Link {
  */
   public function initialise() {
 
-    $this->lti_context_id = NULL;
-    $this->lti_resource_id = NULL;
+    $this->lti_context_id = '';
+    $this->lti_resource_id = '';
     $this->title = '';
     $this->settings = array();
     $this->group_sets = NULL;
@@ -1167,7 +1171,6 @@ class LTI_Resource_Link {
     $this->share_approved = NULL;
     $this->created = NULL;
     $this->updated = NULL;
-
   }
 
 /**
@@ -1225,9 +1228,7 @@ class LTI_Resource_Link {
  * @return string ID for this resource link.
  */
   public function getId() {
-
-    return $this->id;
-
+    return $this->lti_resource_id;
   }
 
 /**
@@ -1355,9 +1356,11 @@ class LTI_Resource_Link {
 #
     $source_resource_link = $this;
     $sourcedid = $lti_outcome->getSourcedid();
+    $resultid = $lti_outcome->getResultID();
     if (!is_null($user)) {
       $source_resource_link = $user->getResourceLink();
       $sourcedid = $user->lti_result_sourcedid;
+      $resultid = NULL;
     }
 #
 ### Use LTI 1.1 service in preference to extension service if it is available
@@ -1436,6 +1439,8 @@ EOF;
         $params = array();
         $params['sourcedid'] = $sourcedid;
         $params['result_resultscore_textstring'] = $value;
+        $params['result_resultscore_resultid'] = $lti_outcome->getResultID();
+
         if (!empty($lti_outcome->language)) {
           $params['result_resultscore_language'] = $lti_outcome->language;
         }
@@ -1789,7 +1794,7 @@ EOF;
     $ok = FALSE;
     $this->ext_response = NULL;
     if (!empty($url)) {
-// Check for query parameters which need to be included in the signature
+      // Check for query parameters which need to be included in the signature
       $query_params = array();
       $query_string = parse_url($url, PHP_URL_QUERY);
       if (!is_null($query_string)) {
@@ -1804,23 +1809,23 @@ EOF;
         }
       }
       $params = $params + $query_params;
-// Add standard parameters
+      // Add standard parameters
       $params['oauth_consumer_key'] = $this->consumer->getKey();
       $params['lti_version'] = LTI_Tool_Provider::LTI_VERSION;
       $params['lti_message_type'] = $type;
-// Add OAuth signature
+      // Add OAuth signature
       $hmac_method = new OAuthSignatureMethod_HMAC_SHA1();
       $consumer = new OAuthConsumer($this->consumer->getKey(), $this->consumer->secret, NULL);
       $req = OAuthRequest::from_consumer_and_token($consumer, NULL, 'POST', $url, $params);
       $req->sign_request($hmac_method, $consumer, NULL);
       $params = $req->get_parameters();
-// Remove parameters being passed on the query string
+      // Remove parameters being passed on the query string
       foreach (array_keys($query_params) as $name) {
         unset($params[$name]);
       }
-// Connect to tool consumer
+      // Connect to tool consumer
       $this->ext_response = $this->do_post_request($url, $params);
-// Parse XML response
+      // Parse XML response
       if ($this->ext_response) {
         try {
           $this->ext_doc = new DOMDocument();
@@ -1919,7 +1924,6 @@ EOF;
     } else {
       $data = $params;
     }
-    $this->ext_request = $data;
     $resp = '';
 // Try using curl if available
     if (function_exists('curl_init')) {
@@ -2100,6 +2104,10 @@ class LTI_Outcome {
  * Outcome value.
  */
   private $value = NULL;
+/**
+ * Returns resultid value.
+ */
+  private $resultid = NULL;
 
 /**
  * Class constructor.
@@ -2114,8 +2122,21 @@ class LTI_Outcome {
     $this->language = 'en-US';
     $this->date = gmdate('Y-m-d\TH:i:s\Z', time());
     $this->type = 'decimal';
+  }
+
+/**
+ * Saves the results in outcome to Results database
+ *
+ * @param consumer_tool Consumer tool used to connect to database
+ * 
+ * @return boolean True if saved
+ */
+  public function saveToResult($consumer, $resource_link, $participant) {
+
+    return $consumer->getDataConnector()->Results_save($this, $consumer, $resource_link, $participant);
 
   }
+
 
 /**
  * Get the result sourcedid value.
@@ -2141,6 +2162,27 @@ class LTI_Outcome {
 
   }
 
+
+/**
+ * Get the boolean describing if coaching reports are available.
+ * FIXME: Change this to database access to identify report availability
+ * @return boolean Coaching report available
+ */
+  public function getReportAvailable() {
+
+    return $this->report_available;
+
+  }
+
+/**
+ * Get the result ID for coaching report URL.
+ * 
+ * @return string Coaching report url
+ */
+  public function getResultID() {
+    return $this->resultid;
+  }
+
 /**
  * Set the outcome value.
  *
@@ -2151,6 +2193,16 @@ class LTI_Outcome {
     $this->value = $value;
 
   }
+
+  /**
+ * Set the result ID.
+ * 
+ * @param string result ID
+ */
+  public function setResultID($resultid) {
+    $this->resultid = $resultid;
+  }
+
 
 }
 
@@ -2903,9 +2955,11 @@ class LTI_OAuthDataStore extends OAuthDataStore {
 
     $nonce = new LTI_Consumer_Nonce($this->tool_provider->consumer, $value);
     $ok = !$nonce->load();
+
     if ($ok) {
       $ok = $nonce->save();
     }
+
     if (!$ok) {
       $this->tool_provider->reason = 'Invalid nonce.';
     }
@@ -2968,6 +3022,10 @@ abstract class LTI_Data_Connector {
  */
   const USER_TABLE_NAME = 'lti_user';
 /**
+ * Default name for database table used to store users.
+ */
+  const REPORTS_TABLE_NAME = 'lti_coachingreports';
+/**
  * Default name for database table used to store resource link share keys.
  */
   const RESOURCE_LINK_SHARE_KEY_TABLE_NAME = 'lti_share_key';
@@ -2975,6 +3033,10 @@ abstract class LTI_Data_Connector {
  * Default name for database table used to store nonce values.
  */
   const NONCE_TABLE_NAME = 'lti_nonce';
+/**
+ * Default name for database table used to store student result values
+ */
+  const RESULTS_TABLE_NAME = 'lti_results';
 
 /**
  * SQL date format (default = 'Y-m-d')
@@ -3100,7 +3162,38 @@ abstract class LTI_Data_Connector {
  * @return boolean True if the resource link share key object was successfully deleted
  */
   abstract public function Resource_Link_Share_Key_delete($share_key);
-
+/**
+ * Loads the isAccessible parameter if available
+ *
+ * @param String consumer_key
+ * @param String context
+ * @param String assessment_id
+ *
+ * @return boolean isAccessible parameter, NULL if unavailable
+ */
+  abstract public function ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id);
+/**
+ * Inserts new report into database.
+ *
+ * @param String consumer_key
+ * @param String context
+ * @param String assessment_id
+ * @param Boolean is_accessible 
+ *
+ * @return boolean True if the configuration was successfully inserted
+ */
+  abstract public function ReportConfig_insert($consumer_key, $resource_link_id, $assessment_id, $is_accessible);
+/**
+ * Updates existing report configuration entry with new accessible boolean.
+ * 
+ * @param String consumer_key
+ * @param String context
+ * @param String assessment_id
+ * @param Boolean is_accessible
+ * 
+ * @return boolean True if the configuration was successfully updated
+ */
+  abstract public function ReportConfig_update($consumer_key, $resource_link_id, $assessment_id, $is_accessible);
 /**
  * Load user object.
  *

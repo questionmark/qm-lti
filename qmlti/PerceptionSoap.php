@@ -189,6 +189,20 @@ class PerceptionSoap {
 
   }
 
+  public function get_assessment($assessment_id) {
+
+    try {
+      $response = $this->soap->GetAssessment(array(
+        "Assessment_ID" => $assessment_id
+      ));
+    } catch(SoapFault $e) {
+      throw new QMWiseException($e);
+    }
+
+    return $response->Assessment;
+
+  }
+
   public function get_assessment_list_by_administrator($admin_id, $parent_id, $only_run_from_integration) {
 
     try {
@@ -209,6 +223,33 @@ class PerceptionSoap {
       return $list->AssessmentList->Assessment;
     }
 
+  }
+
+  public function get_assessment_result_list_by_assessment($assessment_id) {
+
+    try {
+      $response = $this->soap->GetAssessmentResultListByAssessment(array(
+        "Assessment_ID" => $assessment_id
+      ));
+    } catch(SoapFault $e) {
+      throw new QMWiseException($e);
+    }
+
+    return $response->AssessmentResultList; 
+
+  }
+
+  public function get_assessment_result_list_by_participant($participant_name) {
+
+    try {
+      $response = $this->soap->GetAssessmentResultListByParticipant(array(
+        "Participant_Name" => $participant_name
+      ));
+    } catch (SoapFault $e) {
+      throw new QMWiseException($e);
+    }
+
+    return $response->AssessmentResultList;
   }
 
   public function get_access_administrator($username) {
@@ -250,10 +291,11 @@ class PerceptionSoap {
         "Notify" => $notify_url,
         "ParameterList" => array(
           "Parameter" => array(
-            array("Name" => "home", "Value" => $home_url),
+            array("Name" => "HOME", "Value" => $home_url),
             array("Name" => "lti_consumer_key", "Value" => $consumer_key),
             array("Name" => "lti_context_id", "Value" => $resource_link_id),
             array("Name" => "lti_result_id", "Value" => $result_id),
+            array("Name" => "CALLBACK", "Value" => 1)
           )
         )
       ));
@@ -289,16 +331,14 @@ class PerceptionSoap {
    * we are especially interested in participant id
    */
   public function get_participant_by_name($username) {
-
     try {
-      $participant = $this->soap->GetParticipantByName(array(
+      $response = $this->soap->GetParticipantByName(array(
         'Participant_Name' => $username
       ));
     } catch(SoapFault $e) {
       throw new QMWiseException($e);
     }
-
-    return $participant->Participant;
+    return $response->Participant;
 
   }
 

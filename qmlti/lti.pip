@@ -16,3 +16,4 @@ lti_result_id=lti_result_id
 [Settings]
 HEADER=Content-Type: application/x-www-form-urlencoded
 USEHOME=yes
+USENOTIFY=Yes

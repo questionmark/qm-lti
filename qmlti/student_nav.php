@@ -28,6 +28,9 @@
 
 require_once('lib.php');
 require_once('app/Model/student.php');
+require_once('LTI_Data_Connector_qmp.php');
+
+  $db = open_db();
 
   session_name(SESSION_NAME);
   session_start();
@@ -40,12 +43,18 @@ require_once('app/Model/student.php');
     perception_soapconnect();
   }
 
-  $student->createParticipant();
-  $url = $student->getAccessAssessmentNotify();
-  if (isset($_SESSION['error'])) {
-    $url = "error.php";
+  if (isset($_POST['action'])) {
+    $student->identifyAction($_POST['action']);
   }
-  
-  header("Location: {$url}");
+  $student->createParticipant();
 
+  $bool_coaching_report = $student->isCoachingReportAvailable($db);
+  $assessment = $student->getAssessment();
+
+  if (isset($_SESSION['error'])) {
+   header("Location: error.php");
+  }
+
+  page_header();
+  include_once("app/View/student_nav.php");
 ?>

@@ -47,7 +47,6 @@ require_once('LTI_Data_Connector_qmp.php');
 
 // process validated connection
   function doLaunch($tool_provider) {
-
     global $db;
 
     if (defined('QMWISE_URL')) {
@@ -70,6 +69,7 @@ require_once('LTI_Data_Connector_qmp.php');
     $result_id = $tool_provider->user->lti_result_sourcedid;
 
     $assessment_id = $tool_provider->resource_link->getSetting(ASSESSMENT_SETTING);
+    $coaching_report = $tool_provider->resource_link->getSetting(COACHING_REPORT);
 
     $ok = ($resource_link_id && $username && ($tool_provider->user->isLearner() || $tool_provider->user->isStaff()));
 
@@ -87,6 +87,7 @@ require_once('LTI_Data_Connector_qmp.php');
       $_SESSION['lti_return_url'] = $tool_provider->return_url;
       $_SESSION['result_id'] = $result_id;
       $_SESSION['allow_outcome'] = $supportsOutcomes;
+      $_SESSION['coaching_report'] = $coaching_report;
       if (defined('QMWISE_URL')) {
         $_SESSION['qmwise_url'] = QMWISE_URL;
         $_SESSION['qmwise_client_id'] = SECURITY_CLIENT_ID;
@@ -97,9 +98,10 @@ require_once('LTI_Data_Connector_qmp.php');
         $_SESSION['qmwise_client_id'] = $customer['qmwise_client_id'];
         $_SESSION['qmwise_checksum'] = $customer['qmwise_checksum'];
       }
-// set redirect URL
+
+      // set redirect URL
       if ($isStudent) {
-        $page = 'student';
+        $page = 'student_nav';
       } else {
         $page = 'staff';
       }

@@ -246,17 +246,17 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 
     if (defined('CONSUMER_KEY')) {
       $id = $resource_link->getId();
-      $sql = 'SELECT context_id, settings, created, updated ' .
+      $sql = 'SELECT lti_context_id, settings, created, updated ' .
              'FROM ' .$this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
-             'WHERE context_id = :id';
+             'WHERE lti_context_id = :id';
       $query = $this->db->prepare($sql);
       $query->bindValue('id', $id, PDO::PARAM_STR);
     } else {
       $key = $resource_link->getKey();
       $id = $resource_link->getId();
-      $sql = 'SELECT consumer_key, context_id, settings, created, updated ' .
+      $sql = 'SELECT consumer_key, lti_context_id, settings, created, updated ' .
              'FROM ' .$this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
-             'WHERE (consumer_key = :key) AND (context_id = :id)';
+             'WHERE (consumer_key = :key) AND (lti_context_id = :id)';
       $query = $this->db->prepare($sql);
       $query->bindValue('key', $key, PDO::PARAM_STR);
       $query->bindValue('id', $id, PDO::PARAM_STR);
@@ -298,7 +298,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     if (defined('CONSUMER_KEY')) {
       if (is_null($resource_link->created)) {
         $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
-               '(context_id, settings, created, updated) VALUES (:id, :settings, :created, :updated)';
+               '(lti_context_id, settings, created, updated) VALUES (:id, :settings, :created, :updated)';
         $query = $this->db->prepare($sql);
         $query->bindValue('id', $id, PDO::PARAM_STR);
         $query->bindValue('settings', $settingsValue, PDO::PARAM_INT);
@@ -307,7 +307,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
       } else {
         $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
                'SET settings = :settings, updated = :updated ' .
-               'WHERE context_id = :id';
+               'WHERE lti_context_id = :id';
         $query = $this->db->prepare($sql);
         $query->bindValue('id', $id, PDO::PARAM_STR);
         $query->bindValue('settings', $settingsValue, PDO::PARAM_STR);
@@ -317,7 +317,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
       $key = $resource_link->getKey();
       if (is_null($resource_link->created)) {
         $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
-               '(consumer_key, context_id, settings, created, updated) VALUES (:key, :id, :settings, :created, :updated)';
+               '(consumer_key, lti_context_id, settings, created, updated) VALUES (:key, :id, :settings, :created, :updated)';
         $query = $this->db->prepare($sql);
         $query->bindValue('key', $key, PDO::PARAM_STR);
         $query->bindValue('id', $id, PDO::PARAM_STR);
@@ -327,7 +327,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
       } else {
         $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
                'SET settings = :settings, updated = :updated ' .
-               'WHERE (consumer_key = :key) AND (context_id = :id)';
+               'WHERE (consumer_key = :key) AND (lti_context_id = :id)';
         $query = $this->db->prepare($sql);
         $query->bindValue('key', $key, PDO::PARAM_STR);
         $query->bindValue('id', $id, PDO::PARAM_STR);
@@ -351,13 +351,13 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 // Delete resource link
     if (defined('CONSUMER_KEY')) {
       $sql = 'DELETE FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
-             'WHERE context_id = :id';
+             'WHERE lti_context_id = :id';
       $query = $this->db->prepare($sql);
       $query->bindValue('id', $id, PDO::PARAM_STR);
     } else {
       $key = $resource_link->getKey();
       $sql = 'DELETE FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' ' .
-             'WHERE (consumer_key = :key) AND (context_id = :id)';
+             'WHERE (consumer_key = :key) AND (lti_context_id = :id)';
       $query = $this->db->prepare($sql);
       $query->bindValue('key', $key, PDO::PARAM_STR);
       $query->bindValue('id', $id, PDO::PARAM_STR);
@@ -472,7 +472,6 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 
   }
 
-
 ###
 ###  LTI_Resource_Link_Share_Key methods
 ###
@@ -501,6 +500,102 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
   public function Resource_Link_Share_Key_delete($share_key) {
 
     return TRUE;
+
+  }
+
+###
+###  Result methods
+###
+
+###
+#    Saves the current result into the Results table.
+###
+  public function Results_save($outcome, $consumer, $resource_link, $participant) {
+
+    $time = time();
+    $now = date('Y-m-d H:i:s', $time);
+    $id = $resource_link->getId();
+
+    $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' (consumer_key, context_id, ' .
+             'assessment_id, customer_id, created, score, result_id) ' .
+             'VALUES (:consumer, :context, :assessment, :customer, :created, :score, :result)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
+    $query->bindValue('context', $id, PDO::PARAM_STR);
+    $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
+    $query->bindValue('customer', $participant, PDO::PARAM_STR);
+    $query->bindValue('created', $now, PDO::PARAM_STR);
+    $query->bindValue('score', $outcome->getValue(), PDO::PARAM_STR);
+    $query->bindValue('result', $outcome->getResultID(), PDO::PARAM_INT);
+    $ok = $query->execute();
+
+    return $ok;
+
+  }
+
+###
+###  Coaching Config methods
+###
+
+###
+#    Checks to see if report config is already loaded for specific build
+###
+  public function ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id) {
+
+    $sql = 'SELECT is_accessible ' .
+           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
+           'WHERE (consumer_key = :consumer) AND (context_id = :context) AND (assessment_id = :assessment)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('consumer', $consumer_key, PDO::PARAM_STR);
+    $query->bindValue('context', $resource_link_id, PDO::PARAM_STR);
+    $query->bindValue('assessment', $assessment_id, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      $row = $query->fetch();
+      $is_accessible = $row['is_accessible'];
+    }
+    if (!$ok) {
+      return NULL;
+    }
+    return $is_accessible;
+
+  }
+
+###
+#    Inserts the report configuration to the database
+###
+  public function ReportConfig_insert($consumer_key, $resource_link_id, $assessment_id, $is_accessible) {
+
+    $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::REPORTS_TABLE_NAME . ' (consumer_key, context_id, ' .
+             'assessment_id, is_accessible) ' .
+             'VALUES (:consumer, :context, :assessment, :accessible)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('consumer', $consumer_key, PDO::PARAM_STR);
+    $query->bindValue('context', $resource_link_id, PDO::PARAM_STR);
+    $query->bindValue('assessment', $assessment_id, PDO::PARAM_STR);
+    $query->bindValue('accessible', $is_accessible, PDO::PARAM_INT);
+    $ok = $query->execute();
+
+    return $ok;
+
+  }
+
+###
+#    Updates the report configuration to the database
+###
+  public function ReportConfig_update($consumer_key, $resource_link_id, $assessment_id, $is_accessible) {
+    
+    $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::REPORTS_TABLE_NAME . ' ' .
+             'SET is_accessible = :accessible ' .
+             'WHERE (consumer_key = :consumer) AND (context_id = :context) AND (assessment_id = :assessment)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('consumer', $consumer_key, PDO::PARAM_STR);
+    $query->bindValue('context', $resource_link_id, PDO::PARAM_STR);
+    $query->bindValue('assessment', $assessment_id, PDO::PARAM_STR);
+    $query->bindValue('accessible', $is_accessible, PDO::PARAM_INT);
+    $ok = $query->execute();
+
+    return $ok;
 
   }
 

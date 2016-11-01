@@ -41,16 +41,56 @@ require_once('LTI_Data_Connector_qmp.php');
   $lastname = $_SESSION['lastname'];
   $email = $_SESSION['email'];
   $isStudent = $_SESSION['isStudent'];
+  $coachingReport = $_SESSION['coaching_report'];
+  $assessment_id = $_SESSION['assessment_id'];
+
+  $coaching_check = '';
+  
+  // checks if a coaching report setting is already set
+  if (isset($coachingReport)) {
+    if ($coachingReport) {
+      $coaching_check = 'checked';
+      $coachingReport = True;
+      $intCoaching = 1;
+    } else {
+      $coaching_check = '';
+      $coachingReport = False;
+      $intCoaching = 0;
+    }
+  }
+
+  // checks if the coaching report option was changed
+  if (isset($_POST['id_coachingreport'])) {
+    if ($_POST['id_coachingreport'] == '1') {
+      $coaching_check = 'checked';
+      $coachingReport = True;
+      $intCoaching = 1;
+    } else {
+      $coaching_check = '';
+      $coachingReport = False;
+      $intCoaching = 0;
+    }
+  } 
 
   if (isset($_POST['assessment'])) {
+
     $_SESSION['assessment_id'] = htmlentities($_POST['assessment']);
     $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
     $consumer = new LTI_Tool_Consumer($consumer_key, $data_connector);
     $resource_link = new LTI_Resource_Link($consumer, $resource_link_id);
     $resource_link->setSetting(ASSESSMENT_SETTING, $_SESSION['assessment_id']);
+    $resource_link->setSetting(COACHING_REPORT, $coachingReport);
     $resource_link->save();
+
+    $assessment_id = $_SESSION['assessment_id'];
+
+    // Insert / Update Coaching Reports index
+    if ($data_connector->ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id) != NULL) {
+      $save = $data_connector->ReportConfig_update($consumer_key, $resource_link_id, $assessment_id, $intCoaching);
+    } else {
+      $save = $data_connector->ReportConfig_insert($consumer_key, $resource_link_id, $assessment_id, $intCoaching);
+    }
   }
-  $assessment_id = $_SESSION['assessment_id'];
 
   $ok = !$isStudent;
   if (!$ok) {
@@ -106,6 +146,7 @@ function doReset() {
     if (el) {
       el.className = 'hide';
     }
+
   }
 }
 // -->
@@ -113,57 +154,6 @@ function doReset() {
 
 EOD;
   page_header($script);
-?>
-        <p><a href="<?php echo $em_url; ?>" target="_blank" />Log into Enterprise Manager</a></p>
-<?php
-  if (!$_SESSION['allow_outcome']) {
-?>
-        <p><strong>No score will be saved by this connection.</strong></p>
-<?php
-  }
-?>
-        <h1>Assessments</h1>
-<?php
-  if ((count($assessments) > 0) && !is_null($assessments[0])) {
-?>
-        <form action="staff.php" method="POST">
-        <table class="DataTable" cellpadding="0" cellspacing="0">
-        <tr class="GridHeader">
-          <td>&nbsp;</td>
-          <td class="AssessmentName">Assessment Name</td>
-          <td class="AssessmentAuthor">Assessment Author</td>
-          <td class="LastModified">Last Modified</td>
-        </tr>
-<?php
-    $i = 0;
-    foreach ($assessments as $assessment) {
-      $i++;
-      if ($assessment->Assessment_ID == $assessment_id) {
-        $selected = ' checked="checked" onclick="doReset();"';
-      } else {
-        $selected = ' onclick="doChange(\'img' . $i . '\');"';
-      }
-?>
-        <tr class="GridRow">
-          <td><img src="images/exclamation.png" alt="Unsaved change" title="Unsaved change" class="hide" id="img<?php echo $i; ?>" />&nbsp;<input type="radio" name="assessment" value="<?php echo $assessment->Assessment_ID; ?>"<?php echo $selected; ?> /></td>
-          <td><?php echo $assessment->Session_Name; ?></td>
-          <td><?php echo $assessment->Author; ?></td>
-          <td><?php echo $assessment->Modified_Date; ?></td>
-        </tr>
-<?php
-    }
-?>
-        </table>
-        <p>
-        <input type="submit" id="id_save" value="Save change" disabled="disabled" />
-        </p>
-        </form>
-<?php
-  } else {
-?>
-        <p>No assessments available.</p>
-<?php
-  }
-
+  include_once("app/View/staff.php");
   page_footer();
 ?>
