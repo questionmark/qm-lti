@@ -271,6 +271,8 @@ CREATE TABLE [dbo].[{$results_table_name}] (
   [created] DATETIME,
   [score] VARCHAR(255),
   [result_id] INT,
+  [is_accessed] INT,
+  [result_sourcedid] VARCHAR(255),
  CONSTRAINT [PK_{$results_table_name}] PRIMARY KEY CLUSTERED ([consumer_key] ASC, [result_id] ASC)
 )
 EOD;
@@ -357,6 +359,8 @@ EOD;
                ' created DATETIME,' .
                ' score VARCHAR(255),' .
                ' result_id INT,' .
+               ' is_accessed INT,' .
+               ' result_sourcedid VARCHAR(255), ' .
                'PRIMARY KEY (consumer_key, result_id))';
         $ok = $db->exec($sql) !== FALSE;
       }
@@ -598,6 +602,70 @@ function is_best_result($db, $consumer, $resource_link, $participant_name, $scor
       return TRUE;
     } else {
       return FALSE;
+    }
+  }
+}
+
+/*
+ * Returns the result currently accessed by the LMS
+ *
+ * returns TRUE if result is oldest
+ */
+function get_accessed_result($db, $consumer, $resource_link, $participant_name) {
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+  $accessed_result_id = $data_connector->Results_getAccessedResult($consumer, $resource_link, $participant_name);
+  return $accessed_result_id;
+}
+
+/*
+ * Gets the correct result given result parameter
+ *
+ * returns result_id
+ */
+function get_new_result($data_connector, $consumer, $resource_link, $participant_name, $multiple_result) {
+  switch ($multiple_result) {
+    case 'Newest':
+      $new_result = $data_connector->Results_getResultByParam($consumer, $resource_link, $participant_name, 'created', 'DESC');
+      break;
+    case 'Oldest':
+      $new_result = $data_connector->Results_getResultByParam($consumer, $resource_link, $participant_name, 'created', 'ASC');
+      break;
+    case 'Best':
+      $new_result = $data_connector->Results_getResultByParam($consumer, $resource_link, $participant_name, 'score', 'DESC');
+      break;
+    case 'Worst':
+      $new_result = $data_connector->Results_getResultByParam($consumer, $resource_link, $participant_name, 'score', 'ASC');
+      break;
+    default:
+      return FALSE;
+  }
+  return $new_result;
+}
+
+/*
+ * Retroactively updates all results accessed via is_accessed tag,
+ * Updates LMS with correct grade
+ *
+ */
+function update_result_accessed($db, $consumer, $resource_link, $assessment_id, $multiple_result) {
+  // Two parts: update DB and then update SOAP
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+  // Find all participants that match the resource_link_id, assessment_id
+  $participants = $data_connector->Results_getParticipantsByResource($consumer, $resource_link, $assessment_id);
+  foreach ($participants as $participant) {
+    // For each, find out whether or not the 'updated' result differs from the 'original' result
+    $original_result = get_accessed_result($db, $consumer, $resource_link, $participant['customer_id']);
+    $new_result = get_new_result($data_connector, $consumer, $resource_link, $participant['customer_id'], $multiple_result);
+    if ($original_result != $new_result) {
+      $outcome = new LTI_Outcome($data_connector->Results_getSourcedIDbyResultID($consumer, $resource_link, $new_result));
+      $outcome->setValue($data_connector->Results_getScorebyResultID($consumer, $resource_link, $new_result));
+      $outcome->type = 'decimal';
+      if ($resource_link->hasOutcomesService()) {
+        if ($resource_link->doOutcomesService(LTI_Resource_Link::EXT_WRITE, $outcome)) {
+          $data_connector->Results_clearAccessedResult($consumer, $resource_link, $participant['customer_id']);
+          $data_connector->Results_setAccessedResult($consumer, $resource_link, $new_result);
+        }
+      }
     }
   }
 }

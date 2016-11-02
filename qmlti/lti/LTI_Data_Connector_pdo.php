@@ -517,8 +517,8 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     $id = $resource_link->getId();
 
     $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' (consumer_key, context_id, ' .
-             'assessment_id, customer_id, created, score, result_id) ' .
-             'VALUES (:consumer, :context, :assessment, :customer, :created, :score, :result)';
+             'assessment_id, customer_id, created, score, result_id, is_accessed) ' .
+             'VALUES (:consumer, :context, :assessment, :customer, :created, :score, :result, :accessed)';
     $query = $this->db->prepare($sql);
     $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
     $query->bindValue('context', $id, PDO::PARAM_STR);
@@ -527,10 +527,37 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     $query->bindValue('created', $now, PDO::PARAM_STR);
     $query->bindValue('score', $outcome->getValue(), PDO::PARAM_STR);
     $query->bindValue('result', $outcome->getResultID(), PDO::PARAM_INT);
+    $query->bindValue('accessed', 1, PDO::PARAM_INT);
     $ok = $query->execute();
 
     return $ok;
 
+  }
+
+###
+#    Gets latest result for participant given assessment id
+###
+  public function Results_getLatestResult($consumer, $resource_link, $participant) {
+      
+    $id = $resource_link->getId();
+    $sql = 'SELECT result_id ' .
+           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
+           'WHERE (assessment_id = :assessment) AND (customer_id = :customer) AND (consumer_key = :consumer) ' .
+           'AND (context_id = :context)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
+    $query->bindValue('customer', $participant, PDO::PARAM_STR);
+    $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
+    $query->bindValue('context', $id, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      $row = $query->fetch();
+      $result_id = $row['result_id'];
+    }
+    if (!$ok) {
+      return FALSE;
+    }
+    return $result_id;
   }
 
 ###

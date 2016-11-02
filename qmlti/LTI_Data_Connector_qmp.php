@@ -508,17 +508,57 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 ###
 
 ###
+#    Clears the accessed result from db
+###
+  public function Results_clearAccessedResult($consumer, $resource_link, $participant) {
+
+    $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
+           'SET is_accessed = 0 ' .
+           'WHERE (consumer_key = :consumer) AND (context_id = :context) AND (assessment_id = :assessment) ' . 
+           'AND (customer_id = :customer)' ;
+    $query = $this->db->prepare($sql);
+    $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
+    $query->bindValue('context', $resource_link->getId(), PDO::PARAM_STR);
+    $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
+    $query->bindValue('customer', $participant, PDO::PARAM_STR);
+    $ok = $query->execute();
+
+    return $ok;
+
+  }
+
+###
+#    Clears the accessed result from db
+###
+  public function Results_setAccessedResult($consumer, $resource_link, $result_id) {
+
+    $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
+           'SET is_accessed = 1 ' .
+           'WHERE (consumer_key = :consumer) AND (context_id = :context) AND (assessment_id = :assessment) ' . 
+           'AND (result_id = :result)' ;
+    $query = $this->db->prepare($sql);
+    $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
+    $query->bindValue('context', $resource_link->getId(), PDO::PARAM_STR);
+    $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
+    $query->bindValue('result', $result_id, PDO::PARAM_INT);
+    $ok = $query->execute();
+
+    return $ok;
+
+  }
+
+###
 #    Saves the current result into the Results table.
 ###
-  public function Results_save($outcome, $consumer, $resource_link, $participant) {
+  public function Results_save($outcome, $consumer, $resource_link, $participant, $is_accessed, $result_sourcedid) {
 
     $time = time();
     $now = date('Y-m-d H:i:s', $time);
     $id = $resource_link->getId();
 
     $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' (consumer_key, context_id, ' .
-             'assessment_id, customer_id, created, score, result_id) ' .
-             'VALUES (:consumer, :context, :assessment, :customer, :created, :score, :result)';
+             'assessment_id, customer_id, created, score, result_id, is_accessed, result_sourcedid) ' .
+             'VALUES (:consumer, :context, :assessment, :customer, :created, :score, :result, :accessed, :sourcedid)';
     $query = $this->db->prepare($sql);
     $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
     $query->bindValue('context', $id, PDO::PARAM_STR);
@@ -527,6 +567,8 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     $query->bindValue('created', $now, PDO::PARAM_STR);
     $query->bindValue('score', $outcome->getValue(), PDO::PARAM_STR);
     $query->bindValue('result', $outcome->getResultID(), PDO::PARAM_INT);
+    $query->bindValue('accessed', $is_accessed, PDO::PARAM_INT);
+    $query->bindValue('sourcedid', $result_sourcedid, PDO::PARAM_STR);
     $ok = $query->execute();
 
     return $ok;
@@ -560,6 +602,59 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
   }
 
 ###
+#    Gets sourcedid for LMS
+###
+  public function Results_getSourcedIDbyResultID($consumer, $resource_link, $result_id) {
+
+    $id = $resource_link->getId();
+    $sql = 'SELECT result_sourcedid ' .
+           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
+           'WHERE (assessment_id = :assessment) AND (consumer_key = :consumer) ' .
+           'AND (context_id = :context) AND (result_id = :result)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
+    $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
+    $query->bindValue('context', $id, PDO::PARAM_STR);
+    $query->bindValue('result', $result_id, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      $row = $query->fetch();
+      $result_sourcedid = $row['result_sourcedid'];
+    }
+    if (!$ok) {
+      return FALSE;
+    }
+    return $result_sourcedid;
+  }
+
+
+###
+#    Gets score given result ID
+###
+  public function Results_getScorebyResultID($consumer, $resource_link, $result_id) {
+
+    $id = $resource_link->getId();
+    $sql = 'SELECT score ' .
+           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
+           'WHERE (assessment_id = :assessment) AND (consumer_key = :consumer) ' .
+           'AND (context_id = :context) AND (result_id = :result)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
+    $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
+    $query->bindValue('context', $id, PDO::PARAM_STR);
+    $query->bindValue('result', $result_id, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      $row = $query->fetch();
+      $score = $row['score'];
+    }
+    if (!$ok) {
+      return FALSE;
+    }
+    return $score;
+  }
+
+###
 #    Gets latest result for participant given assessment id
 ###
   public function Results_getScore($consumer, $resource_link, $participant, $order) {
@@ -585,6 +680,86 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
       return FALSE;
     }
     return $score;
+  }
+
+###
+#    Gets latest result for participant given assessment id
+###
+  public function Results_getResultByParam($consumer, $resource_link, $participant, $param, $order) {
+      
+    $id = $resource_link->getId();
+    $sql = 'SELECT result_id ' .
+           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
+           'WHERE (assessment_id = :assessment) AND (customer_id = :customer) AND (consumer_key = :consumer) ' .
+           'AND (context_id = :context)' .
+           'ORDER BY ' . $param . ' ' . $order . ' ' . 
+           'LIMIT 1 ';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
+    $query->bindValue('customer', $participant, PDO::PARAM_STR);
+    $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
+    $query->bindValue('context', $id, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      $row = $query->fetch();
+      $result = $row['result_id'];
+    }
+    if (!$ok) {
+      return FALSE;
+    }
+    return $result;
+  }
+
+###
+#    Gets result id of result currently used by LMS
+###
+  public function Results_getAccessedResult($consumer, $resource_link, $participant) {
+      
+    $id = $resource_link->getId();
+    $sql = 'SELECT result_id ' .
+           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
+           'WHERE (assessment_id = :assessment) AND (customer_id = :customer) AND (consumer_key = :consumer) ' .
+           'AND (context_id = :context) AND (is_accessed = 1) ' .
+           'LIMIT 1 ';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
+    $query->bindValue('customer', $participant, PDO::PARAM_STR);
+    $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
+    $query->bindValue('context', $id, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      $row = $query->fetch();
+      $result_id = $row['result_id'];
+    }
+    if (!$ok) {
+      return FALSE;
+    }
+    return $result_id;
+  }
+
+
+###
+#    Gets array of participants given a specific context and assessment
+###
+  public function Results_getParticipantsByResource($consumer, $resource_link, $assessment_id) {
+      
+    $id = $resource_link->getId();
+    $sql = 'SELECT DISTINCT customer_id ' .
+           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
+           'WHERE (assessment_id = :assessment) AND (consumer_key = :consumer) ' .
+           'AND (context_id = :context) ';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('assessment', $assessment_id, PDO::PARAM_STR);
+    $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
+    $query->bindValue('context', $id, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      $participants = $query->fetchAll();
+    }
+    if (!$ok) {
+      return FALSE;
+    }
+    return $participants;
   }
 
 

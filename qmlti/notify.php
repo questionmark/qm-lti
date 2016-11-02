@@ -46,9 +46,11 @@ require_once('LTI_Data_Connector_qmp.php');
   $resource_link = new LTI_Resource_Link($consumer, $resource_link_id);
 
   $multiple_results = $resource_link->getSetting(MULTIPLE_RESULTS);
+
   switch ($multiple_results) {
     case 'Newest':
       $is_saved = TRUE;
+      break;
     case 'Best':
       $is_saved = is_best_result($db, $consumer, $resource_link, $participant, $score);
       break;
@@ -62,18 +64,25 @@ require_once('LTI_Data_Connector_qmp.php');
       error_log("Failed to establish result parameter, did not save result.");
   }
 
+  $outcome = new LTI_Outcome($result_id);
+  $outcome->setValue($score);
+  $outcome->setResultID($report_id);
+  $outcome->type = 'percentage';
+  
   if ($is_saved) {
     if ($resource_link->hasOutcomesService()) {
       // Save result
-      $outcome = new LTI_Outcome($result_id);
-      $outcome->setValue($score);
-      $outcome->setResultID($report_id);
-      $outcome->type = 'percentage';
       if ($resource_link->doOutcomesService(LTI_Resource_Link::EXT_WRITE, $outcome)) {
-        error_log("Successfully passed outcome of {$score} for {$result_id}");
-        $outcome->saveToResult($consumer, $resource_link, $participant);
+        $outcome->clearAccessedResult($consumer, $resource_link, $participant);
+        $outcome->saveToResult($consumer, $resource_link, $participant, 1, $result_id);
       } else {
         error_log("Failed to pass outcome of {$score} for {$result_id}");
+      }
+    }
+  } else {
+    if ($resource_link->hasOutcomesService()) {
+      if ($resource_link->doOutcomesService(LTI_Resource_Link::EXT_WRITE, $outcome)) {
+        $outcome->saveToResult($consumer, $resource_link, $participant, 0, $result_id);
       }
     }
   }

@@ -2123,16 +2123,36 @@ class LTI_Outcome {
     $this->type = 'decimal';
   }
 
+
+/**
+ * Clears accessed result in Results database
+ *
+ * @param consumer_tool Consumer tool used to connect to database
+ * @param resoure_link
+ * @param participant
+ *
+ * @return boolean True if saved
+ */
+  public function clearAccessedResult($consumer, $resource_link, $participant) {
+
+    return $consumer->getDataConnector()->Results_clearAccessedResult($consumer, $resource_link, $participant);
+
+  }
+
+
+
 /**
  * Saves the results in outcome to Results database
  *
  * @param consumer_tool Consumer tool used to connect to database
+ * @param resoure_link
+ * @param participant
  * 
  * @return boolean True if saved
  */
-  public function saveToResult($consumer, $resource_link, $participant) {
+  public function saveToResult($consumer, $resource_link, $participant, $is_accessed, $result_sourcedid) {
 
-    return $consumer->getDataConnector()->Results_save($this, $consumer, $resource_link, $participant);
+    return $consumer->getDataConnector()->Results_save($this, $consumer, $resource_link, $participant, $is_accessed, $result_sourcedid);
 
   }
 
