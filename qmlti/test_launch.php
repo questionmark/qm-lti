@@ -78,6 +78,7 @@ window.onload=doOnLoad;
 </script>
 </head>
 <body>
+<div class="col-md-12">
 <p>Redirecting, please wait...</p>
 <?php
   echo "<form name=\"frmConnect\" action=\"{$url}\" method=\"post\">\n";
@@ -85,6 +86,7 @@ window.onload=doOnLoad;
     echo "  <input type=\"hidden\" name=\"{$name}\" value=\"{$value}\">\n";
   }
 ?>
+</div>
 </form>
 </body>
 </html>

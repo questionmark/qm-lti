@@ -840,7 +840,10 @@ function update_result_accessed($db, $consumer, $resource_link, $assessment_id, 
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <meta charset="utf-8" />
-<title>QMP: LTI</title>
+<title>QMP - LTI</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 <link href="css/qmp-lti.css" type="text/css" rel="stylesheet" />
 {$script}
 </head>
@@ -851,7 +854,7 @@ EOD;
 
     if (!$isFrame) {
       $html .= <<<EOD
-  <div id="HeaderWrapper">
+  <div id="HeaderWrapper" class="header-top">
     <img id="logoImage" src="images/logo.gif" alt="Questionmark" style="width: 175px; height: 32px; margin-left: 10px" />
   </div>
 
@@ -866,7 +869,7 @@ EOD;
 EOD;
 
     if (!$isFrame && isset($_SESSION['lti_return_url']) && (strlen($_SESSION['lti_return_url']) > 0)) {
-      $html .= '        <p><button type="button" onclick="location.href=\'' . $_SESSION['lti_return_url'] . '\';">Return to course environment</button></p>' . "\n";
+      $html .= '        <br><br><br><div class="container-fluid"><p><button type="button" class="btn btn-default" onclick="location.href=\'' . $_SESSION['lti_return_url'] . '\';">Return to course environment</button></p></div>' . "\n";
     }
 
     echo $html;
@@ -888,14 +891,16 @@ EOD;
 
     if (!$isFrame) {
       $html .= <<<EOD
-  <div id="FooterWrapper">
+  <div class="spacer-sm"></div>
+  <div id="FooterWrapper" class="footer navbar-fixed-bottom">
     <span id="Copyright">
-      <a id="lnkCopyright" href="http://www.questionmark.com" target="_blank">Copyright &copy;2016 Questionmark Computing Ltd.</a>
+      © 2016 Questionmark Computing Ltd.
     </span>
   </div>
 </div>
 </body>
 </html>
+<script src="js/footer.js" type="text/javascript"></script>
 EOD;
     }
 
