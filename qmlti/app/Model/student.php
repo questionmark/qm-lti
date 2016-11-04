@@ -6,24 +6,24 @@
 
   class Student {
 
-    public $consumer_key = NULL;
-    public $resource_link_id = NULL;
-    public $assessment_id = NULL;
-    public $username = NULL;
-    public $firstname = NULL;
-    public $lastname = NULL;
-    public $participant_name = NULL;
-    public $email = NULL;
-    public $return_url = NULL;
-    public $isStudent = NULL;
-    public $notify_url = NULL;
-    public $result_id = NULL;
-    public $participant_id = NULL;
+    protected $consumer_key = NULL;
+    protected $resource_link_id = NULL;
+    protected $assessment_id = NULL;
+    protected $username = NULL;
+    protected $firstname = NULL;
+    protected $lastname = NULL;
+    protected $participant_name = NULL;
+    protected $email = NULL;
+    protected $return_url = NULL;
+    protected $isStudent = NULL;
+    protected $notify_url = NULL;
+    protected $result_id = NULL;
+    protected $participant_id = NULL;
 
-    public $db = NULL;
-    public $data_connector = NULL;
-    public $consumer = NULL;
-    public $resource_link = NULL;
+    protected $db = NULL;
+    protected $data_connector = NULL;
+    protected $consumer = NULL;
+    protected $resource_link = NULL;
 
     function __construct() {
       $this->db = open_db();
