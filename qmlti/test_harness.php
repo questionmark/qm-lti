@@ -365,7 +365,7 @@ EOD;
 ?>
 
 <?php
-  $sql = 'SELECT context_id, assessment_id, customer_id, created, score, result_id ' .
+  $sql = 'SELECT context_id, assessment_id, customer_id, created, score, result_id, is_accessed, result_sourcedid ' .
          'FROM ' . TABLE_PREFIX . 'lti_results ' .
          'ORDER BY created DESC';
   $query = $db->prepare($sql);
@@ -384,10 +384,12 @@ EOD;
           <tr class="GridHeader">
             <td>Resource Link ID</td>
             <td>Assessment ID</td>
+            <td>Result SourcedId</td>
             <td>Customer Name</td>
             <td>Created</td>
             <td>Score</td>
             <td>Result ID</td>
+            <td>Is Accessed by LMS</td>
           </tr>
 <?php
     do {
@@ -395,10 +397,12 @@ EOD;
           <tr border="1" class="GridRow">
             <td>&nbsp;<?php echo $row['context_id']; ?></td>
             <td>&nbsp;<?php echo $row['assessment_id']; ?></td>
+            <td>&nbsp;<?php echo $row['result_sourcedid']; ?></td>
             <td>&nbsp;<?php echo $row['customer_id']; ?></td>
             <td>&nbsp;<?php echo $row['created']; ?></td>
             <td>&nbsp;<?php echo $row['score']; ?></td>
             <td>&nbsp;<?php echo $row['result_id']; ?></td>
+            <td>&nbsp;<?php echo $row['is_accessed']; ?></td>
           </tr>
 <?php
       $row = $query->fetch();

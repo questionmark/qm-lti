@@ -43,9 +43,28 @@
 ?>
         </table>
         <br><hr>
+        <p>
         <input type="hidden" id="id_coachingreport" name="id_coachingreport" value="0">
         <input type="checkbox" id="id_coachingreport" name="id_coachingreport" onclick="doChange('id_coachingreport');" value="1" <?php echo $coaching_check ?> >Allow participants to view coaching reports.
-        <p>
+        <br><br>
+        Select result to display: 
+        <select id="id_multipleresult" name="id_multipleresult" onclick="doChange('id_multipleresult');">
+
+<?php
+      foreach ($arr_results as $results) {
+        if ($results == $multipleResults) {
+          $selectresults = 'selected';
+        } else { 
+          $selectresults = ''; 
+        }
+?>
+          <option value="<?php echo $results; ?>" <?php echo $selectresults; ?>><?php echo $results ?></option>
+<?php
+      }
+             
+?>
+        </select>
+        <br><br><br>
         <input type="submit" id="id_save" value="Save change" disabled="disabled" />
         </p>
         </form>

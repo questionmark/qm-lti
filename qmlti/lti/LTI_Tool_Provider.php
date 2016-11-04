@@ -1161,7 +1161,6 @@ class LTI_Resource_Link {
   public function initialise() {
 
     $this->lti_context_id = '';
-    $this->lti_resource_id = '';
     $this->title = '';
     $this->settings = array();
     $this->group_sets = NULL;
@@ -1305,7 +1304,7 @@ class LTI_Resource_Link {
  * @return boolean True if this resource link supports the Outcomes service (either the LTI 1.1 or extension service)
  */
   public function hasOutcomesService() {
-
+    
     $url = $this->getSetting('ext_ims_lis_basic_outcome_url') . $this->getSetting('lis_outcome_service_url');
 
     return !empty($url);
@@ -1654,7 +1653,7 @@ EOF;
       }
 
     }
-
+    
     return $response;
 
   }
@@ -2124,16 +2123,36 @@ class LTI_Outcome {
     $this->type = 'decimal';
   }
 
+
+/**
+ * Clears accessed result in Results database
+ *
+ * @param consumer_tool Consumer tool used to connect to database
+ * @param resoure_link
+ * @param participant
+ *
+ * @return boolean True if saved
+ */
+  public function clearAccessedResult($consumer, $resource_link, $participant) {
+
+    return $consumer->getDataConnector()->Results_clearAccessedResult($consumer, $resource_link, $participant);
+
+  }
+
+
+
 /**
  * Saves the results in outcome to Results database
  *
  * @param consumer_tool Consumer tool used to connect to database
+ * @param resoure_link
+ * @param participant
  * 
  * @return boolean True if saved
  */
-  public function saveToResult($consumer, $resource_link, $participant) {
+  public function saveToResult($consumer, $resource_link, $participant, $is_accessed, $result_sourcedid) {
 
-    return $consumer->getDataConnector()->Results_save($this, $consumer, $resource_link, $participant);
+    return $consumer->getDataConnector()->Results_save($this, $consumer, $resource_link, $participant, $is_accessed, $result_sourcedid);
 
   }
 

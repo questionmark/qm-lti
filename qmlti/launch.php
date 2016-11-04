@@ -70,6 +70,7 @@ require_once('LTI_Data_Connector_qmp.php');
 
     $assessment_id = $tool_provider->resource_link->getSetting(ASSESSMENT_SETTING);
     $coaching_report = $tool_provider->resource_link->getSetting(COACHING_REPORT);
+    $multiple_results = $tool_provider->resource_link->getSetting(MULTIPLE_RESULTS);
 
     $ok = ($resource_link_id && $username && ($tool_provider->user->isLearner() || $tool_provider->user->isStaff()));
 
@@ -84,6 +85,7 @@ require_once('LTI_Data_Connector_qmp.php');
       $_SESSION['consumer_key'] = $consumer_key;
       $_SESSION['resource_link_id'] = $resource_link_id;
       $_SESSION['assessment_id'] = $assessment_id;
+      $_SESSION['multiple_results'] = $multiple_results;
       $_SESSION['lti_return_url'] = $tool_provider->return_url;
       $_SESSION['result_id'] = $result_id;
       $_SESSION['allow_outcome'] = $supportsOutcomes;

@@ -43,9 +43,14 @@ require_once('LTI_Data_Connector_qmp.php');
   $isStudent = $_SESSION['isStudent'];
   $coachingReport = $_SESSION['coaching_report'];
   $assessment_id = $_SESSION['assessment_id'];
+  $multipleResults = $_SESSION['multiple_results'];
+  $arr_results = [ "Best", "Worst", "Newest", "Oldest" ];
 
   $coaching_check = '';
-  
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+  $consumer = new LTI_Tool_Consumer($consumer_key, $data_connector);
+  $resource_link = new LTI_Resource_Link($consumer, $resource_link_id);
+
   // checks if a coaching report setting is already set
   if (isset($coachingReport)) {
     if ($coachingReport) {
@@ -75,14 +80,19 @@ require_once('LTI_Data_Connector_qmp.php');
   if (isset($_POST['assessment'])) {
 
     $_SESSION['assessment_id'] = htmlentities($_POST['assessment']);
-    $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
-    $consumer = new LTI_Tool_Consumer($consumer_key, $data_connector);
-    $resource_link = new LTI_Resource_Link($consumer, $resource_link_id);
     $resource_link->setSetting(ASSESSMENT_SETTING, $_SESSION['assessment_id']);
-    $resource_link->setSetting(COACHING_REPORT, $coachingReport);
-    $resource_link->save();
-
     $assessment_id = $_SESSION['assessment_id'];
+
+    if (isset($_POST['id_multipleresult'])) {
+      if ($multipleResults != $_POST['id_multipleresult']) {
+        update_result_accessed($db, $consumer, $resource_link, $assessment_id, $_POST['id_multipleresult'] );
+        $multipleResults = $_POST['id_multipleresult'];
+      }
+    }
+
+    $resource_link->setSetting(COACHING_REPORT, $coachingReport);
+    $resource_link->setSetting(MULTIPLE_RESULTS, $multipleResults);
+    $resource_link->save();
 
     // Insert / Update Coaching Reports index
     if ($data_connector->ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id) != NULL) {
@@ -91,6 +101,14 @@ require_once('LTI_Data_Connector_qmp.php');
       $save = $data_connector->ReportConfig_insert($consumer_key, $resource_link_id, $assessment_id, $intCoaching);
     }
   }
+
+  if (isset($_POST['id_multipleresult'])) {
+    if ($multipleResults != $_POST['id_multipleresult']) {
+      update_result_accessed($db, $consumer, $resource_link, $assessment_id, $_POST['id_multipleresult'] );
+      $multipleResults = $_POST['id_multipleresult'];
+    }
+  }
+
 
   $ok = !$isStudent;
   if (!$ok) {

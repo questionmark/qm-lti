@@ -20,7 +20,13 @@
     public $result_id = NULL;
     public $participant_id = NULL;
 
+    public $db = NULL;
+    public $data_connector = NULL;
+    public $consumer = NULL;
+    public $resource_link = NULL;
+
     function __construct() {
+      $this->db = open_db();
       $this->consumer_key = $_SESSION['consumer_key'];
       $this->resource_link_id = $_SESSION['resource_link_id'];
       $this->assessment_id = $_SESSION['assessment_id'];
@@ -36,6 +42,10 @@
       $this->isStudent = $_SESSION['isStudent'];
       $this->notify_url = get_root_url() . 'notify.php';
       $this->result_id = $_SESSION['result_id'];
+
+      $this->data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $this->db, DATA_CONNECTOR);
+      $this->consumer = new LTI_Tool_Consumer($this->consumer_key, $this->data_connector);
+      $this->resource_link = new LTI_Resource_Link($this->consumer, $this->resource_link_id);
     }
 
     function checkValid() {
@@ -57,16 +67,14 @@
           header("Location: {$redirect}");
         } else if ($action == 'View Coaching Report') {
           // view coaching report
-          $resultIDs = get_result_id($this->participant_name);
-          if (is_array($resultIDs)) {
-            $coachingreport = get_report_url($resultIDs[0]->Result->Result_ID);
-          } else {
-            $coachingreport = get_report_url($resultIDs->Result->Result_ID);
-          }
+          $multiple_results = $this->resource_link->getSetting(MULTIPLE_RESULTS);
+          $resultID = get_accessed_result($this->db, $this->consumer, $this->resource_link, $this->participant_name);
+          $coachingreport = get_report_url($resultID);
           header("Location: {$coachingreport->URL}");
         }
       }
     }
+
 
     function createParticipant() {
       if (!isset($_SESSION['error']) && (($participant_details = get_participant_by_name($this->username)) !== FALSE)) {
