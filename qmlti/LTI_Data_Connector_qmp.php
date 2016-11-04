@@ -594,8 +594,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     if ($ok) {
       $row = $query->fetch();
       $result_id = $row['result_id'];
-    }
-    if (!$ok) {
+    } else {
       return FALSE;
     }
     return $result_id;
@@ -620,8 +619,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     if ($ok) {
       $row = $query->fetch();
       $result_sourcedid = $row['result_sourcedid'];
-    }
-    if (!$ok) {
+    } else {
       return FALSE;
     }
     return $result_sourcedid;
@@ -647,8 +645,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     if ($ok) {
       $row = $query->fetch();
       $score = $row['score'];
-    }
-    if (!$ok) {
+    } else {
       return FALSE;
     }
     return $score;
@@ -675,8 +672,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     if ($ok) {
       $row = $query->fetch();
       $score = $row['score'];
-    }
-    if (!$ok) {
+    } else {
       return FALSE;
     }
     return $score;
@@ -703,8 +699,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     if ($ok) {
       $row = $query->fetch();
       $result = $row['result_id'];
-    }
-    if (!$ok) {
+    } else {
       return FALSE;
     }
     return $result;
@@ -730,8 +725,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     if ($ok) {
       $row = $query->fetch();
       $result_id = $row['result_id'];
-    }
-    if (!$ok) {
+    } else {
       return FALSE;
     }
     return $result_id;
@@ -755,8 +749,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     $ok = $query->execute();
     if ($ok) {
       $participants = $query->fetchAll();
-    }
-    if (!$ok) {
+    } else {
       return FALSE;
     }
     return $participants;
@@ -783,8 +776,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     if ($ok) {
       $row = $query->fetch();
       $is_accessible = $row['is_accessible'];
-    }
-    if (!$ok) {
+    } else {
       return NULL;
     }
     return $is_accessible;
