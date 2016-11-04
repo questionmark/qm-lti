@@ -1,7 +1,8 @@
-       
+
+        <div id="body" class="container-fluid">
         <p>
-        <a href="<?php echo $em_url; ?>" target="_blank" />Log into Enterprise Manager</a>&nbsp;&nbsp;
-        <a href="staff_results.php" />View Assessment Results</a>
+        <a class="btn btn-default" href="<?php echo $em_url; ?>" target="_blank" />Log into Enterprise Manager</a>&nbsp;&nbsp;&nbsp;
+        <a class="btn btn-default" href="staff_results.php" />View Assessment Results</a>
         </p>
 <?php
   if (!$_SESSION['allow_outcome']) {
@@ -15,7 +16,7 @@
   if ((count($assessments) > 0) && !is_null($assessments[0])) {
 ?>
         <form action="staff.php" method="POST">
-        <table class="DataTable" cellpadding="0" cellspacing="0">
+        <table class="DataTable table table-sm" cellpadding="0" cellspacing="0">
         <tr class="GridHeader">
           <td>&nbsp;</td>
           <td class="AssessmentName">Assessment Name</td>
@@ -42,13 +43,24 @@
     }
 ?>
         </table>
-        <br><hr>
+        <br><br>
         <p>
         <input type="hidden" id="id_coachingreport" name="id_coachingreport" value="0">
-        <input type="checkbox" id="id_coachingreport" name="id_coachingreport" onclick="doChange('id_coachingreport');" value="1" <?php echo $coaching_check ?> >Allow participants to view coaching reports.
-        <br><br>
-        Select result to display: 
-        <select id="id_multipleresult" name="id_multipleresult" onclick="doChange('id_multipleresult');">
+        <div class="row">
+          <div class="col1">
+          Allow participants to view coaching reports
+          </div>
+          <div class="col2">
+          <input type="checkbox" id="id_coachingreport" name="id_coachingreport" onclick="doChange('');" value="1" <?php echo $coaching_check ?> >
+          </div>
+        </div>
+        <br>
+        <div class="row">
+          <div class="col1">
+          Select result to display: 
+          </div>
+          <div class="col2">
+          <select id="id_multipleresult" class="form-control dropdown-select" name="id_multipleresult" onchange="doChange('');">
 
 <?php
       foreach ($arr_results as $results) {
@@ -64,14 +76,18 @@
              
 ?>
         </select>
+        </div>
+        </div>
         <br><br><br>
-        <input type="submit" id="id_save" value="Save change" disabled="disabled" />
+        <input class="button btn" type="submit" id="id_save" value="Save change" disabled="disabled" />
         </p>
         </form>
+        </div>
 <?php
   } else {
 ?>
         <p>No assessments available.</p>
+        </div>
 <?php
   }
 ?>

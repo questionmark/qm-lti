@@ -1,13 +1,14 @@
+        <div id="body" class="container-fluid">
         <p>
-        <a href="<?php echo $em_url; ?>" target="_blank" />Log into Enterprise Manager</a>&nbsp;&nbsp;
-        <a href="staff.php" />Back to Control Panel</a>
+        <a class="btn btn-default" href="<?php echo $em_url; ?>" target="_blank" />Log into Enterprise Manager</a>&nbsp;&nbsp;
+        <a class="btn btn-default" href="staff.php" />Back to Control Panel</a>
         </p>
         <h1>Assessment Results</h1>
 <?php
   if ((count($results) > 0) && !is_null($results[0])) {
 ?>
         <form action="staff.php" method="POST">
-        <table class="DataTable" cellpadding="0" cellspacing="0">
+        <table class="DataTable table table-sm" cellpadding="0" cellspacing="0">
         <tr class="GridHeader">
           <td>Participant</td>
           <td>Score</td>
@@ -34,10 +35,12 @@
         </table>
         <br><br><br>
         </form>
+        </div>
 <?php
   } else {
 ?>
         <p>No results available.</p>
+        </div>
 <?php
   }
 ?>
