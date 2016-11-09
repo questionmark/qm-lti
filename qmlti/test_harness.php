@@ -316,7 +316,7 @@ EOD;
 ?>
           <tr border="1" class="GridRow">
             <td>&nbsp;<?php echo $row['result_sourcedid']; ?></td>
-            <td>&nbsp;<?php echo $row['score']; ?></td>
+            <td>&nbsp;<?php echo round((float)$row['score'] * 100 ) . '%'; ?></td>
             <td>&nbsp;<?php echo $row['created']; ?></td>
           </tr>
 <?php
@@ -411,7 +411,7 @@ EOD;
             <td>&nbsp;<?php echo $row['result_sourcedid']; ?></td>
             <td>&nbsp;<?php echo $row['customer_id']; ?></td>
             <td>&nbsp;<?php echo $row['created']; ?></td>
-            <td>&nbsp;<?php echo $row['score']; ?></td>
+            <td>&nbsp;<?php echo round((float)$row['score'] * 100 ) . '%'; ?></td>
             <td>&nbsp;<?php echo $row['result_id']; ?></td>
             <td>&nbsp;<?php echo $row['is_accessed']; ?></td>
           </tr>
