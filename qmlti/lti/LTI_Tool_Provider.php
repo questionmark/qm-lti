@@ -51,6 +51,7 @@
  * OAuth library file
  */
 require_once('OAuth.php');
+require_once('lib.php');
 
 /**
  * Class to represent an LTI Tool Provider
@@ -580,7 +581,7 @@ class LTI_Tool_Provider {
 #
 ### Set the user instance
 #
-        $user_id = '';
+        $user_id = getRandomString(8);
         if (isset($_POST['user_id'])) {
           $user_id = trim($_POST['user_id']);
         }
