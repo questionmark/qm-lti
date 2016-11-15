@@ -144,31 +144,6 @@ require_once('LTI_Data_Connector_qmp.php');
   }
 
   $script = <<< EOD
-<script type="text/javascript">
-<!--
-function doChange(id) {
-  doReset();
-  var el = document.getElementById(id);
-  if (el) {
-    el.className = 'show';
-  }
-  el = document.getElementById('id_save');
-  el.disabled = false;
-}
-
-function doReset() {
-  var el = document.getElementById('id_save');
-  el.disabled = true;
-  for (var i=1; i<=document.forms[0].assessment.length; i++) {
-    el = document.getElementById('img' + i);
-    if (el) {
-      el.className = 'hide';
-    }
-
-  }
-}
-// -->
-</script>
 
 EOD;
   page_header($script);

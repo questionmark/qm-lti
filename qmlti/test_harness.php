@@ -58,40 +58,7 @@ require_once('lib.php');
     init_data();
   }
 
-  $script = <<< EOD
-<script type="text/javascript">
-<!--
-var save;
-var launch;
-window.onload = onLoad;
-
-function onLoad() {
-  save = document.getElementById('id_save');
-  launch = document.getElementById('id_launch');
-  save.disabled = true;
-  launch.disabled = ((document.getElementById('id_url').value.length <= 0) ||
-                     (document.getElementById('id_key').value.length <= 0));
-}
-
-function onChange() {
-  save.disabled = false;
-  launch.disabled = true;
-}
-
-function doLaunch() {
-  location.href = 'test_launch.php';
-}
-
-function doReset() {
-  if (confirm('Reset.  Are you sure?')) {
-    location.href = 'test_reset.php';
-  }
-}
-// -->
-</script>
-
-EOD;
-
+  $script = '<script src="js/testharness.js" type="text/javascript"></script>';
   page_header($script);
 
 ?>
