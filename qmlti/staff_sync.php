@@ -35,6 +35,7 @@ require_once('LTI_Data_Connector_qmp.php');
   session_start();
 
   $consumer_key = $_SESSION['consumer_key'];
+  $context_id = $_SESSION['context_id'];
   $resource_link_id = $_SESSION['resource_link_id'];
   $username = $_SESSION['username'];
   $firstname = $_SESSION['firstname'];
@@ -43,6 +44,10 @@ require_once('LTI_Data_Connector_qmp.php');
   $isStudent = $_SESSION['isStudent'];
   $coachingReport = $_SESSION['coaching_report'];
   $assessment_id = $_SESSION['assessment_id'];
+
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+  $consumer = new LTI_Tool_Consumer($consumer_key, $data_connector);
+  $resource_link = new LTI_Resource_Link($consumer, $resource_link_id);
 
   $ok = !$isStudent;
   if (!$ok) {
@@ -66,15 +71,23 @@ require_once('LTI_Data_Connector_qmp.php');
     $ok = FALSE;
   }
 
-  $results = NULL;
-  $result_list = get_assessment_result_list_by_assessment($assessment_id);
-  if ($result_list != FALSE) {
-    $results = $result_list->AssessmentResult;
-    foreach ($results as $result) {
-      $result->Result->URL = get_report_url($result->Result->Result_ID)->URL;
+  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['btn_sync'])) {
+      if ($resource_link->hasMembershipsService()) {
+        $gen_users = $resource_link->doMembershipsService();
+        foreach ($gen_users as $user) {
+          $user->setContext($context_id);
+          save_user($db, $user);
+        }
+      } else {
+        error_log("Manual sync failed due to lack of membership service.");
+      }
     }
   }
-  
+
+  // Get list of students logged in LTI
+  $students_list = get_participants_by_context_id($db, $consumer_key, $context_id);
+
   if (!$ok) {
     header('Location: error.php');
     exit;
@@ -82,6 +95,6 @@ require_once('LTI_Data_Connector_qmp.php');
 
 
   page_header();
-  include_once("app/View/staff_results.php");
+  include_once("app/View/staff_sync.php");
   page_footer();
 ?>

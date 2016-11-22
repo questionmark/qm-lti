@@ -203,6 +203,27 @@ class PerceptionSoap {
 
   }
 
+    public function get_assessment_list($parent_id, $only_run_from_integration) {
+
+    try {
+      $list = $this->soap->GetAssessmentList(array(
+        "Parent_ID" => $parent_id,
+        "OnlyRunFromIntegration" => $only_run_from_integration
+      ));
+    } catch(SoapFault $e) {
+      throw new QMWiseException($e);
+    }
+
+    if (!isset($list->AssessmentList->Assessment)) {
+      return array();
+    } else if (!is_array($list->AssessmentList->Assessment)) {
+      return array($list->AssessmentList->Assessment);
+    } else {
+      return $list->AssessmentList->Assessment;
+    }
+
+  }
+
   public function get_assessment_list_by_administrator($admin_id, $parent_id, $only_run_from_integration) {
 
     try {

@@ -378,8 +378,40 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 #    resource links which are sharing this resource link.  It may also be optionally indexed by the user ID of a specified scope.
 ###
   public function Resource_Link_getUserResultSourcedIDs($resource_link, $resource_link_only, $id_scope) {
-
+    if ($resource_link_only) {
+      $sql = 'SELECT u.consumer_key, u.context_id, u.user_id, u.lti_result_sourcedid ' .
+             'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::USER_TABLE_NAME . ' u ' .
+             'INNER JOIN ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' c ' .
+             'ON u.consumer_key = c.consumer_key AND u.context_id = c.context_id ' .
+             'WHERE (c.consumer_key = :key) AND (c.context_id = :id) AND (c.primary_consumer_key IS NULL) AND (c.context_id IS NULL)';
+    } else {
+      $sql = 'SELECT u.consumer_key, u.context_id, u.user_id, u.lti_result_sourcedid ' .
+             'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::USER_TABLE_NAME . ' u ' .
+             'INNER JOIN ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESOURCE_LINK_TABLE_NAME . ' c ' .
+             'ON u.consumer_key = c.consumer_key AND u.context_id = c.context_id ' .
+             'WHERE ((c.consumer_key = :key) AND (c.context_id = :id) AND (c.primary_consumer_key IS NULL) AND (c.context_id IS NULL)) OR ' .
+             '((c.primary_consumer_key = :key) AND (c.primary_context_id = :id) AND (share_approved = 1))';
+    }
+    $key = $resource_link->getKey();
+    $id = $resource_link->getId();
+    $query = $this->db->prepare($sql);
+    $query->bindValue('key', $key, PDO::PARAM_STR);
+    $query->bindValue('id', $id, PDO::PARAM_STR);
     $users = array();
+    if ($query->execute()) {
+      while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+        $row = array_change_key_case($row);
+        $user = new LTI_User($resource_link, $row['user_id']);
+        $user->consumer_key = $row['consumer_key'];
+        $user->context_id = $row['context_id'];
+        $user->lti_result_sourcedid = $row['lti_result_sourcedid'];
+        if (is_null($id_scope)) {
+          $users[] = $user;
+        } else {
+          $users[$user->getId($id_scope)] = $user;
+        }
+      }
+    }
 
     return $users;
 
@@ -826,13 +858,119 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 ###  LTI_User methods
 ###
 
+###
+#     Loads list of users available on LTI by context
+###
+
+  public function User_loadUsersbyContext($consumer_key, $context_id) {
+    $sql = 'SELECT user_id, firstname, lastname, fullname, email, roles, created, updated, lti_result_sourcedid ' .
+    'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::USER_TABLE_NAME . ' ' .
+    'WHERE (consumer_key = :key) AND (context_id = :id)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('key', $consumer_key, PDO::PARAM_STR);
+    $query->bindValue('id', $context_id, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      $users = $query->fetchAll();
+    } else {
+      return FALSE;
+    }
+    return $users;
+  }
+
+###
+#     loads list of users available on Tool Consumer by context
+###
+
+  public function TCUser_loadUsersbyContext($consumer_key, $context_id) {
+    $sql = 'SELECT user_id, firstname, lastname, fullname, email, roles, created, updated, lti_result_sourcedid ' .
+    'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::TC_USER_TABLE_NAME . ' ' .
+    'WHERE (consumer_key = :key) AND (context_id = :id)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('key', $consumer_key, PDO::PARAM_STR);
+    $query->bindValue('id', $context_id, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      $users = $query->fetchAll();
+    } else {
+      return FALSE;
+    }
+    return $users;
+  }
+
+###
+#     loads list of users available on Tool Consumer by context
+###
+
+  public function TCUser_loadUsers($consumer_key) {
+    $sql = 'SELECT user_id, firstname, lastname, fullname, email, roles, created, updated, lti_result_sourcedid ' .
+    'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::TC_USER_TABLE_NAME . ' ' .
+    'WHERE (consumer_key = :key)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('key', $consumer_key, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      $users = $query->fetchAll();
+    } else {
+      return FALSE;
+    }
+    return $users;
+  }
+
+###
+#     loads list of users available on Tool Consumer by context
+###
+
+  public function User_loadUsers($consumer_key) {
+    $sql = 'SELECT user_id, firstname, lastname, fullname, email, roles, created, updated, lti_result_sourcedid ' .
+    'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::USER_TABLE_NAME . ' ' .
+    'WHERE (consumer_key = :key)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('key', $consumer_key, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      $users = $query->fetchAll();
+    } else {
+      return FALSE;
+    }
+    return $users;
+  }
 
 ###
 #    Load the user from the database
-###
+###    
+
   public function User_load($user) {
 
-    return TRUE;
+    $key = $user->getResourceLink()->getKey();
+    $id = $user->getContext();
+    $userId = $user->getId(LTI_Tool_Provider::ID_SCOPE_ID_ONLY);
+    $sql = 'SELECT firstname, lastname, fullname, email, roles, created, updated, lti_result_sourcedid ' .
+           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::USER_TABLE_NAME . ' ' .
+           'WHERE (consumer_key = :key) AND (context_id = :id) AND (user_id = :user_id)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('key', $key, PDO::PARAM_STR);
+    $query->bindValue('id', $id, PDO::PARAM_STR);
+    $query->bindValue('user_id', $userId, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      $row = $query->fetch(PDO::FETCH_ASSOC);
+      $ok = ($row !== FALSE);
+    }
+
+    if ($ok) {
+      $row = array_change_key_case($row);
+      $user->firstname = $row['firstname'];
+      $user->lastname = $row['lastname'];
+      $user->fullname = $row['fullname'];
+      $user->email = $row['email'];
+      $user->roles = explode(", ", $row['roles']);
+      $user->created = strtotime($row['created']);
+      $user->updated = strtotime($row['updated']);
+      $user->lti_result_sourcedid = $row['lti_result_sourcedid'];
+    }
+
+    return $ok;
 
   }
 
@@ -841,7 +979,40 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 ###
   public function User_save($user) {
 
-    return TRUE;
+    $time = time();
+    $now = date("{$this->date_format} {$this->time_format}", $time);
+    $key = $user->getResourceLink()->getKey();
+    $id = $user->getContext();
+    $userId = $user->getId(LTI_Tool_Provider::ID_SCOPE_ID_ONLY);
+    if (!($this->User_load($user))) {
+      $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::USER_TABLE_NAME . ' (consumer_key, context_id, ' .
+             'user_id, firstname, lastname, fullname, email, roles, created, updated, lti_result_sourcedid) ' .
+             'VALUES (:key, :id, :user_id, :first, :last, :full, :email, :roles, :now, :now, :sourcedid)';
+    } else {
+      $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::USER_TABLE_NAME . ' ' .
+             'SET firstname = :first, lastname = :last, fullname = :full, email = :email, roles = :roles, updated = :now, lti_result_sourcedid = :sourcedid ' .
+             'WHERE (consumer_key = :key) AND (context_id = :id) AND (user_id = :user_id)';
+    }
+    $query = $this->db->prepare($sql);
+    $query->bindValue('key', $key, PDO::PARAM_STR);
+    $query->bindValue('id', $id, PDO::PARAM_STR);
+    $query->bindValue('user_id', $userId, PDO::PARAM_STR);
+    $query->bindValue('first', $user->firstname, PDO::PARAM_STR);
+    $query->bindValue('last', $user->lastname, PDO::PARAM_STR);
+    $query->bindValue('full', $user->fullname, PDO::PARAM_STR);
+    $query->bindValue('email', $user->email, PDO::PARAM_STR);
+    $query->bindValue('roles', implode(", ", $user->roles), PDO::PARAM_STR);
+    $query->bindValue('now', $now, PDO::PARAM_STR);
+    $query->bindValue('sourcedid', $user->lti_result_sourcedid);
+    $ok = $query->execute();
+    if ($ok) {
+      if (is_null($user->created)) {
+        $user->created = $time;
+      }
+      $user->updated = $time;
+    }
+
+    return $ok;
 
   }
 
@@ -850,7 +1021,127 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 ###
   public function User_delete($user) {
 
-    return TRUE;
+    $key = $user->getResourceLink()->getKey();
+    $id = $user->getResourceLink()->lti_context_id;
+    $userId = $user->getId(LTI_Tool_Provider::ID_SCOPE_ID_ONLY);
+    $sql = 'DELETE FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::USER_TABLE_NAME . ' ' .
+           'WHERE (consumer_key = :key) AND (context_id = :id) AND (user_id = :user_id)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('key', $key, PDO::PARAM_STR);
+    $query->bindValue('id', $id, PDO::PARAM_STR);
+    $query->bindValue('user_id', $userId, PDO::PARAM_STR);
+    $ok = $query->execute();
+
+    if ($ok) {
+      $user->initialise();
+    }
+
+    return $ok;
+
+  }
+
+  ###
+#    Load the user from the database
+###
+  public function TCUser_load($user) {
+
+    $key = $user->getResourceLink()->getKey();
+    $id = $user->getResourceLink()->lti_context_id;
+    $userId = $user->getId(LTI_Tool_Provider::ID_SCOPE_ID_ONLY);
+    $sql = 'SELECT firstname, lastname, fullname, email, roles, created, updated, lti_result_sourcedid ' .
+           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::TC_USER_TABLE_NAME . ' ' .
+           'WHERE (consumer_key = :key) AND (context_id = :id) AND (user_id = :user_id)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('key', $key, PDO::PARAM_STR);
+    $query->bindValue('id', $id, PDO::PARAM_STR);
+    $query->bindValue('user_id', $userId, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      $row = $query->fetch(PDO::FETCH_ASSOC);
+      $ok = ($row !== FALSE);
+    }
+
+    if ($ok) {
+      $row = array_change_key_case($row);
+      $user->firstname = $row['firstname'];
+      $user->lastname = $row['lastname'];
+      $user->fullname = $row['fullname'];
+      $user->email = $row['email'];
+      $user->roles = explode(", ", $row['roles']);
+      $user->created = strtotime($row['created']);
+      $user->updated = strtotime($row['updated']);
+      $user->lti_result_sourcedid = $row['lti_result_sourcedid'];
+    }
+
+    return $ok;
+
+
+  }
+
+###
+#    Save the user to the tool consumer database
+###
+  public function TCUser_save($user) {
+
+    $time = time();
+    $now = date("{$this->date_format} {$this->time_format}", $time);
+    $key = $user->getResourceLink()->getKey();
+    $id = $user->getResourceLink()->lti_context_id;
+    $userId = $user->getId(LTI_Tool_Provider::ID_SCOPE_ID_ONLY);
+    $roles = implode(", ", $user->roles);
+    if (!($this->TCUser_load($user))) {
+      $sql = 'INSERT INTO ' . $this->dbTableNamePrefix . LTI_Data_Connector::TC_USER_TABLE_NAME . ' (consumer_key, context_id, ' .
+             'user_id, firstname, lastname, fullname, email, roles, created, updated, lti_result_sourcedid) ' .
+             'VALUES (:key, :id, :user_id, :first, :last, :full, :email, :roles, :now, :now, :sourcedid)';
+    } else {
+      $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::TC_USER_TABLE_NAME . ' ' .
+             'SET firstname = :first, lastname = :last, fullname = :full, email = :email, roles = :roles, updated = :now, lti_result_sourcedid = :sourcedid ' .
+             'WHERE (consumer_key = :key) AND (context_id = :id) AND (user_id = :user_id)';
+    }
+    $query = $this->db->prepare($sql);
+    $query->bindValue('key', $key, PDO::PARAM_STR);
+    $query->bindValue('id', $id, PDO::PARAM_STR);
+    $query->bindValue('user_id', $userId, PDO::PARAM_STR);
+    $query->bindValue('first', $user->firstname, PDO::PARAM_STR);
+    $query->bindValue('last', $user->lastname, PDO::PARAM_STR);
+    $query->bindValue('full', $user->fullname, PDO::PARAM_STR);
+    $query->bindValue('email', $user->email, PDO::PARAM_STR);
+    $query->bindValue('roles', $roles, PDO::PARAM_STR);
+    $query->bindValue('now', $now, PDO::PARAM_STR);
+    $query->bindValue('sourcedid', $user->lti_result_sourcedid, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      if (is_null($user->created)) {
+        $user->created = $time;
+      }
+      $user->updated = $time;
+    }
+
+    return $ok;
+
+  }
+
+###
+#    Delete the user from the database
+###
+  public function TCUser_delete($user) {
+
+    $key = $user->getResourceLink()->getKey();
+    $id = $user->getResourceLink()->lti_context_id;
+    $userId = $user->getId(LTI_Tool_Provider::ID_SCOPE_ID_ONLY);
+    $sql = 'DELETE FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::TC_USER_TABLE_NAME . ' ' .
+           'WHERE (consumer_key = :key) AND (context_id = :id) AND (user_id = :user_id)';
+    $query = $this->db->prepare($sql);
+    $query->bindValue('key', $key, PDO::PARAM_STR);
+    $query->bindValue('id', $id, PDO::PARAM_STR);
+    $query->bindValue('user_id', $userId, PDO::PARAM_STR);
+    $ok = $query->execute();
+
+    if ($ok) {
+      $user->initialise();
+    }
+
+    return $ok;
 
   }
 

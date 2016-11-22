@@ -133,8 +133,9 @@ require_once('LTI_Data_Connector_qmp.php');
     $ok = !empty($em_url);
   }
 
-// Get assessments
-  if ($ok && (($assessments = get_assessment_list_by_administrator($admin_id)) === FALSE)) {
+  // Get assessments
+  // if ($ok && (($assessments = get_assessment_list_by_administrator($admin_id)) === FALSE)) {
+  if ($ok && (($assessments = get_assessment_list()) === FALSE)) {
     $assessments = array();
   }
 
@@ -144,6 +145,7 @@ require_once('LTI_Data_Connector_qmp.php');
   }
 
   $script = <<< EOD
+<script src="js/staff.js" type="text/javascript"></script>
 
 EOD;
   page_header($script);

@@ -2665,7 +2665,6 @@ class LTI_User {
 
     $this->initialise();
     $this->resource_link = $resource_link;
-    $this->context = &$this->resource_link;
     $this->id = $id;
     $this->load();
 
@@ -2742,14 +2741,20 @@ class LTI_User {
 /**
  * Get context.
  *
- * @deprecated Use getResourceLink() instead
- * @see LTI_User::getResourceLink()
- *
  * @return LTI_Resource_Link Context object
  */
   public function getContext() {
 
-    return $this->resource_link;
+    return $this->context;
+
+  }
+
+/**
+ * Sets context.
+ */
+  public function setContext($context) {
+
+    $this->context = $context;
 
   }
 
@@ -3042,6 +3047,10 @@ abstract class LTI_Data_Connector {
  */
   const USER_TABLE_NAME = 'lti_user';
 /**
+ * Default name for database table used to store test users for tool consumer.
+ */
+  const TC_USER_TABLE_NAME = 'lti_tc_user';
+/**
  * Default name for database table used to store users.
  */
   const REPORTS_TABLE_NAME = 'lti_coachingreports';
@@ -3215,6 +3224,40 @@ abstract class LTI_Data_Connector {
  */
   abstract public function ReportConfig_update($consumer_key, $resource_link_id, $assessment_id, $is_accessible);
 /**
+ * Loads list of users given a specific context
+ *
+ * @param String consumer_key
+ * @param String context
+ *
+ * @return mixed Array of users or false
+ */
+  abstract public function User_loadUsersbyContext($consumer_key, $context_id);
+/**
+ * Loads list of users available on tool consumer given a specific context
+ *
+ * @param String consumer_key
+ * @param String context
+ * 
+ * @return mixed Array of users or false
+ */
+  abstract public function TCUser_loadUsersbyContext($consumer_key, $context_id);
+/**
+ * Loads list of users available
+ *
+ * @param String consumer_key
+ * 
+ * @return mixed Array of users or false
+ */
+  abstract public function User_loadUsers($consumer_key);
+/**
+ * Loads list of users available on tool consumer
+ *
+ * @param String consumer_key
+ * 
+ * @return mixed Array of users or false
+ */
+  abstract public function TCUser_loadUsers($consumer_key);
+/**
  * Load user object.
  *
  * @param LTI_User $user User object
@@ -3238,7 +3281,30 @@ abstract class LTI_Data_Connector {
  * @return boolean True if the user object was successfully deleted
  */
   abstract public function User_delete($user);
-
+/**
+ * Load user object for Tool Consumer use.
+ *
+ * @param LTI_User $user User object
+ *
+ * @return boolean True if the user object was successfully loaded
+ */
+  abstract public function TCUser_load($user);
+/**
+ * Save user object for Tool Consumer use.
+ *
+ * @param LTI_User $user User object
+ *
+ * @return boolean True if the user object was successfully saved
+ */
+  abstract public function TCUser_save($user);
+/**
+ * Delete user object for Tool Consumer use.
+ *
+ * @param LTI_User $user User object
+ *
+ * @return boolean True if the user object was successfully deleted
+ */
+  abstract public function TCUser_delete($user);
 /**
  * Create data connector object.
  *
