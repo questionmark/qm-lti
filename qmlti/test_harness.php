@@ -51,9 +51,13 @@ require_once('lib.php');
     set_session('email');
     set_session('result');
     set_session('roles');
+    set_session('membership');
+    set_session('membership_id');
     set_session('outcome');
     set_session('outcomes');
     set_session('debug');
+    tc_save_user($db, $_SESSION);
+
   } else {
     init_data();
   }
@@ -62,6 +66,7 @@ require_once('lib.php');
   page_header($script);
 
 ?>
+<div class="col-md-12">
 <?php
   if (isset($_GET['lti_msg'])) {
     echo '<p style="font-weight: bold;">' . htmlentities($_GET['lti_msg']) . "</p>\n";
@@ -206,6 +211,28 @@ require_once('lib.php');
         </div>
 <?php
   $checked = '';
+  if (!empty($_SESSION['membership'])) {
+    $checked = ' checked="checked"';
+  }
+?>
+        <div class="row">
+          <div class="col1">
+            Context memberships service URL
+          </div>
+          <div class="col2">
+            <input type="checkbox" name="membership" value="1"<?php echo $checked; ?> onchange="onChange();" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col1">
+            Context memberships service ID
+          </div>
+          <div class="col2">
+            <input type="text" name="membership_id" class="form-control" value="<?php echo htmlentities($_SESSION['membership_id']); ?>" size="40" maxlength="255" onchange="onChange();" />
+          </div>
+        </div>
+<?php
+  $checked = '';
   if (!empty($_SESSION['outcome'])) {
     $checked = ' checked="checked"';
   }
@@ -252,65 +279,144 @@ require_once('lib.php');
         <input id="id_launch" class="btn btn-default" type="button" value="Launch" onclick="doLaunch(); return false;" />
 
         </form>
+        <br><br><br>
+        </div>
         </div>
         <br><br>
         <div class="container-fluid">
+        <div class="spacer-md"></div>
         <?php
-  $sql = 'SELECT result_sourcedid, score, created ' .
-         'FROM ' . TABLE_PREFIX . 'lti_outcome ' .
-         'ORDER BY created DESC';
-  $query = $db->prepare($sql);
-  $query->execute();
 
-  $row = $query->fetch();
+        $sql = 'SELECT consumer_key, context_id, user_id, firstname, lastname, fullname, email, roles, created, updated, lti_result_sourcedid ' . 
+               'FROM ' . TABLE_PREFIX . 'lti_tc_user ' . 
+               'ORDER BY updated DESC';
+        $query = $db->prepare($sql);
+        $query->execute();
 
-  $ok = ($row !== FALSE);
+        $row = $query->fetch();
+        $ok = ($row !== FALSE);
 
-  if ($ok) {
-?>
+        if ($ok) {
+
+        ?>
+
+        <div class="users_box">
+          <div class="row">
+          <h2>Users Currently in TC</h2>
+          </div>
+          <table class="DataTable table" cellpadding="0" cellspacing="0">
+            <tr class="GridHeader">
+              <td>Consumer Key</td>
+              <td>Context ID</td>
+              <td>Result Sourced ID</td>
+              <td>User ID</td>
+              <td>First Name</td>
+              <td>Last Name</td>
+              <td>Full Name</td>
+              <td>Email</td>
+              <td>Roles</td>
+              <td>Created</td>
+              <td>Updated</td>
+            </tr>
+
+        <?php
+          do {
+        ?>
+
+            <tr border="1" class="GridRow">
+              <td>&nbsp;<?php echo $row['consumer_key']; ?></td>
+              <td>&nbsp;<?php echo $row['context_id'] ?></td>
+              <td>&nbsp;<?php echo $row['lti_result_sourcedid'] ?></td>
+              <td>&nbsp;<?php echo $row['user_id'] ?></td>
+              <td>&nbsp;<?php echo $row['firstname'] ?></td>
+              <td>&nbsp;<?php echo $row['lastname'] ?></td>
+              <td>&nbsp;<?php echo $row['fullname'] ?></td>
+              <td>&nbsp;<?php echo $row['email'] ?></td>
+              <td>&nbsp;<?php echo $row['roles'] ?></td>
+              <td>&nbsp;<?php echo $row['created']; ?></td>
+              <td>&nbsp;<?php echo $row['updated']; ?></td>
+            </tr>
+
+        <?php
+              $row = $query->fetch();
+              $ok = ($row !== FALSE);
+            } while ($ok);
+          ?>
+      
+        </table>
+          </div>
+
+        <div class="spacer-md"></div>
+
+        <?php
+          }
+        ?>
+
+        <?php
+
+          $sql = 'SELECT result_sourcedid, score, created ' .
+                 'FROM ' . TABLE_PREFIX . 'lti_outcome ' .
+                 'ORDER BY created DESC';
+          $query = $db->prepare($sql);
+          $query->execute();
+
+          $row = $query->fetch();
+          $ok = ($row !== FALSE);
+
+          if ($ok) {
+
+        ?>
+
         <div class="grades_box">
           <div class="row">
           <h2>Grades</h2>
           </div>
           <table class="DataTable table" cellpadding="0" cellspacing="0">
           <tr class="GridHeader">
-            <td class="AssessmentAuthor">Result SourcedId</td>
-            <td class="AssessmentAuthor">Score</td>
+            <td>Result SourcedId</td>
+            <td>Score</td>
             <td class="Created">Created</td>
           </tr>
-<?php
-    do {
-?>
+
+          <?php
+            do {
+          ?>
+
           <tr border="1" class="GridRow">
             <td>&nbsp;<?php echo $row['result_sourcedid']; ?></td>
             <td>&nbsp;<?php echo round((float)$row['score'] * 100 ) . '%'; ?></td>
             <td>&nbsp;<?php echo $row['created']; ?></td>
           </tr>
-<?php
-      $row = $query->fetch();
-      $ok = ($row !== FALSE);
-    } while ($ok);
-?>
+
+          <?php
+              $row = $query->fetch();
+              $ok = ($row !== FALSE);
+            } while ($ok);
+          ?>
+
           </table>
           </div>
+
         <div class="spacer-md"></div>
-<?php
-  }
-?>
 
-<?php
-  $sql = 'SELECT context_id, assessment_id, is_accessible ' .
-         'FROM ' . TABLE_PREFIX . 'lti_coachingreports ' .
-         'ORDER BY context_id DESC';
-  $query = $db->prepare($sql);
-  $query->execute();
+        <?php
+          }
+        ?>
 
-  $row = $query->fetch();
+        <?php
+          $sql = 'SELECT context_id, assessment_id, is_accessible ' .
+                 'FROM ' . TABLE_PREFIX . 'lti_coachingreports ' .
+                 'ORDER BY context_id DESC';
+          
+          $query = $db->prepare($sql);
+          $query->execute();
 
-  $ok = ($row !== FALSE);
+          $row = $query->fetch();
+          $ok = ($row !== FALSE);
 
-  if ($ok) {
-?>
+          if ($ok) {
+        ?>
+
         <div class="coaching_box">
           <div class="row">
           <h2>Coaching Reports Accessibility</h2>
@@ -321,39 +427,45 @@ require_once('lib.php');
             <td class="AssessmentID">Assessment ID</td>
             <td class="IsAccessible">Is Accessible</td>
           </tr>
-<?php
-    do {
-?>
+
+          <?php
+              do {
+          ?>
+
           <tr border="1" class="GridRow">
             <td>&nbsp;<?php echo $row['context_id']; ?></td>
             <td>&nbsp;<?php echo $row['assessment_id']; ?></td>
             <td>&nbsp;<?php echo $row['is_accessible']; ?></td>
           </tr>
-<?php
-      $row = $query->fetch();
-      $ok = ($row !== FALSE);
-    } while ($ok);
-?>
+
+          <?php
+              $row = $query->fetch();
+              $ok = ($row !== FALSE);
+            } while ($ok);
+          ?>
+
           </table>
           </div>
         <div class="spacer-md"></div>
-<?php
-  }
-?>
 
-<?php
-  $sql = 'SELECT context_id, assessment_id, customer_id, created, score, result_id, is_accessed, result_sourcedid ' .
-         'FROM ' . TABLE_PREFIX . 'lti_results ' .
-         'ORDER BY created DESC';
-  $query = $db->prepare($sql);
-  $query->execute();
+        <?php
+          }
+        ?>
 
-  $row = $query->fetch();
+        <?php
+          $sql = 'SELECT context_id, assessment_id, customer_id, created, score, result_id, is_accessed, result_sourcedid ' .
+                 'FROM ' . TABLE_PREFIX . 'lti_results ' .
+                 'ORDER BY created DESC';
+          
+          $query = $db->prepare($sql);
+          $query->execute();
 
-  $ok = ($row !== FALSE);
+          $row = $query->fetch();
+          $ok = ($row !== FALSE);
 
-  if ($ok) {
-?>
+          if ($ok) {
+        ?>
+
         <div class="coaching_box">
           <div class="row">
           <h2>Student Results</h2>
@@ -369,9 +481,11 @@ require_once('lib.php');
             <td>Result ID</td>
             <td>Is Accessed by LMS</td>
           </tr>
-<?php
-    do {
-?>
+
+          <?php
+              do {
+          ?>
+
           <tr border="1" class="GridRow">
             <td>&nbsp;<?php echo $row['context_id']; ?></td>
             <td>&nbsp;<?php echo $row['assessment_id']; ?></td>
@@ -382,21 +496,21 @@ require_once('lib.php');
             <td>&nbsp;<?php echo $row['result_id']; ?></td>
             <td>&nbsp;<?php echo $row['is_accessed']; ?></td>
           </tr>
-<?php
-      $row = $query->fetch();
-      $ok = ($row !== FALSE);
-    } while ($ok);
-?>
+
+          <?php
+                $row = $query->fetch();
+                $ok = ($row !== FALSE);
+              } while ($ok);
+          ?>
+
           </table>
           </div>
         <div class="spacer-md"></div>
 
-<?php
-  }
-?>
+        <?php
+          }
+        ?>
+
       </div>
-<?php
 
-  page_footer();
-
-?>
+      <?php page_footer(); ?>

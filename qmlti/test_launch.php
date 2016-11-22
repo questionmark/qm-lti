@@ -41,7 +41,10 @@ require_once('lti/OAuth.php');
   if (!empty($_SESSION['outcomes'])) {
     $params['ext_ims_lis_basic_outcome_url'] = get_root_url() . 'test_outcome.php';
   }
-
+  if (!empty($_SESSION['membership'])) {
+    $params['ext_ims_lis_memberships_url'] = get_root_url() . 'test_membership.php';
+    $params['ext_ims_lis_memberships_id'] = $_SESSION['membership_id'];
+  }
   $params['launch_presentation_return_url'] = get_root_url() . 'test_harness.php';
   $params['resource_link_id'] = $_SESSION['rid'];
   $params['context_id'] = $_SESSION['cid'];
@@ -79,7 +82,7 @@ window.onload=doOnLoad;
 </head>
 <body>
 <div class="col-md-12">
-<p>Redirecting, please wait...</p>
+<p>&nbsp;&nbsp;Redirecting, please wait...</p>
 <?php
   echo "<form name=\"frmConnect\" action=\"{$url}\" method=\"post\">\n";
   foreach ($params as $name => $value) {
