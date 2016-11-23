@@ -46,6 +46,7 @@ require_once('lib.php');
     set_session('context_title');
     set_session('context_label');
     set_session('rid');
+    set_session('lis_person_sourcedid');
     set_session('uid');
     set_session('name');
     set_session('fname');
@@ -124,7 +125,7 @@ require_once('lib.php');
         </div>
         <div class="row">
           <div class="col1">
-            Context Label (Course ID)
+            Course ID
           </div>
           <div class="col2">
             <input type="text" name="context_label" class="form-control" value="<?php echo htmlentities($_SESSION['context_label']); ?>" size="10" maxlength="255" onchange="onChange();" />
@@ -132,7 +133,7 @@ require_once('lib.php');
         </div>
         <div class="row">
           <div class="col1">
-            Context Title (Course Name)
+            Course Name
           </div>
           <div class="col2">
             <input type="text" name="context_title" class="form-control" value="<?php echo htmlentities($_SESSION['context_title']); ?>" size="10" maxlength="255" onchange="onChange();" />
@@ -150,7 +151,14 @@ require_once('lib.php');
         <div class="row">
         <h2>User Details</h2>
         </div>
-
+        <div class="row">
+          <div class="col1">
+            Username
+          </div>
+          <div class="col2">
+            <input type="text" name="lis_person_sourcedid" class="form-control" value="<?php echo htmlentities($_SESSION['lis_person_sourcedid']); ?>" size="10" maxlength="255" onchange="onChange();" />
+          </div>
+        </div>
         <div class="row">
           <div class="col1">
             ID

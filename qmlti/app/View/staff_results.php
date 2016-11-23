@@ -1,8 +1,7 @@
         <div id="body" class="container-fluid">
         <p>
         <a class="btn btn-default" href="<?php echo $em_url; ?>" target="_blank" />Log into Enterprise Manager</a>&nbsp;&nbsp;
-        <a class="btn btn-default" href="staff.php" />Back to Control Panel</a>&nbsp;&nbsp;
-        <a class="btn btn-default" href="staff_sync.php">Sync LTI Information</a>
+        <a class="btn btn-default" href="staff.php" />Back to Control Panel</a>
         </p>
         <h1>Assessment Results</h1>
 <?php

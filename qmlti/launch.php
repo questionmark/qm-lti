@@ -61,7 +61,11 @@ require_once('LTI_Data_Connector_qmp.php');
     $context_title = $tool_provider->resource_link->lti_context_title;
     $context_label = $tool_provider->resource_link->lti_context_label;
     $supportsOutcomes = $tool_provider->resource_link->hasOutcomesService();
-    $username = $prefix . $tool_provider->user->getId();
+    if ($tool_provider->user->username != '') {
+      $username = $tool_provider->user->username;
+    } else {
+      $username = $prefix . $tool_provider->user->getId();
+    }
     // remove invalid characters in username
     $username = strtr($username, INVALID_USERNAME_CHARS, str_repeat('-', strlen(INVALID_USERNAME_CHARS)));
     $username = substr($username, 0, MAX_NAME_LENGTH);

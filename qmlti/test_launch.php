@@ -60,6 +60,7 @@ require_once('lti/OAuth.php');
     }
     $params['roles'] = substr($params['roles'], 1);
   }
+  $params['lis_person_sourcedid'] = $_SESSION['lis_person_sourcedid'];
   $params['lis_person_name_full'] = $_SESSION['name'];
   $params['lis_person_name_given'] = $_SESSION['fname'];
   $params['lis_person_name_family'] = $_SESSION['lname'];

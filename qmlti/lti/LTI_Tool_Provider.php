@@ -595,9 +595,11 @@ class LTI_Tool_Provider {
 #
 ### Set the user name
 #
+        $username = (isset($_POST['lis_person_sourcedid'])) ? $_POST['lis_person_sourcedid'] : '';
         $firstname = (isset($_POST['lis_person_name_given'])) ? $_POST['lis_person_name_given'] : '';
         $lastname = (isset($_POST['lis_person_name_family'])) ? $_POST['lis_person_name_family'] : '';
         $fullname = (isset($_POST['lis_person_name_full'])) ? $_POST['lis_person_name_full'] : '';
+        $this->user->username = $username;
         $this->user->setNames($firstname, $lastname, $fullname);
 #
 ### Set the user email
@@ -1536,9 +1538,11 @@ EOF;
 #
 ### Set the user name
 #
+        $username = (isset($members[$i]['lis_person_sourcedid'])) ? $members[$i]['lis_person_sourcedid'] : '';
         $firstname = (isset($members[$i]['person_name_given'])) ? $members[$i]['person_name_given'] : '';
         $lastname = (isset($members[$i]['person_name_family'])) ? $members[$i]['person_name_family'] : '';
         $fullname = (isset($members[$i]['person_name_full'])) ? $members[$i]['person_name_full'] : '';
+        $user->username = $username;
         $user->setNames($firstname, $lastname, $fullname);
 #
 ### Set the user email
@@ -2618,7 +2622,10 @@ class LTI_Context_Share extends LTI_Resource_Link_Share {
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
  */
 class LTI_User {
-
+/**
+ * User's username (generally implemented in Institution:User format)
+ */
+  public $username = '';
 /**
  * User's first name.
  */

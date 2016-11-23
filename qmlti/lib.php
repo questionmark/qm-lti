@@ -1230,6 +1230,7 @@ EOD;
     init_session('cid', '12345');
     init_session('context_label', 'JT123');
     init_session('context_title', 'Jane Teacher Course');
+    init_session('lis_person_sourcedid', 'UniversityofInst:JaneTeacher');
     init_session('rid', 'linkABC');
     init_session('uid', 'jt001');
     init_session('name', 'Jane Teacher');
@@ -1494,6 +1495,7 @@ EOD;
   $tool = new LTI_Tool_Provider(NULL, $data_connector);
 
   $user = new LTI_User($resource_link, $user_id);
+  $user->username = $session['lis_person_sourcedid'];
   $user->setNames($session['fname'], $session['lname'], $session['name']);
   $user->setEmail($session['email']);
   $user->lti_result_sourcedid = $session['result'];
