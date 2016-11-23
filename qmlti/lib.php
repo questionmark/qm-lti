@@ -923,6 +923,110 @@ function get_tc_participants($db, $consumer_key) {
 
   }
 
+/*
+ * SOAP call to get details for a group
+ *
+ *   returns the groups object or FALSE
+ */
+  function get_group_by_name($groupname) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $group = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_group_by_name($groupname);
+    } catch (Exception $e) {
+      $group = FALSE;
+    }
+
+    return $group;
+  }
+
+/*
+ * SOAP call to add participant to group
+ *
+ *   returns TRUE or FALSE
+ */
+  function add_group_participant_list($group_id, $participant_id) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $response = $GLOBALS['perceptionsoap'][$soap_connection_id]->add_group_participant_list($group_id, $participant_id);
+    } catch (Exception $e) {
+      $response = FALSE;
+    }
+
+    return $response;
+  }
+
+/*
+ * SOAP call to add administrator to group
+ *
+ *   returns TRUE or FALSE
+ */
+  function add_group_administrator_list($group_id, $administrator_id) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $response = $GLOBALS['perceptionsoap'][$soap_connection_id]->add_group_administrator_list($group_id, $administrator_id);
+    } catch (Exception $e) {
+      $response = FALSE;
+    }
+
+    return $response;
+
+  }
+
+/*
+ * SOAP call to add administrator to group
+ *
+ *   returns TRUE or FALSE
+ */
+  function get_participant_group_list($participant_id) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $response = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_participant_group_list($participant_id);
+    } catch (Exception $e) {
+      $response = FALSE;
+    }
+
+    return $response;
+
+  }
+
+/*
+ * SOAP call to add administrator to group
+ *
+ *   returns TRUE or FALSE
+ */
+  function get_administrator_group_list($administrator_id) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $response = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_administrator_group_list($administrator_id);
+    } catch (Exception $e) {
+      $response = FALSE;
+    }
+
+    return $response;
+
+  }
+
+/*
+ * SOAP call to create a group
+ *
+ *   returns the group ID or FALSE
+ */
+ function create_group($groupname, $description, $parentid) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $group_id = $GLOBALS['perceptionsoap'][$soap_connection_id]->create_group($groupname, $description, $parentid);
+    } catch (Exception $e) {
+      $group_id = FALSE;
+    }
+
+    return $group_id;
+ }
 
 /*
  * SOAP call to get details for a participant account
@@ -1124,6 +1228,8 @@ EOD;
       init_session('secret', '');
     }
     init_session('cid', '12345');
+    init_session('context_label', 'JT123');
+    init_session('context_title', 'Jane Teacher Course');
     init_session('rid', 'linkABC');
     init_session('uid', 'jt001');
     init_session('name', 'Jane Teacher');

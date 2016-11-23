@@ -47,6 +47,7 @@ require_once('LTI_Data_Connector_qmp.php');
     $student->identifyAction($_POST['action']);
   }
   $student->createParticipant();
+  $student->joinGroup();
 
   $bool_coaching_report = $student->isCoachingReportAvailable($db);
   $assessment = $student->getAssessment();

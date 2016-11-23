@@ -36,6 +36,8 @@
       $this->participant_name = "{$this->firstname} {$this->lastname}";
       $this->email = $_SESSION['email'];
       $this->return_url = $_SESSION['lti_return_url'];
+      $this->context_title = $_SESSION['context_title'];
+      $this->context_label = $_SESSION['context_label'];
       if (!$this->return_url) {
         $this->return_url = get_root_url() . 'return.php';
       }
@@ -83,6 +85,28 @@
         $this->participant_id = create_participant($this->username, $this->firstname, $this->lastname, $this->email);
       } else {
       	$this->participant_id = FALSE;
+      }
+    }
+
+    function joinGroup() {
+      if (!isset($_SESSION['error']) && (($group = get_group_by_name($this->context_label)) !== FALSE)) {
+        $this->group = $group->Group;
+      } else if (!isset($_SESSION['error'])) {
+        $this->group = create_group($this->context_label, $this->context_title, 0);
+      } else {
+        $this->group = FALSE;
+      }
+      if ($this->group != FALSE) {
+        $this->group_list = get_participant_group_list($this->participant_id);
+        $found = FALSE;
+        foreach ($this->group_list->GroupList as $group_item ) {
+          if ($group_item->Group_ID == $this->group->Group_ID) {
+            $found = TRUE;
+          }
+        }
+        if (!$found) {
+          add_group_participant_list($this->group->Group_ID, $this->participant_id);
+        } 
       }
     }
 

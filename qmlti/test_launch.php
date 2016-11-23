@@ -49,6 +49,10 @@ require_once('lti/OAuth.php');
   $params['resource_link_id'] = $_SESSION['rid'];
   $params['context_id'] = $_SESSION['cid'];
   $params['user_id'] = $_SESSION['uid'];
+
+  $params['context_title'] = $_SESSION['context_title'];
+  $params['context_label'] = $_SESSION['context_label'];
+
   $params['roles'] = '';
   if (is_array($_SESSION['roles'])) {
     foreach ($_SESSION['roles'] as $role) {

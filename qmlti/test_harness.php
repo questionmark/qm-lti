@@ -43,6 +43,8 @@ require_once('lib.php');
     set_session('key');
     set_session('secret');
     set_session('cid');
+    set_session('context_title');
+    set_session('context_label');
     set_session('rid');
     set_session('uid');
     set_session('name');
@@ -57,7 +59,6 @@ require_once('lib.php');
     set_session('outcomes');
     set_session('debug');
     tc_save_user($db, $_SESSION);
-
   } else {
     init_data();
   }
@@ -119,6 +120,22 @@ require_once('lib.php');
           </div>
           <div class="col2">
             <input type="text" name="cid" class="form-control" value="<?php echo htmlentities($_SESSION['cid']); ?>" size="10" maxlength="255" onchange="onChange();" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col1">
+            Context Label (Course ID)
+          </div>
+          <div class="col2">
+            <input type="text" name="context_label" class="form-control" value="<?php echo htmlentities($_SESSION['context_label']); ?>" size="10" maxlength="255" onchange="onChange();" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col1">
+            Context Title (Course Name)
+          </div>
+          <div class="col2">
+            <input type="text" name="context_title" class="form-control" value="<?php echo htmlentities($_SESSION['context_title']); ?>" size="10" maxlength="255" onchange="onChange();" />
           </div>
         </div>
         <div class="row">

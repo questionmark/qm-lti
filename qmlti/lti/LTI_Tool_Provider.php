@@ -547,6 +547,12 @@ class LTI_Tool_Provider {
         $title = '';
         if (isset($_POST['context_title'])) {
           $title = trim($_POST['context_title']);
+          $this->resource_link->lti_context_title = trim($_POST['context_title']);
+        }
+        if (isset($_POST['context_label'])) {
+          $this->resource_link->lti_context_label = trim($_POST['context_label']);
+        } else {
+          $this->resource_link->lti_context_label = trim($_POST['resource_link_id']);
         }
         if (isset($_POST['resource_link_title']) && (strlen(trim($_POST['resource_link_title'])) > 0)) {
           if (!empty($title)) {
@@ -1057,11 +1063,19 @@ class LTI_Resource_Link {
  */
   public $lti_context_id = NULL;
 /**
+ * Context title as supplied in the last connection request.
+ */
+  public $lti_context_title = NULL;
+/**
+ * Context label as supplied in the last connection request.
+ */
+  public $lti_context_label = NULL;
+/**
  * Resource link ID as supplied in the last connection request.
  */
   public $lti_resource_id = NULL;
 /**
- * Context title.
+ * Resource link title.
  */
   public $title = NULL;
 /**

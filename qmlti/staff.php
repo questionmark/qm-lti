@@ -46,6 +46,9 @@ require_once('LTI_Data_Connector_qmp.php');
   $multipleResults = $_SESSION['multiple_results'];
   $arr_results = [ "Best", "Worst", "Newest", "Oldest" ];
 
+  $context_label = $_SESSION['context_label'];
+  $context_title = $_SESSION['context_title'];
+
   $coaching_check = '';
   $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
   $consumer = new LTI_Tool_Consumer($consumer_key, $data_connector);
@@ -125,6 +128,32 @@ require_once('LTI_Data_Connector_qmp.php');
     $admin_id = $admin_details->Administrator_ID;
   } else if ($ok && (($admin_id = create_administrator_with_password($username, $firstname, $lastname, $email, ADMINISTRATOR_ROLE)) === FALSE)) {
     $ok = FALSE;
+  }
+
+  // Join group
+  if ($ok && (($group_response = get_group_by_name($context_label)) !== FALSE)) {
+    $group = $group_response->Group;
+  } else if ($ok) {
+    $group = create_group($context_label, $context_title, 0);
+  } else {
+    $group = FALSE;
+    $ok = FALSE;
+  }
+  if ($group != FALSE) {
+    $group_list = get_administrator_group_list($admin_id);
+    $found = FALSE;
+    if ($group_list != FALSE) {
+      foreach ($group_list->GroupList->Group as $group_item ) {
+        if ($group_item->Group_ID == $group->Group_ID) {
+          $found = TRUE;
+        }
+      }
+    } else {
+      $ok = FALSE;
+    }
+    if ($ok && !$found) {
+      add_group_administrator_list($group->Group_ID, $admin_id);
+    } 
   }
 
 // Get login URL
