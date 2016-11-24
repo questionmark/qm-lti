@@ -549,7 +549,7 @@ class LTI_Tool_Provider {
           $title = trim($_POST['context_title']);
           $this->resource_link->lti_context_title = trim($_POST['context_title']);
         }
-        if (isset($_POST['context_label'])) {
+        if (isset($_POST['context_label']) && $_POST['context_label'] != '') {
           $this->resource_link->lti_context_label = trim($_POST['context_label']);
         } else {
           $this->resource_link->lti_context_label = trim($_POST['resource_link_id']);

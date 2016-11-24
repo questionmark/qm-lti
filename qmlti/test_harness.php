@@ -236,28 +236,6 @@ require_once('lib.php');
         </div>
 <?php
   $checked = '';
-  if (!empty($_SESSION['membership'])) {
-    $checked = ' checked="checked"';
-  }
-?>
-        <div class="row">
-          <div class="col1">
-            Context memberships service URL
-          </div>
-          <div class="col2">
-            <input type="checkbox" name="membership" value="1"<?php echo $checked; ?> onchange="onChange();" />
-          </div>
-        </div>
-        <div class="row">
-          <div class="col1">
-            Context memberships service ID
-          </div>
-          <div class="col2">
-            <input type="text" name="membership_id" class="form-control" value="<?php echo htmlentities($_SESSION['membership_id']); ?>" size="40" maxlength="255" onchange="onChange();" />
-          </div>
-        </div>
-<?php
-  $checked = '';
   if (!empty($_SESSION['outcome'])) {
     $checked = ' checked="checked"';
   }
@@ -310,72 +288,6 @@ require_once('lib.php');
         <br><br>
         <div class="container-fluid">
         <div class="spacer-md"></div>
-        <?php
-
-        $sql = 'SELECT consumer_key, context_id, user_id, firstname, lastname, fullname, email, roles, created, updated, lti_result_sourcedid ' . 
-               'FROM ' . TABLE_PREFIX . 'lti_tc_user ' . 
-               'ORDER BY updated DESC';
-        $query = $db->prepare($sql);
-        $query->execute();
-
-        $row = $query->fetch();
-        $ok = ($row !== FALSE);
-
-        if ($ok) {
-
-        ?>
-
-        <div class="users_box">
-          <div class="row">
-          <h2>Users Currently in TC</h2>
-          </div>
-          <table class="DataTable table" cellpadding="0" cellspacing="0">
-            <tr class="GridHeader">
-              <td>Consumer Key</td>
-              <td>Context ID</td>
-              <td>Result Sourced ID</td>
-              <td>User ID</td>
-              <td>First Name</td>
-              <td>Last Name</td>
-              <td>Full Name</td>
-              <td>Email</td>
-              <td>Roles</td>
-              <td>Created</td>
-              <td>Updated</td>
-            </tr>
-
-        <?php
-          do {
-        ?>
-
-            <tr border="1" class="GridRow">
-              <td>&nbsp;<?php echo $row['consumer_key']; ?></td>
-              <td>&nbsp;<?php echo $row['context_id'] ?></td>
-              <td>&nbsp;<?php echo $row['lti_result_sourcedid'] ?></td>
-              <td>&nbsp;<?php echo $row['user_id'] ?></td>
-              <td>&nbsp;<?php echo $row['firstname'] ?></td>
-              <td>&nbsp;<?php echo $row['lastname'] ?></td>
-              <td>&nbsp;<?php echo $row['fullname'] ?></td>
-              <td>&nbsp;<?php echo $row['email'] ?></td>
-              <td>&nbsp;<?php echo $row['roles'] ?></td>
-              <td>&nbsp;<?php echo $row['created']; ?></td>
-              <td>&nbsp;<?php echo $row['updated']; ?></td>
-            </tr>
-
-        <?php
-              $row = $query->fetch();
-              $ok = ($row !== FALSE);
-            } while ($ok);
-          ?>
-      
-        </table>
-          </div>
-
-        <div class="spacer-md"></div>
-
-        <?php
-          }
-        ?>
 
         <?php
 

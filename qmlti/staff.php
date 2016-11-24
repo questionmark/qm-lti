@@ -143,8 +143,14 @@ require_once('LTI_Data_Connector_qmp.php');
     $group_list = get_administrator_group_list($admin_id);
     $found = FALSE;
     if ($group_list != FALSE) {
-      foreach ($group_list->GroupList->Group as $group_item ) {
-        if ($group_item->Group_ID == $group->Group_ID) {
+      if (((count( (array)$group_list->GroupList) ) != 0) && (is_array($group_list->GroupList->Group))) {
+        foreach ($group_list->GroupList->Group as $group_item ) {
+          if ($group_item->Group_ID == $group->Group_ID) {
+            $found = TRUE;
+          }
+        }
+      } else {
+        if (((count( (array)$group_list->GroupList) ) != 0) && ($group_list->GroupList->Group->Group_ID == $group->Group_ID)) {
           $found = TRUE;
         }
       }

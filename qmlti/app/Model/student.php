@@ -99,8 +99,14 @@
       if ($this->group != FALSE) {
         $this->group_list = get_participant_group_list($this->participant_id);
         $found = FALSE;
-        foreach ($this->group_list->GroupList as $group_item ) {
-          if ($group_item->Group_ID == $this->group->Group_ID) {
+        if (((count( (array)$this->group_list->GroupList) ) != 0) && is_array($this->group_list->GroupList)) {
+          foreach ($this->group_list->GroupList as $group_item ) {
+            if ($group_item->Group_ID == $this->group->Group_ID) {
+              $found = TRUE;
+            }
+          }
+        } else {
+          if (((count( (array)$this->group_list->GroupList) ) != 0) && ($this->group_list->GroupList->Group->Group_ID == $this->group->Group_ID)) {
             $found = TRUE;
           }
         }
