@@ -75,11 +75,34 @@
 ?>
           <option value="<?php echo $results; ?>" <?php echo $selectresults; ?>><?php echo $results ?></option>
 <?php
-      }
-             
+      }             
 ?>
         </select>
         </div>
+        </div>
+        <br>
+        <div class="row">
+          <div class="col1">
+          Number of Attempts
+          </div>
+          <div class="col2">
+          
+          <select id="id_numberattempts" class="form-control dropdown-select" name="id_numberattempts" onchange="doChange('');">
+            <option value="none">No limit</option>
+            <?php
+              for ($i = 1; $i <= 10; $i++) {
+                if ($i == $numberAttempts) {
+                  $selectattempts = 'selected';
+                } else {
+                  $selectattempts = 'selected';
+                }
+            ?>
+              <option value="<?php echo $i; ?>" <?php echo $selectattempts ?>><?php echo $i; ?></option>
+            <?php 
+              }
+            ?>
+          </select>
+          </div>
         </div>
         <br><br><br>
         <input class="button btn" type="submit" id="id_save" value="Save change" disabled="disabled" />

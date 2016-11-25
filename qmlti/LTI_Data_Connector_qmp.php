@@ -580,6 +580,29 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
   }
 
 ###
+#     Gets the number of results a participant has previously taken an assessment
+###
+  public function Results_getResultsByParticipant($resource_link_id, $assessment_id, $participant_name) {
+
+    $sql = 'SELECT COUNT(*) ' .
+           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
+           'WHERE (assessment_id = :assessment) AND (context_id = :context) AND (consumer_key = :consumer)';
+    error_log("Debugging: RESOURCE_LINK_ID: {$resource_link_id} | ASSESSMENT_ID: {$assessment_id} | PARTICIPANT_NAME: {$participant_name}");
+    $query = $this->db->prepare($sql);
+    $query->bindValue('assessment', $assessment_id, PDO::PARAM_STR);
+    $query->bindValue('context', $resource_link_id, PDO::PARAM_STR);
+    $query->bindValue('consumer', $participant_name, PDO::PARAM_STR);
+    $ok = $query->execute();
+    if ($ok) {
+      $row = $query->fetch();
+      $count = $row['COUNT(*)'];
+    } else {
+      return FALSE;
+    }
+    return $count;
+  }
+
+###
 #    Saves the current result into the Results table.
 ###
   public function Results_save($outcome, $consumer, $resource_link, $participant, $is_accessed, $result_sourcedid) {

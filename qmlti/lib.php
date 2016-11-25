@@ -47,6 +47,7 @@ require_once('lti/LTI_Tool_Provider.php');
   define('ASSESSMENT_SETTING', 'qmp_assessment_id');
   define('COACHING_REPORT', 'qmp_coaching_reports');
   define('MULTIPLE_RESULTS', 'qmp_multiple_results');
+  define('NUMBER_ATTEMPTS', 'qmp_number_attempts');
 // LTI roles supported
   $LTI_ROLES = array('a' => 'Administrator',
                      'd' => 'ContentDeveloper',
@@ -707,6 +708,18 @@ function is_best_result($db, $consumer, $resource_link, $participant_name, $scor
     }
   }
 }
+
+/*
+ * Returns the number of assessments previously logged for the user
+ *
+ * returns the numeral value
+ */
+function get_past_attempts($db, $resource_link_id, $assessment_id, $participant_name) {
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+  $past_attempts = $data_connector->Results_getResultsByParticipant($resource_link_id, $assessment_id, $participant_name);
+  return $past_attempts;
+}
+
 
 /*
  * Returns the result currently accessed by the LMS

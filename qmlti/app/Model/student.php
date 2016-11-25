@@ -19,6 +19,7 @@
     protected $notify_url = NULL;
     protected $result_id = NULL;
     protected $participant_id = NULL;
+    protected $number_attempts = NULL;
 
     protected $db = NULL;
     protected $data_connector = NULL;
@@ -38,6 +39,7 @@
       $this->return_url = $_SESSION['lti_return_url'];
       $this->context_title = $_SESSION['context_title'];
       $this->context_label = $_SESSION['context_label'];
+      $this->number_attempts = $_SESSION['number_attempts'];
       if (!$this->return_url) {
         $this->return_url = get_root_url() . 'return.php';
       }
@@ -126,6 +128,18 @@
         $assessment = get_assessment($this->assessment_id);
       }
       return $assessment;
+    }
+
+    function getAttemptDetails() {
+      $past_attempts = 0;
+      if (!isset($_SESSION['error'])) {
+        $past_attempts = get_past_attempts($this->db, $this->resource_link_id, $this->assessment_id, $this->participant_name);
+      }
+      return $past_attempts;
+    }
+
+    function getNumberAttempts() {
+      return $this->number_attempts;
     }
 
     function getAccessAssessmentNotify() {

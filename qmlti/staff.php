@@ -44,6 +44,7 @@ require_once('LTI_Data_Connector_qmp.php');
   $coachingReport = $_SESSION['coaching_report'];
   $assessment_id = $_SESSION['assessment_id'];
   $multipleResults = $_SESSION['multiple_results'];
+  $numberAttempts = $_SESSION['number_attempts'];
   $arr_results = [ "Best", "Worst", "Newest", "Oldest" ];
 
   $context_label = $_SESSION['context_label'];
@@ -93,8 +94,13 @@ require_once('LTI_Data_Connector_qmp.php');
       }
     }
 
+    if (isset($_POST['id_numberattempts'])) {
+      $numberAttempts = $_POST['id_numberattempts'];
+    }
+
     $resource_link->setSetting(COACHING_REPORT, $coachingReport);
     $resource_link->setSetting(MULTIPLE_RESULTS, $multipleResults);
+    $resource_link->setSetting(NUMBER_ATTEMPTS, $numberAttempts);
     $resource_link->save();
 
     // Insert / Update Coaching Reports index
@@ -104,14 +110,6 @@ require_once('LTI_Data_Connector_qmp.php');
       $save = $data_connector->ReportConfig_insert($consumer_key, $resource_link_id, $assessment_id, $intCoaching);
     }
   }
-
-  if (isset($_POST['id_multipleresult'])) {
-    if ($multipleResults != $_POST['id_multipleresult']) {
-      update_result_accessed($db, $consumer, $resource_link, $assessment_id, $_POST['id_multipleresult'] );
-      $multipleResults = $_POST['id_multipleresult'];
-    }
-  }
-
 
   $ok = !$isStudent;
   if (!$ok) {
