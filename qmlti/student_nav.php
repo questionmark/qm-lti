@@ -53,7 +53,8 @@ require_once('LTI_Data_Connector_qmp.php');
   $assessment = $student->getAssessment();
   $past_attempts = $student->getAttemptDetails();
   $number_attempts = $student->getNumberAttempts();
-  error_log(print_r($past_attempts, true));
+  $launch_disabled = $student->checkLaunchDisabled();
+  $parsed_attempts = $student->getParsedAttempts();
 
   if (isset($_SESSION['error'])) {
    header("Location: error.php");

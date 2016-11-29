@@ -55,6 +55,16 @@ require_once('LTI_Data_Connector_qmp.php');
   $consumer = new LTI_Tool_Consumer($consumer_key, $data_connector);
   $resource_link = new LTI_Resource_Link($consumer, $resource_link_id);
 
+  if (isset($_POST['id_numberattempts'])) {
+    $numberAttempts = $_POST['id_numberattempts'];
+  }
+
+  if ($numberAttempts == 'none') {
+    $no_attempts = 'selected';
+  } else {
+    $no_attempts = '';
+  }
+
   // checks if a coaching report setting is already set
   if (isset($coachingReport)) {
     if ($coachingReport) {
@@ -94,9 +104,6 @@ require_once('LTI_Data_Connector_qmp.php');
       }
     }
 
-    if (isset($_POST['id_numberattempts'])) {
-      $numberAttempts = $_POST['id_numberattempts'];
-    }
 
     $resource_link->setSetting(COACHING_REPORT, $coachingReport);
     $resource_link->setSetting(MULTIPLE_RESULTS, $multipleResults);

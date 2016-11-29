@@ -40,6 +40,7 @@
       $this->context_title = $_SESSION['context_title'];
       $this->context_label = $_SESSION['context_label'];
       $this->number_attempts = $_SESSION['number_attempts'];
+      $this->parsed_attempts = $this->number_attempts;
       if (!$this->return_url) {
         $this->return_url = get_root_url() . 'return.php';
       }
@@ -50,6 +51,7 @@
       $this->data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $this->db, DATA_CONNECTOR);
       $this->consumer = new LTI_Tool_Consumer($this->consumer_key, $this->data_connector);
       $this->resource_link = new LTI_Resource_Link($this->consumer, $this->resource_link_id);
+      $this->past_attempts = 0;
     }
 
     function checkValid() {
@@ -131,15 +133,31 @@
     }
 
     function getAttemptDetails() {
-      $past_attempts = 0;
       if (!isset($_SESSION['error'])) {
-        $past_attempts = get_past_attempts($this->db, $this->resource_link_id, $this->assessment_id, $this->participant_name);
+        $this->past_attempts = get_past_attempts($this->db, $this->resource_link_id, $this->assessment_id, $this->participant_name);
       }
-      return $past_attempts;
+      return $this->past_attempts;
     }
 
     function getNumberAttempts() {
       return $this->number_attempts;
+    }
+
+    function checkLaunchDisabled() {
+      if ($this->number_attempts != 'none') {
+        if ($this->past_attempts >= $this->number_attempts) {
+          return 'disabled';
+        } else {
+          return '';
+        }
+      } else {
+        $this->parsed_attempts = 'No limit';
+        return '';
+      }
+    }
+
+    function getParsedAttempts() {
+      return $this->parsed_attempts;
     }
 
     function getAccessAssessmentNotify() {

@@ -586,12 +586,11 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 
     $sql = 'SELECT COUNT(*) ' .
            'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
-           'WHERE (assessment_id = :assessment) AND (context_id = :context) AND (consumer_key = :consumer)';
-    error_log("Debugging: RESOURCE_LINK_ID: {$resource_link_id} | ASSESSMENT_ID: {$assessment_id} | PARTICIPANT_NAME: {$participant_name}");
+           'WHERE (assessment_id = :assessment) AND (context_id = :context) AND (customer_id = :customer)';
     $query = $this->db->prepare($sql);
     $query->bindValue('assessment', $assessment_id, PDO::PARAM_STR);
     $query->bindValue('context', $resource_link_id, PDO::PARAM_STR);
-    $query->bindValue('consumer', $participant_name, PDO::PARAM_STR);
+    $query->bindValue('customer', $participant_name, PDO::PARAM_STR);
     $ok = $query->execute();
     if ($ok) {
       $row = $query->fetch();
@@ -886,6 +885,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 ###
 
   public function User_loadUsersbyContext($consumer_key, $context_id) {
+
     $sql = 'SELECT user_id, firstname, lastname, fullname, email, roles, created, updated, lti_result_sourcedid ' .
     'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::USER_TABLE_NAME . ' ' .
     'WHERE (consumer_key = :key) AND (context_id = :id)';
@@ -906,6 +906,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 ###
 
   public function TCUser_loadUsersbyContext($consumer_key, $context_id) {
+
     $sql = 'SELECT user_id, firstname, lastname, fullname, email, roles, created, updated, lti_result_sourcedid ' .
     'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::TC_USER_TABLE_NAME . ' ' .
     'WHERE (consumer_key = :key) AND (context_id = :id)';
@@ -926,6 +927,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 ###
 
   public function TCUser_loadUsers($consumer_key) {
+
     $sql = 'SELECT user_id, firstname, lastname, fullname, email, roles, created, updated, lti_result_sourcedid ' .
     'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::TC_USER_TABLE_NAME . ' ' .
     'WHERE (consumer_key = :key)';
@@ -945,6 +947,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 ###
 
   public function User_loadUsers($consumer_key) {
+
     $sql = 'SELECT user_id, firstname, lastname, fullname, email, roles, created, updated, lti_result_sourcedid ' .
     'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::USER_TABLE_NAME . ' ' .
     'WHERE (consumer_key = :key)';

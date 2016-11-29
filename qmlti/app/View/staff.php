@@ -73,7 +73,7 @@
           $selectresults = ''; 
         }
 ?>
-          <option value="<?php echo $results; ?>" <?php echo $selectresults; ?>><?php echo $results ?></option>
+          <option value="<?php echo $results; ?>" <?php echo $selectresults; ?>><?php echo $results; ?></option>
 <?php
       }             
 ?>
@@ -88,16 +88,16 @@
           <div class="col2">
           
           <select id="id_numberattempts" class="form-control dropdown-select" name="id_numberattempts" onchange="doChange('');">
-            <option value="none">No limit</option>
+            <option value="none" <?php echo $no_attempts; ?>>No limit</option>
             <?php
               for ($i = 1; $i <= 10; $i++) {
                 if ($i == $numberAttempts) {
-                  $selectattempts = 'selected';
+                  $num_attempts = 'selected';
                 } else {
-                  $selectattempts = 'selected';
+                  $num_attempts = '';
                 }
             ?>
-              <option value="<?php echo $i; ?>" <?php echo $selectattempts ?>><?php echo $i; ?></option>
+              <option value="<?php echo $i; ?>" <?php echo $num_attempts; ?>><?php echo $i; ?></option>
             <?php 
               }
             ?>
