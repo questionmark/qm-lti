@@ -869,8 +869,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     $query = $this->db->prepare($sql);
     $query->bindValue('key', $consumer_key, PDO::PARAM_STR);
     $query->bindValue('id', $context_id, PDO::PARAM_STR);
-    $ok = $query->execute();
-    if ($ok) {
+    if ($query->execute()) {
       $users = $query->fetchAll();
     } else {
       return FALSE;
@@ -889,8 +888,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     $query = $this->db->prepare($sql);
     $query->bindValue('key', $consumer_key, PDO::PARAM_STR);
     $query->bindValue('id', $context_id, PDO::PARAM_STR);
-    $ok = $query->execute();
-    if ($ok) {
+    if ($query->execute()) {
       $users = $query->fetchAll();
     } else {
       return FALSE;
@@ -908,8 +906,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     'WHERE (consumer_key = :key)';
     $query = $this->db->prepare($sql);
     $query->bindValue('key', $consumer_key, PDO::PARAM_STR);
-    $ok = $query->execute();
-    if ($ok) {
+    if ($query->execute()) {
       $users = $query->fetchAll();
     } else {
       return FALSE;
@@ -927,8 +924,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     'WHERE (consumer_key = :key)';
     $query = $this->db->prepare($sql);
     $query->bindValue('key', $consumer_key, PDO::PARAM_STR);
-    $ok = $query->execute();
-    if ($ok) {
+    if ($query->execute()) {
       $users = $query->fetchAll();
     } else {
       return FALSE;
@@ -1074,8 +1070,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     }
 
     return $ok;
-
-
+    
   }
 
 ###
