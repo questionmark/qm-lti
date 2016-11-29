@@ -41,11 +41,18 @@ require_once('lti/OAuth.php');
   if (!empty($_SESSION['outcomes'])) {
     $params['ext_ims_lis_basic_outcome_url'] = get_root_url() . 'test_outcome.php';
   }
-
+  if (!empty($_SESSION['membership'])) {
+    $params['ext_ims_lis_memberships_url'] = get_root_url() . 'test_membership.php';
+    $params['ext_ims_lis_memberships_id'] = $_SESSION['membership_id'];
+  }
   $params['launch_presentation_return_url'] = get_root_url() . 'test_harness.php';
   $params['resource_link_id'] = $_SESSION['rid'];
   $params['context_id'] = $_SESSION['cid'];
   $params['user_id'] = $_SESSION['uid'];
+
+  $params['context_title'] = $_SESSION['context_title'];
+  $params['context_label'] = $_SESSION['context_label'];
+
   $params['roles'] = '';
   if (is_array($_SESSION['roles'])) {
     foreach ($_SESSION['roles'] as $role) {
@@ -53,6 +60,7 @@ require_once('lti/OAuth.php');
     }
     $params['roles'] = substr($params['roles'], 1);
   }
+  $params['lis_person_sourcedid'] = $_SESSION['lis_person_sourcedid'];
   $params['lis_person_name_full'] = $_SESSION['name'];
   $params['lis_person_name_given'] = $_SESSION['fname'];
   $params['lis_person_name_family'] = $_SESSION['lname'];
@@ -79,7 +87,7 @@ window.onload=doOnLoad;
 </head>
 <body>
 <div class="col-md-12">
-<p>Redirecting, please wait...</p>
+<p>&nbsp;&nbsp;Redirecting, please wait...</p>
 <?php
   echo "<form name=\"frmConnect\" action=\"{$url}\" method=\"post\">\n";
   foreach ($params as $name => $value) {

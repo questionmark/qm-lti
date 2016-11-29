@@ -5,7 +5,7 @@
         </p>
         <h1>Assessment Results</h1>
 <?php
-  if ((count($results) > 0) && !is_null($results[0])) {
+  if (($results != NULL) && (count($results) > 0) && !is_null($results[0])) {
 ?>
         <form action="staff.php" method="POST">
         <table class="DataTable table table-sm" cellpadding="0" cellspacing="0">

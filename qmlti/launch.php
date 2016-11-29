@@ -57,9 +57,16 @@ require_once('LTI_Data_Connector_qmp.php');
 
     $consumer_key = $tool_provider->consumer->getKey();
     $resource_link_id = $tool_provider->resource_link->getId();
+    $context_id = $tool_provider->resource_link->lti_context_id;
+    $context_title = $tool_provider->resource_link->lti_context_title;
+    $context_label = $tool_provider->resource_link->lti_context_label;
     $supportsOutcomes = $tool_provider->resource_link->hasOutcomesService();
-    $username = $prefix . $tool_provider->user->getId();
-// remove invalid characters in username
+    if ($tool_provider->user->username != '') {
+      $username = $tool_provider->user->username;
+    } else {
+      $username = $prefix . $tool_provider->user->getId();
+    }
+    // remove invalid characters in username
     $username = strtr($username, INVALID_USERNAME_CHARS, str_repeat('-', strlen(INVALID_USERNAME_CHARS)));
     $username = substr($username, 0, MAX_NAME_LENGTH);
     $firstname = substr($tool_provider->user->firstname, 0, MAX_NAME_LENGTH);
@@ -83,6 +90,9 @@ require_once('LTI_Data_Connector_qmp.php');
       $_SESSION['email'] = $email;
       $_SESSION['isStudent'] = $isStudent;
       $_SESSION['consumer_key'] = $consumer_key;
+      $_SESSION['context_id'] = $context_id;
+      $_SESSION['context_title'] = $context_title;
+      $_SESSION['context_label'] = $context_label;
       $_SESSION['resource_link_id'] = $resource_link_id;
       $_SESSION['assessment_id'] = $assessment_id;
       $_SESSION['multiple_results'] = $multiple_results;

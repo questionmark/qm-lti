@@ -203,6 +203,27 @@ class PerceptionSoap {
 
   }
 
+    public function get_assessment_list($parent_id, $only_run_from_integration) {
+
+    try {
+      $list = $this->soap->GetAssessmentList(array(
+        "Parent_ID" => $parent_id,
+        "OnlyRunFromIntegration" => $only_run_from_integration
+      ));
+    } catch(SoapFault $e) {
+      throw new QMWiseException($e);
+    }
+
+    if (!isset($list->AssessmentList->Assessment)) {
+      return array();
+    } else if (!is_array($list->AssessmentList->Assessment)) {
+      return array($list->AssessmentList->Assessment);
+    } else {
+      return $list->AssessmentList->Assessment;
+    }
+
+  }
+
   public function get_assessment_list_by_administrator($admin_id, $parent_id, $only_run_from_integration) {
 
     try {
@@ -326,9 +347,111 @@ class PerceptionSoap {
   }
 
   /**
-   * get_participant ($username)
-   * Get an participant's details from perception,
-   * we are especially interested in participant id
+   * get_group_by_name($groupname)
+   * Gets a group from perception
+   */
+  public function get_group_by_name($groupname) {
+    try {
+      $response = $this->soap->GetGroupByName(array(
+        'Group_Name' => $groupname
+      ));
+    } catch (SoapFault $e) {
+      throw new QMWiseException($e);
+    }
+    return $response;
+  }
+
+  /**
+   * create_group($groupname, $description, $parentid)
+   * Creates a group with a specified name, description and parent group id
+   */
+  public function create_group($groupname, $description, $parentid) {
+    try {
+      $response = $this->soap->CreateGroup(array(
+        'Group' => array(
+          'Parent_ID' => $parentid,
+          'Group_Name' => $groupname,
+          'Description' => $description,
+          // Required attributes from QMWise
+          'Account_Status' => '',
+          'Max_Participants' => '',
+          'Max_Sessions_Attempt' => '',
+          'Session_Taken' => '',
+          'Account_Type' => '',
+          'Use_Emailing' => ''
+        )
+      ));
+    } catch (SoapFault $e) {
+      throw new QMWiseException($e);
+    }
+    return $response;
+  }
+
+  /**
+   * Adds the participant to the group
+   */
+  public function add_group_participant_list($groupid, $participantid) {
+    try {
+      $response = $this->soap->AddGroupParticipantList(array(
+        'Group_ID' => $groupid,
+        'ParticipantIDList' => array(
+          'Participant_ID' => $participantid
+        )
+      ));
+    } catch (SoapFault $e) {
+      throw new QMWiseException($e);
+    }
+    return $response;
+  }
+
+  /**
+   * Adds an administrator to the group
+   */
+  public function add_group_administrator_list($groupid, $administratorid) {
+    try {
+      $response = $this->soap->AddGroupAdministratorList(array(
+        'Group_ID' => $groupid,
+        'AdministratorIDList' => array(
+          'Administrator_ID' => $administratorid
+        )
+      ));
+    } catch (SoapFault $e) {
+      throw new QMWiseException($e);
+    }
+    return $response;
+  }
+
+  /**
+   * Gets group list attached to participant
+   */
+  public function get_participant_group_list($participantid) {
+    try {
+      $response = $this->soap->GetParticipantGroupList(array(
+        'Participant_ID' => $participantid
+      ));
+    } catch (SoapFault $e) {
+      throw new QMWiseException($e);
+    }
+    return $response;
+  }
+
+  /**
+   * Gets group list attached to administrator
+   */
+  public function get_administrator_group_list($administratorid) {
+    try {
+      $response = $this->soap->GetAdministratorGroupList(array(
+        'Administrator_ID' => $administratorid
+      ));
+    } catch (SoapFault $e) {
+      throw new QMWiseException($e);
+    }
+    return $response;
+  }
+
+  /**
+   * get_participant_by_name($username)
+   * Get an participant's details from perception
    */
   public function get_participant_by_name($username) {
     try {
@@ -344,8 +467,7 @@ class PerceptionSoap {
 
   /**
    * create_participant($username, $firstname, $lastname, $email, $profile)
-   * Create a participant in perception,
-   * we are especially interested in participant id
+   * Create a participant in perception
    */
   public function create_participant($username, $firstname, $lastname, $email) {
 

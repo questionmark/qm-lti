@@ -46,6 +46,9 @@ require_once('LTI_Data_Connector_qmp.php');
   $multipleResults = $_SESSION['multiple_results'];
   $arr_results = [ "Best", "Worst", "Newest", "Oldest" ];
 
+  $context_label = $_SESSION['context_label'];
+  $context_title = $_SESSION['context_title'];
+
   $coaching_check = '';
   $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
   $consumer = new LTI_Tool_Consumer($consumer_key, $data_connector);
@@ -127,14 +130,47 @@ require_once('LTI_Data_Connector_qmp.php');
     $ok = FALSE;
   }
 
+  // Join group
+  if ($ok && (($group_response = get_group_by_name($context_label)) !== FALSE)) {
+    $group = $group_response->Group;
+  } else if ($ok) {
+    $group = create_group($context_label, $context_title, 0);
+  } else {
+    $group = FALSE;
+    $ok = FALSE;
+  }
+  if ($group != FALSE) {
+    $group_list = get_administrator_group_list($admin_id);
+    $found = FALSE;
+    if ($group_list != FALSE) {
+      if (((count( (array)$group_list->GroupList) ) != 0) && (is_array($group_list->GroupList->Group))) {
+        foreach ($group_list->GroupList->Group as $group_item ) {
+          if ($group_item->Group_ID == $group->Group_ID) {
+            $found = TRUE;
+          }
+        }
+      } else {
+        if (((count( (array)$group_list->GroupList) ) != 0) && ($group_list->GroupList->Group->Group_ID == $group->Group_ID)) {
+          $found = TRUE;
+        }
+      }
+    } else {
+      $ok = FALSE;
+    }
+    if ($ok && !$found) {
+      add_group_administrator_list($group->Group_ID, $admin_id);
+    } 
+  }
+
 // Get login URL
   if ($ok) {
     $em_url = get_access_administrator($username);
     $ok = !empty($em_url);
   }
 
-// Get assessments
-  if ($ok && (($assessments = get_assessment_list_by_administrator($admin_id)) === FALSE)) {
+  // Get assessments
+  // if ($ok && (($assessments = get_assessment_list_by_administrator($admin_id)) === FALSE)) {
+  if ($ok && (($assessments = get_assessment_list()) === FALSE)) {
     $assessments = array();
   }
 
@@ -144,31 +180,7 @@ require_once('LTI_Data_Connector_qmp.php');
   }
 
   $script = <<< EOD
-<script type="text/javascript">
-<!--
-function doChange(id) {
-  doReset();
-  var el = document.getElementById(id);
-  if (el) {
-    el.className = 'show';
-  }
-  el = document.getElementById('id_save');
-  el.disabled = false;
-}
-
-function doReset() {
-  var el = document.getElementById('id_save');
-  el.disabled = true;
-  for (var i=1; i<=document.forms[0].assessment.length; i++) {
-    el = document.getElementById('img' + i);
-    if (el) {
-      el.className = 'hide';
-    }
-
-  }
-}
-// -->
-</script>
+<script src="js/staff.js" type="text/javascript"></script>
 
 EOD;
   page_header($script);

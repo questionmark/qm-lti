@@ -173,6 +173,7 @@ EOD;
   page_header($script, TRUE);
 
 ?>
+      <div class="container-fluid">
         <img src="images/exchange.gif" style="float: left; width: 50px; height: 50px; margin-right: 10px" />
         <h1>LTI Connector App Settings</h1>
 
@@ -220,6 +221,7 @@ EOD;
         </p>
 
         </form>
+      </div>
 <?php
 
   page_footer(TRUE);

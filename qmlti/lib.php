@@ -282,6 +282,56 @@ EOD;
 
       }
 
+      $users_table_name = TABLE_PREFIX . LTI_Data_Connector::USER_TABLE_NAME;
+      if ($ok && !sqlsrv_table_exists($db, $users_table_name)) {
+
+        $sql = <<< EOD
+CREATE TABLE [dbo].[{$users_table_name}] (
+  [consumer_key] VARCHAR(50) NOT NULL DEFAULT '',
+  [context_id] VARCHAR(255),
+  [user_id] VARCHAR(255),
+  [firstname] VARCHAR(255), 
+  [lastname] VARCHAR(255),
+  [fullname] VARCHAR(255),
+  [email] VARCHAR(255),
+  [roles] VARCHAR(255),
+  [created] DATETIME,
+  [updated] DATETIME,
+  [lti_result_sourcedid] VARCHAR(255),
+ CONSTRAINT [PK_{$users_table_name}] PRIMARY KEY CLUSTERED ([consumer_key] ASC, [context_id] ASC, [user_id] ASC)
+)
+EOD;
+
+        $db->exec($sql);
+
+      }
+
+      $tc_users_table_name = TABLE_PREFIX . LTI_Data_Connector::TC_USER_TABLE_NAME;
+      if ($ok && !sqlsrv_table_exists($db, $tc_users_table_name)) {
+
+        $sql = <<< EOD
+CREATE TABLE [dbo].[{$tc_users_table_name}] (
+  [consumer_key] VARCHAR(50) NOT NULL DEFAULT '',
+  [context_id] VARCHAR(255),
+  [user_id] VARCHAR(255),
+  [firstname] VARCHAR(255), 
+  [lastname] VARCHAR(255),
+  [fullname] VARCHAR(255),
+  [email] VARCHAR(255),
+  [roles] VARCHAR(255),
+  [created] DATETIME,
+  [updated] DATETIME,
+  [lti_result_sourcedid] VARCHAR(255)
+ CONSTRAINT [PK_{$tc_users_table_name}] PRIMARY KEY CLUSTERED ([consumer_key] ASC, [context_id] ASC, [user_id] ASC)
+)
+EOD;
+
+        $db->exec($sql);
+
+      }
+
+    
+
     } else if (($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') || ($db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'sqlite')) {
 
       if (!defined('CONSUMER_KEY')) {
@@ -362,6 +412,40 @@ EOD;
                ' is_accessed INT,' .
                ' result_sourcedid VARCHAR(255), ' .
                'PRIMARY KEY (consumer_key, result_id))';
+        $ok = $db->exec($sql) !== FALSE;
+      }
+
+      if ($ok) {
+        $sql = 'CREATE TABLE IF NOT EXISTS ' . TABLE_PREFIX . LTI_Data_Connector::USER_TABLE_NAME . ' ' .
+               '(consumer_key VARCHAR(50) NOT NULL DEFAULT \'\',' .
+               ' context_id VARCHAR(255),' .
+               ' user_id VARCHAR(255),' .
+               ' firstname VARCHAR(255),' .
+               ' lastname VARCHAR(255),' .
+               ' fullname VARCHAR(255),' .
+               ' email VARCHAR(255),' .
+               ' roles VARCHAR(255),' .
+               ' created DATETIME' .
+               ' updated DATETIME' .
+               ' lti_result_sourcedid VARCHAR(255)), ' .
+               'PRIMARY KEY (consumer_key, context_id, user_id))';
+        $ok = $db->exec($sql) !== FALSE;
+      }
+
+      if ($ok) {
+        $sql = 'CREATE TABLE IF NOT EXISTS ' . TABLE_PREFIX . LTI_Data_Connector::TC_USER_TABLE_NAME . ' ' .
+        '(consumer_key VARCHAR(50) NOT NULL DEFAULT \'\',' .
+               ' context_id VARCHAR(255),' .
+               ' user_id VARCHAR(255),' .
+               ' firstname VARCHAR(255),' .
+               ' lastname VARCHAR(255),' .
+               ' fullname VARCHAR(255),' .
+               ' email VARCHAR(255),' .
+               ' roles VARCHAR(255),' .
+               ' created DATETIME' .
+               ' updated DATETIME' .
+               ' lti_result_sourcedid VARCHAR(255)), ' .
+               'PRIMARY KEY (consumer_key, context_id, user_id))';
         $ok = $db->exec($sql) !== FALSE;
       }
 
@@ -513,6 +597,24 @@ EOD;
 
   }
 
+/*
+ * SOAP call to get a list of assessments availalble to an administrator account
+ *
+ *   returns the array of assessment objects or FALSE
+ */
+  function get_assessment_list() {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $assessments = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_assessment_list(0, 1);
+    } catch (Exception $e) {
+      log_error($e);
+      $assessments = FALSE;
+    }
+
+    return $assessments;
+
+  }
 
 /*
  * SOAP call to get a list of assessments availalble to an administrator account
@@ -670,20 +772,69 @@ function update_result_accessed($db, $consumer, $resource_link, $assessment_id, 
   }
 }
 
+/*
+ * DB call to get all available participants specific to a context
+ * 
+ * returns the list of participants
+ */
+function get_participants($db, $consumer_key) {
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+  return $data_connector->User_loadUsers($consumer_key);
+}
 
 /*
- * External call to grab coaching report url if allowed
- *
- * returns the coaching report url
+ * DB call to get all available participants specific to a context
+ * 
+ * returns the list of participants
  */
- function get_coaching_report($db, $consumer_key, $lti_outcome, $resource_link_id, $assessment_id) {
-   $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
-   if ($data_connector->ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id)) {
-      return get_report_url($lti_outcome->getResultID());
-   } else {
-      return FALSE;
-   }
- }
+function get_participants_by_context_id($db, $consumer_key, $context_id) {
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+  return $data_connector->User_loadUsersbyContext($consumer_key, $context_id);
+}
+
+/* 
+ * DB call to save user generated by manual sync process
+ *
+ * returns boolean
+ */
+function save_user($db, $user) {
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+  return $data_connector->User_save($user);
+}
+
+ /*
+  * DB call for Tool Consumer to grab all available participants specific to a context
+  *
+  * returns the list of participants
+  */
+function get_tc_participants_by_context_id($db, $consumer_key, $context_id) {
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+  return $data_connector->TCUser_loadUsersbyContext($consumer_key, $context_id);
+}
+
+/*
+ * DB call for Tool Consumer to grab all available participants
+ *
+ * returns the list of participants
+ */
+function get_tc_participants($db, $consumer_key) {
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+  return $data_connector->TCUser_loadUsers($consumer_key);
+}
+
+/*
+* External call to grab coaching report url if allowed
+*
+* returns the coaching report url
+*/
+function get_coaching_report($db, $consumer_key, $lti_outcome, $resource_link_id, $assessment_id) {
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+  if ($data_connector->ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id)) {
+    return get_report_url($lti_outcome->getResultID());
+  } else {
+    return FALSE;
+  }
+}
 
 /*
  * External call to grab most recent result ID
@@ -772,6 +923,110 @@ function update_result_accessed($db, $consumer, $resource_link, $assessment_id, 
 
   }
 
+/*
+ * SOAP call to get details for a group
+ *
+ *   returns the groups object or FALSE
+ */
+  function get_group_by_name($groupname) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $group = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_group_by_name($groupname);
+    } catch (Exception $e) {
+      $group = FALSE;
+    }
+
+    return $group;
+  }
+
+/*
+ * SOAP call to add participant to group
+ *
+ *   returns TRUE or FALSE
+ */
+  function add_group_participant_list($group_id, $participant_id) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $response = $GLOBALS['perceptionsoap'][$soap_connection_id]->add_group_participant_list($group_id, $participant_id);
+    } catch (Exception $e) {
+      $response = FALSE;
+    }
+
+    return $response;
+  }
+
+/*
+ * SOAP call to add administrator to group
+ *
+ *   returns TRUE or FALSE
+ */
+  function add_group_administrator_list($group_id, $administrator_id) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $response = $GLOBALS['perceptionsoap'][$soap_connection_id]->add_group_administrator_list($group_id, $administrator_id);
+    } catch (Exception $e) {
+      $response = FALSE;
+    }
+
+    return $response;
+
+  }
+
+/*
+ * SOAP call to add administrator to group
+ *
+ *   returns TRUE or FALSE
+ */
+  function get_participant_group_list($participant_id) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $response = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_participant_group_list($participant_id);
+    } catch (Exception $e) {
+      $response = FALSE;
+    }
+
+    return $response;
+
+  }
+
+/*
+ * SOAP call to add administrator to group
+ *
+ *   returns TRUE or FALSE
+ */
+  function get_administrator_group_list($administrator_id) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $response = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_administrator_group_list($administrator_id);
+    } catch (Exception $e) {
+      $response = FALSE;
+    }
+
+    return $response;
+
+  }
+
+/*
+ * SOAP call to create a group
+ *
+ *   returns the group ID or FALSE
+ */
+ function create_group($groupname, $description, $parentid) {
+
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $group_id = $GLOBALS['perceptionsoap'][$soap_connection_id]->create_group($groupname, $description, $parentid);
+    } catch (Exception $e) {
+      $group_id = FALSE;
+    }
+
+    return $group_id;
+ }
 
 /*
  * SOAP call to get details for a participant account
@@ -790,7 +1045,6 @@ function update_result_accessed($db, $consumer, $resource_link, $assessment_id, 
     return $participant_details;
 
   }
-
 
 /*
  * SOAP call to create a participant account
@@ -841,11 +1095,14 @@ function update_result_accessed($db, $consumer, $resource_link, $assessment_id, 
 <head>
 <meta charset="utf-8" />
 <title>QMP - LTI</title>
+
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link href="css/qmp-lti.css" type="text/css" rel="stylesheet" />
+
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-<link href="css/qmp-lti.css" type="text/css" rel="stylesheet" />
 {$script}
+
 </head>
 <body>
 <div id="Wrapper">
@@ -931,7 +1188,6 @@ EOD;
 
   }
 
-
 /*
  * Set a named value from post data in the user session; using a default value if the parameter does not exist
  */
@@ -971,7 +1227,10 @@ EOD;
     } else {
       init_session('secret', '');
     }
-    init_session('cid', '');
+    init_session('cid', '12345');
+    init_session('context_label', 'JT123');
+    init_session('context_title', 'Jane Teacher Course');
+    init_session('lis_person_sourcedid', 'UniversityofInst:JaneTeacher');
     init_session('rid', 'linkABC');
     init_session('uid', 'jt001');
     init_session('name', 'Jane Teacher');
@@ -982,7 +1241,8 @@ EOD;
     init_session('roles', array('i'));
     init_session('outcome', '1');
     init_session('outcomes', '1');
-
+    init_session('membership', '1');
+    init_session('membership_id', 'f726-ea827-77edf99');
   }
 
 
@@ -1209,6 +1469,48 @@ EOD;
 
   }
 
+
+/*
+ * Saves a user into the tool consumer using session values
+ */
+ function tc_save_user($db, $session) {
+
+  $consumer_key = $session['key'];
+  $resource_link_id = $session['rid'];
+  $user_id = $session['uid'];
+  $context_id = $session['cid'];
+
+  $roles = array('a' => 'Administrator',
+                     'd' => 'ContentDeveloper',
+                     'i' => 'Instructor',
+                     't' => 'TeachingAssistant',
+                     'l' => 'Learner',
+                     'm' => 'Mentor');
+
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+
+  $consumer = new LTI_Tool_Consumer($consumer_key, $data_connector);
+  $resource_link = new LTI_Resource_Link($consumer, $resource_link_id);
+  $resource_link->lti_context_id = $context_id;
+  $tool = new LTI_Tool_Provider(NULL, $data_connector);
+
+  $user = new LTI_User($resource_link, $user_id);
+  $user->username = $session['lis_person_sourcedid'];
+  $user->setNames($session['fname'], $session['lname'], $session['name']);
+  $user->setEmail($session['email']);
+  $user->lti_result_sourcedid = $session['result'];
+  $user->roles = array();
+
+  foreach ($session['roles'] as $user_role) {
+    if ($user_role != NULL) {
+      array_push( $user->roles, $roles[$user_role]);
+    } 
+  }
+
+  $response = $data_connector->TCUser_save($user);
+  return $response;
+
+ }
 
 /**
  * Delete a customer record from the database

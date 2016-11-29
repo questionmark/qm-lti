@@ -51,6 +51,7 @@
  * OAuth library file
  */
 require_once('OAuth.php');
+require_once('lib.php');
 
 /**
  * Class to represent an LTI Tool Provider
@@ -546,6 +547,12 @@ class LTI_Tool_Provider {
         $title = '';
         if (isset($_POST['context_title'])) {
           $title = trim($_POST['context_title']);
+          $this->resource_link->lti_context_title = trim($_POST['context_title']);
+        }
+        if (isset($_POST['context_label']) && $_POST['context_label'] != '') {
+          $this->resource_link->lti_context_label = trim($_POST['context_label']);
+        } else {
+          $this->resource_link->lti_context_label = trim($_POST['resource_link_id']);
         }
         if (isset($_POST['resource_link_title']) && (strlen(trim($_POST['resource_link_title'])) > 0)) {
           if (!empty($title)) {
@@ -580,7 +587,7 @@ class LTI_Tool_Provider {
 #
 ### Set the user instance
 #
-        $user_id = '';
+        $user_id = getRandomString(8);
         if (isset($_POST['user_id'])) {
           $user_id = trim($_POST['user_id']);
         }
@@ -588,9 +595,11 @@ class LTI_Tool_Provider {
 #
 ### Set the user name
 #
+        $username = (isset($_POST['lis_person_sourcedid'])) ? $_POST['lis_person_sourcedid'] : '';
         $firstname = (isset($_POST['lis_person_name_given'])) ? $_POST['lis_person_name_given'] : '';
         $lastname = (isset($_POST['lis_person_name_family'])) ? $_POST['lis_person_name_family'] : '';
         $fullname = (isset($_POST['lis_person_name_full'])) ? $_POST['lis_person_name_full'] : '';
+        $this->user->username = $username;
         $this->user->setNames($firstname, $lastname, $fullname);
 #
 ### Set the user email
@@ -1056,11 +1065,19 @@ class LTI_Resource_Link {
  */
   public $lti_context_id = NULL;
 /**
+ * Context title as supplied in the last connection request.
+ */
+  public $lti_context_title = NULL;
+/**
+ * Context label as supplied in the last connection request.
+ */
+  public $lti_context_label = NULL;
+/**
  * Resource link ID as supplied in the last connection request.
  */
   public $lti_resource_id = NULL;
 /**
- * Context title.
+ * Resource link title.
  */
   public $title = NULL;
 /**
@@ -1521,9 +1538,11 @@ EOF;
 #
 ### Set the user name
 #
+        $username = (isset($members[$i]['lis_person_sourcedid'])) ? $members[$i]['lis_person_sourcedid'] : '';
         $firstname = (isset($members[$i]['person_name_given'])) ? $members[$i]['person_name_given'] : '';
         $lastname = (isset($members[$i]['person_name_family'])) ? $members[$i]['person_name_family'] : '';
         $fullname = (isset($members[$i]['person_name_full'])) ? $members[$i]['person_name_full'] : '';
+        $user->username = $username;
         $user->setNames($firstname, $lastname, $fullname);
 #
 ### Set the user email
@@ -2603,7 +2622,10 @@ class LTI_Context_Share extends LTI_Resource_Link_Share {
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3
  */
 class LTI_User {
-
+/**
+ * User's username (generally implemented in Institution:User format)
+ */
+  public $username = '';
 /**
  * User's first name.
  */
@@ -2664,7 +2686,6 @@ class LTI_User {
 
     $this->initialise();
     $this->resource_link = $resource_link;
-    $this->context = &$this->resource_link;
     $this->id = $id;
     $this->load();
 
@@ -2741,14 +2762,20 @@ class LTI_User {
 /**
  * Get context.
  *
- * @deprecated Use getResourceLink() instead
- * @see LTI_User::getResourceLink()
- *
  * @return LTI_Resource_Link Context object
  */
   public function getContext() {
 
-    return $this->resource_link;
+    return $this->context;
+
+  }
+
+/**
+ * Sets context.
+ */
+  public function setContext($context) {
+
+    $this->context = $context;
 
   }
 
@@ -3041,6 +3068,10 @@ abstract class LTI_Data_Connector {
  */
   const USER_TABLE_NAME = 'lti_user';
 /**
+ * Default name for database table used to store test users for tool consumer.
+ */
+  const TC_USER_TABLE_NAME = 'lti_tc_user';
+/**
  * Default name for database table used to store users.
  */
   const REPORTS_TABLE_NAME = 'lti_coachingreports';
@@ -3214,6 +3245,40 @@ abstract class LTI_Data_Connector {
  */
   abstract public function ReportConfig_update($consumer_key, $resource_link_id, $assessment_id, $is_accessible);
 /**
+ * Loads list of users given a specific context
+ *
+ * @param String consumer_key
+ * @param String context
+ *
+ * @return mixed Array of users or false
+ */
+  abstract public function User_loadUsersbyContext($consumer_key, $context_id);
+/**
+ * Loads list of users available on tool consumer given a specific context
+ *
+ * @param String consumer_key
+ * @param String context
+ * 
+ * @return mixed Array of users or false
+ */
+  abstract public function TCUser_loadUsersbyContext($consumer_key, $context_id);
+/**
+ * Loads list of users available
+ *
+ * @param String consumer_key
+ * 
+ * @return mixed Array of users or false
+ */
+  abstract public function User_loadUsers($consumer_key);
+/**
+ * Loads list of users available on tool consumer
+ *
+ * @param String consumer_key
+ * 
+ * @return mixed Array of users or false
+ */
+  abstract public function TCUser_loadUsers($consumer_key);
+/**
  * Load user object.
  *
  * @param LTI_User $user User object
@@ -3237,7 +3302,30 @@ abstract class LTI_Data_Connector {
  * @return boolean True if the user object was successfully deleted
  */
   abstract public function User_delete($user);
-
+/**
+ * Load user object for Tool Consumer use.
+ *
+ * @param LTI_User $user User object
+ *
+ * @return boolean True if the user object was successfully loaded
+ */
+  abstract public function TCUser_load($user);
+/**
+ * Save user object for Tool Consumer use.
+ *
+ * @param LTI_User $user User object
+ *
+ * @return boolean True if the user object was successfully saved
+ */
+  abstract public function TCUser_save($user);
+/**
+ * Delete user object for Tool Consumer use.
+ *
+ * @param LTI_User $user User object
+ *
+ * @return boolean True if the user object was successfully deleted
+ */
+  abstract public function TCUser_delete($user);
 /**
  * Create data connector object.
  *
