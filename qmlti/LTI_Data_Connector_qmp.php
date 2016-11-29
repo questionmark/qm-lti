@@ -591,8 +591,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     $query->bindValue('assessment', $assessment_id, PDO::PARAM_STR);
     $query->bindValue('context', $resource_link_id, PDO::PARAM_STR);
     $query->bindValue('customer', $participant_name, PDO::PARAM_STR);
-    $ok = $query->execute();
-    if ($ok) {
+    if ($query->execute()) {
       $row = $query->fetch();
       $count = $row['COUNT(*)'];
     } else {
