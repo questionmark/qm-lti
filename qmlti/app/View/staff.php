@@ -36,7 +36,7 @@
         <tr class="GridRow">
           <td>
             <img src="images/exclamation.png" alt="Unsaved change" title="Unsaved change" class="hide" id="img<?php echo $i; ?>" />&nbsp;
-            <input type="radio" name="assessment" value="<?php echo $assessment->Assessment_ID; ?>"<?php echo $selected; ?> />
+            <input type="radio" name="assessment" value="<?php echo $assessment->Assessment_ID; ?>" <?php echo $selected; ?> />
           </td>
           <td><?php echo $assessment->Session_Name; ?></td>
           <td><?php echo $assessment->Author; ?></td>
