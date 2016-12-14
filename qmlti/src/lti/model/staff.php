@@ -252,7 +252,6 @@ class Staff {
           unset($result_list->AssessmentResult[$assessment_key]);
         }
       }
-      error_log(print_r($result_list, true));
       $this->results = array_values($result_list->AssessmentResult);
       foreach ($this->results as $result) {
         $result->Result->URL = get_report_url($result->Result->Result_ID)->URL;

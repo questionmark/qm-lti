@@ -1198,6 +1198,9 @@ EOD;
  */
   function getQMWISeUrl($customer_id) {
     // identifies if the input value is a valid URL
+    if (filter_var($customer_id, FILTER_VALIDATE_URL)) {
+      return $customer_id;
+    }
     $url = "https://ondemand.questionmark.com/qmwise/{$customer_id}/qmwise.asmx";
     // Check for EU customer IDs
     $id_string = $customer_id;

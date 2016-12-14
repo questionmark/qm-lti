@@ -86,9 +86,7 @@
         } else if ($action == 'View Coaching Report') {
           // view coaching report
           $resultID = get_accessed_result($this->db, $this->consumer, $this->resource_link, $this->username);
-          error_log("Result ID: {$resultID}");
           $coachingreport = get_report_url($resultID);
-          error_log(print_r($coachingreport, true));
           header("Location: {$coachingreport->URL}");
         }
       }

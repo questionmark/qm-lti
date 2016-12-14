@@ -70,7 +70,6 @@ require_once('../resources/OAuth.php');
   if (!empty($_SESSION['debug'])) {
     $params['custom_debug'] = 'true';
   }
-  error_log(print_r($url, true));
   $params = signRequest($url, $params);
 
 ?>
