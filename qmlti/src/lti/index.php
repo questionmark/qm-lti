@@ -185,7 +185,6 @@ EOD;
         <br><br>
         <img src="../../web/images/exchange.gif" style="float: left; width: 50px; height: 50px; margin-right: 10px;" />
         <h1>LTI Connector App Settings</h1>
-
 <?php
   if (isset($message)) {
     echo "        <div class=\"spacer-sm\"></div>{$alert}{$message}</p><div class=\"spacer-sm\"></div><div class=\"spacer-sm\"></div>\n";

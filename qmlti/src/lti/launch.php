@@ -10,7 +10,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License along
@@ -56,7 +56,7 @@ require_once('../resources/LTI_Data_Connector_qmp.php');
     $context_id = $tool_provider->resource_link->lti_context_id;
     $context_title = $tool_provider->resource_link->lti_context_title;
     $context_label = $tool_provider->resource_link->lti_context_label;
-    $supportsOutcomes = $tool_provider->resource_link->hasOutcomesService();
+    $supports_outcomes = $tool_provider->resource_link->hasOutcomesService();
     if ($tool_provider->user->username != '') {
       $username = $tool_provider->user->username;
     } else {
@@ -68,7 +68,7 @@ require_once('../resources/LTI_Data_Connector_qmp.php');
     $firstname = substr($tool_provider->user->firstname, 0, MAX_NAME_LENGTH);
     $lastname = substr($tool_provider->user->lastname, 0, MAX_NAME_LENGTH);
     $email = substr($tool_provider->user->email, 0, MAX_EMAIL_LENGTH);
-    $isStudent = $tool_provider->user->isLearner();
+    $is_student = $tool_provider->user->isLearner();
     $result_id = $tool_provider->user->lti_result_sourcedid;
 
     $assessment_id = $tool_provider->resource_link->getSetting(ASSESSMENT_SETTING);
@@ -85,7 +85,7 @@ require_once('../resources/LTI_Data_Connector_qmp.php');
       $_SESSION['firstname'] = $firstname;
       $_SESSION['lastname'] = $lastname;
       $_SESSION['email'] = $email;
-      $_SESSION['isStudent'] = $isStudent;
+      $_SESSION['is_student'] = $is_student;
       $_SESSION['consumer_key'] = $consumer_key;
       $_SESSION['context_id'] = $context_id;
       $_SESSION['context_title'] = $context_title;
@@ -96,7 +96,7 @@ require_once('../resources/LTI_Data_Connector_qmp.php');
       $_SESSION['number_attempts'] = $number_attempts;
       $_SESSION['lti_return_url'] = $tool_provider->return_url;
       $_SESSION['result_id'] = $result_id;
-      $_SESSION['allow_outcome'] = $supportsOutcomes;
+      $_SESSION['allow_outcome'] = $supports_outcomes;
       $_SESSION['coaching_report'] = $coaching_report;
       if (defined('QMWISE_URL')) {
         $_SESSION['qmwise_url'] = QMWISE_URL;
@@ -110,7 +110,7 @@ require_once('../resources/LTI_Data_Connector_qmp.php');
       }
 
       // set redirect URL
-      if ($isStudent) {
+      if ($is_student) {
         $page = 'student_nav';
       } else {
         $page = 'staff';
