@@ -40,6 +40,7 @@ require_once('../resources/LTI_Data_Connector_qmp.php');
   $score = $_POST['Percentage_Score'];
   $participant = $_POST['Participant'];
   $is_saved = FALSE;
+  $score_decimal = $score / 100;
 
   // Initialise tool consumer and resource link objects
   $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
@@ -53,10 +54,10 @@ require_once('../resources/LTI_Data_Connector_qmp.php');
       $is_saved = TRUE;
       break;
     case 'Best':
-      $is_saved = is_best_result($db, $consumer, $resource_link, $participant_id, $score);
+      $is_saved = is_best_result($db, $consumer, $resource_link, $participant_id, $score_decimal);
       break;
     case 'Worst':
-      $is_saved = is_worst_result($db, $consumer, $resource_link, $participant_id, $score);
+      $is_saved = is_worst_result($db, $consumer, $resource_link, $participant_id, $score_decimal);
       break;
     case 'Oldest':
       $is_saved = is_oldest_result($db, $consumer, $resource_link, $participant_id);
@@ -81,10 +82,7 @@ require_once('../resources/LTI_Data_Connector_qmp.php');
       }
     }
   } else {
-    if ($resource_link->hasOutcomesService()) {
-      if ($resource_link->doOutcomesService(LTI_Resource_Link::EXT_WRITE, $outcome)) {
-        $outcome->saveToResult($consumer, $resource_link, $participant_id, 0, $result_id);
-      }
-    }
+    $resource_link->checkValueType($outcome);
+    $outcome->saveToResult($consumer, $resource_link, $participant_id, 0, $result_id);
   }
 ?>

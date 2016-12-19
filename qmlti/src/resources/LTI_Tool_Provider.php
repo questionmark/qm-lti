@@ -1575,7 +1575,7 @@ EOF;
  *
  * @return boolean True if the type/value are valid and supported
  */
-  private function checkValueType($lti_outcome, $supported_types = NULL) {
+  public function checkValueType($lti_outcome, $supported_types = NULL) {
     if (empty($supported_types)) {
       $supported_types = explode(',', str_replace(' ', '', strtolower($this->getSetting('ext_ims_lis_resultvalue_sourcedids', self::EXT_TYPE_DECIMAL))));
     }

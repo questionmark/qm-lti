@@ -239,7 +239,7 @@ class Staff {
       if ($request == '1') {
         $this->enableCoachingReports();
       } else {
-        $this->enableCoachingReports();
+        $this->disableCoachingReports();
       }
     }
   }
@@ -391,8 +391,14 @@ class Staff {
     if (($result_list != FALSE) && (!stdclass_empty($result_list)) && (!stdclass_empty($participant_list))) {
       foreach ($result_list->AssessmentResult as $assessment_key => $assessment) {
         $found = FALSE;
-        foreach ($participant_list as $participant) {
-          if ($assessment->Result->Participant == "{$participant->First_Name} {$participant->Last_Name}") {
+        if (is_array($participant_list)) { // If participant list contains more than one participant
+          foreach ($participant_list as $participant) {
+            if ($assessment->Result->Participant == "{$participant->First_Name} {$participant->Last_Name}") {
+              $found = TRUE;
+            }
+          }
+        } else { // Participant list contains only one participant
+          if ($assessment->Result->Participant == "{$participant_list->First_Name} {$participant_list->Last_Name}") {
             $found = TRUE;
           }
         }

@@ -3,7 +3,7 @@
  */ 
 
 body {
-  font-size: 1em;
+  font-size: 12px;
   font-family: "Droid Sans", Helvetica, Arial, sans-serif;
   color: #333;
 }
@@ -13,12 +13,12 @@ body {
  */
 
 h1 {
-  font-size: 200%;
+  font-size: 170%;
   font-weight: bold;
 }
 
 h2 {
-  font-size: 130%;
+  font-size: 120%;
   font-weight: bold;
 }
 

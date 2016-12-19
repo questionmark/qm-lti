@@ -17,7 +17,7 @@
       <td><?php echo $parsed_attempts; ?></td>
       <td><?php echo $past_attempts; ?></td>
     <?php if ($bool_coaching_report) { ?>
-      <td><input class="btn btn-sm btn-link" type="submit" name="action" value="View Coaching Report" /></td>
+      <td><input class="btn btn-sm btn-link" type="submit" name="action" value="View Coaching Report" formtarget="_blank"/></td>
     <?php } ?>
     </tr>
   </table>

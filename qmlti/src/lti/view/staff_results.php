@@ -1,7 +1,7 @@
         <div id="body" class="container-fluid">
         <p>
         <a class="btn btn-default" href="<?php echo $em_url; ?>" target="_blank" />Log into Questionmark Portal</a>&nbsp;&nbsp;
-        <a class="btn btn-default" href="staff.php" />Back to Control Panel</a>
+        <a class="btn btn-default" href="staff.php" />Back to Assessment Configuration Page</a>
         </p>
         <h1>Assessment Results</h1>
 <?php
@@ -9,13 +9,16 @@
 ?>
         <form action="staff.php" method="POST">
         <table class="DataTable table table-sm" cellpadding="0" cellspacing="0">
-        <tr class="GridHeader">
-          <td>Participant</td>
-          <td>Score</td>
-          <td>Time Taken</td>
-          <td>When Finished</td>
-          <td>Coaching Result</td>
-        </tr>
+        <thead>
+          <tr class="GridHeader">
+            <th>Participant</th>
+            <th>Score</th>
+            <th>Time Taken</th>
+            <th>When Finished</th>
+            <th>Coaching Result</th>
+          </tr>
+        </thead>
+        <tbody>
 <?php
     $i = 0;
     foreach ($results as $result) {
@@ -32,6 +35,7 @@
 <?php
     }
 ?>
+        </tbody>
         </table>
         <br><br><br>
         </form>

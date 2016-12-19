@@ -281,7 +281,7 @@ EOD;
           </div>
           <br>
           <div class="panel-footer">
-            <a href=""<?php echo get_root_url() . '../pip/pip.php'; ?>" class="btn btn-default">Download LTI PIP file</a>&nbsp;&nbsp;&nbsp;
+            <a href="<?php echo get_root_url() . '../../../pip/pip.php'; ?>" class="btn btn-default">Download LTI PIP file</a>&nbsp;&nbsp;&nbsp;
             <input id="id_configure" type="submit" class="btn btn-default" name="action" value="Apply" />&nbsp;&nbsp;&nbsp;
             <input id="id_configure" type="submit" class="btn btn-default" name="action" value="Cancel" onclick="return confirmCancel();" />
           </div>
