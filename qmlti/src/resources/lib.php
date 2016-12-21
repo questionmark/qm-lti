@@ -164,7 +164,6 @@ EOD;
         $sql = <<< EOD
 CREATE TABLE [dbo].[{$resource_link_table_name}] (
   [consumer_key] VARCHAR(50) NOT NULL DEFAULT '',
-  [context_id] VARCHAR(100) NOT NULL,
   [lti_context_id] VARCHAR(255),
   [lti_resource_id] VARCHAR(255),
   [title] VARCHAR(255),
@@ -174,7 +173,7 @@ CREATE TABLE [dbo].[{$resource_link_table_name}] (
   [share_approved] INT,
   [created] DATETIME,
   [updated] DATETIME,
- CONSTRAINT [PK_{$resource_link_table_name}] PRIMARY KEY CLUSTERED ([consumer_key] ASC, [lti_resource_id] ASC)
+ CONSTRAINT [PK_{$resource_link_table_name}] PRIMARY KEY CLUSTERED ([consumer_key] ASC, [lti_context_id] ASC)
 )
 EOD;
 //        $ok = $db->exec($sql) !== FALSE;
@@ -314,7 +313,7 @@ EOD;
                ' share_approved INT,' .
                ' created DATETIME,' .
                ' updated DATETIME, ' .
-               'PRIMARY KEY (consumer_key, lti_resource_id))';
+               'PRIMARY KEY (consumer_key, lti_context_id))';
         $ok = $db->exec($sql) !== FALSE;
       }
       if ($ok) {
