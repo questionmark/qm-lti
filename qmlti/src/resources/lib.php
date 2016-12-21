@@ -131,7 +131,7 @@ EOD;
       if (!defined('CONSUMER_KEY') && !sqlsrv_table_exists($db, $customer_table_name)) {
         $sql = <<< EOD
 CREATE TABLE [dbo].[{$customer_table_name}] (
-  [customer_id] VARCHAR(25) NOT NULL,
+  [customer_id] VARCHAR(100) NOT NULL,
   [qmwise_client_id] VARCHAR(20) NOT NULL,
   [qmwise_checksum] CHAR(32) NOT NULL,
  CONSTRAINT [PK_{$customer_table_name}] PRIMARY KEY CLUSTERED ([customer_id] ASC)
@@ -148,7 +148,7 @@ CREATE TABLE [dbo].[{$consumer_table_name}] (
   [consumer_key] VARCHAR(50) NOT NULL,
   [secret] VARCHAR(50) NOT NULL,
   [consumer_name] VARCHAR(25) NOT NULL,
-  [customer_id] VARCHAR(25) NOT NULL,
+  [customer_id] VARCHAR(100) NOT NULL,
   [username_prefix] VARCHAR(50),
   [last_access] DATETIME NULL,
   [created] DATETIME NOT NULL,
@@ -226,7 +226,7 @@ CREATE TABLE [dbo].[{$results_table_name}] (
   [consumer_key] VARCHAR(50) NOT NULL DEFAULT '',
   [context_id] VARCHAR(255),
   [assessment_id] VARCHAR(255),
-  [customer_id] VARCHAR(25),
+  [customer_id] VARCHAR(100),
   [created] DATETIME,
   [score] VARCHAR(255),
   [result_id] INT,
@@ -293,7 +293,7 @@ EOD;
                ' secret VARCHAR(50) NOT NULL,' .
                ' username_prefix VARCHAR(50) NOT NULL,' .
                ' consumer_name VARCHAR(20) NOT NULL,' .
-               ' customer_id VARCHAR(25) NOT NULL,' .
+               ' customer_id VARCHAR(100) NOT NULL,' .
                ' username_prefix VARCHAR(10) NULL,' .
                ' last_access DATETIME NULL,' .
                ' created DATETIME NOT NULL,' .
@@ -345,7 +345,7 @@ EOD;
                '(consumer_key VARCHAR(50) NOT NULL DEFAULT \'\',' .
                ' context_id VARCHAR(255),' .
                ' assessment_id VARCHAR(255),' .
-               ' customer_id VARCHAR(25),' .
+               ' customer_id VARCHAR(100),' .
                ' created DATETIME,' .
                ' score VARCHAR(255),' .
                ' result_id INT,' .

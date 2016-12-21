@@ -517,7 +517,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     $query->bindValue('customer', $user_id, PDO::PARAM_STR);
     if ($query->execute()) {
       $row = $query->fetch();
-      $count = $row['COUNT(*)'];
+      $count = $row[0];
     } else {
       return FALSE;
     }
@@ -626,12 +626,21 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
  */
   public function Results_getScore($consumer, $resource_link, $user_id, $order) {
     $id = $resource_link->getId();
-    $sql = 'SELECT score ' .
+    // LIMIT vs TOP 1 implementation
+    if ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'sqlsrv') {
+      $sql = 'SELECT TOP 1 score ' .
+           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
+           'WHERE (assessment_id = :assessment) AND (customer_id = :customer) AND (consumer_key = :consumer) ' .
+           'AND (context_id = :context)' .
+           'ORDER BY score ' . $order . ' ';
+    } else {
+      $sql = 'SELECT score ' .
            'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
            'WHERE (assessment_id = :assessment) AND (customer_id = :customer) AND (consumer_key = :consumer) ' .
            'AND (context_id = :context)' .
            'ORDER BY score ' . $order . ' ' . 
            'LIMIT 1 ';
+    }
     $query = $this->db->prepare($sql);
     $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
     $query->bindValue('customer', $user_id, PDO::PARAM_STR);
@@ -652,12 +661,21 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
  */
   public function Results_getResultByParam($consumer, $resource_link, $user_id, $param, $order) {
     $id = $resource_link->getId();
-    $sql = 'SELECT result_id ' .
+    // LIMIT vs TOP 1 implementation
+    if ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'sqlsrv') {
+      $sql = 'SELECT TOP 1 result_id ' .
+           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
+           'WHERE (assessment_id = :assessment) AND (customer_id = :customer) AND (consumer_key = :consumer) ' .
+           'AND (context_id = :context)' .
+           'ORDER BY ' . $param . ' ' . $order . ' ';
+    } else {
+      $sql = 'SELECT result_id ' .
            'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
            'WHERE (assessment_id = :assessment) AND (customer_id = :customer) AND (consumer_key = :consumer) ' .
            'AND (context_id = :context)' .
            'ORDER BY ' . $param . ' ' . $order . ' ' . 
            'LIMIT 1 ';
+    }
     $query = $this->db->prepare($sql);
     $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
     $query->bindValue('customer', $user_id, PDO::PARAM_STR);
@@ -678,17 +696,26 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
  */
   public function Results_getAccessedResult($consumer, $resource_link, $user_id) {
     $id = $resource_link->getId();
-    $sql = 'SELECT result_id ' .
+    // LIMIT vs TOP 1 implementation
+    if ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'sqlsrv') {
+      $sql = 'SELECT TOP 1 result_id ' .
+           'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
+           'WHERE (assessment_id = :assessment) AND (customer_id = :customer) AND (consumer_key = :consumer) ' .
+           'AND (context_id = :context) AND (is_accessed = 1) ';
+    } else {
+      $sql = 'SELECT result_id ' .
            'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
            'WHERE (assessment_id = :assessment) AND (customer_id = :customer) AND (consumer_key = :consumer) ' .
            'AND (context_id = :context) AND (is_accessed = 1) ' .
            'LIMIT 1 ';
+    }
     $query = $this->db->prepare($sql);
     $query->bindValue('assessment', $resource_link->getSetting('qmp_assessment_id'), PDO::PARAM_STR);
     $query->bindValue('customer', $user_id, PDO::PARAM_STR);
     $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
     $query->bindValue('context', $id, PDO::PARAM_STR);
     $ok = $query->execute();
+    error_log(print_r($query->errorInfo(), true));
     if ($ok) {
       $row = $query->fetch();
       $result_id = $row['result_id'];

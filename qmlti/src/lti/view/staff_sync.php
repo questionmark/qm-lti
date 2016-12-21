@@ -2,7 +2,7 @@
         <p>
         <a class="btn btn-default" href="<?php echo $em_url; ?>" target="_blank" />Log into Questionmark Portal</a>&nbsp;&nbsp;
         <a class="btn btn-default" href="staff_results.php" />View Assessment Results</a>&nbsp;&nbsp;
-        <a class="btn btn-default" href="staff.php" />Back to Control Panel</a>
+        <a class="btn btn-default" href="staff.php" />Back to Assessment Configuration Page</a>
         </p>
         <h1>User List</h1>
 <?php
