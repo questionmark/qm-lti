@@ -555,12 +555,12 @@ EOD;
       return FALSE;
     } 
     // Empty stdClass object
-    if (count((array)$response) == 0) {
+    if (stdclass_empty($response)) {
       return FALSE;
     }
     $result_id = $response->AssessmentResult;
     // Prevents sending back empty array
-    if (count((array)$result_id) == 0) {
+    if (stdclass_empty($result_id)) {
       return FALSE;
     }
     return $result_id;
