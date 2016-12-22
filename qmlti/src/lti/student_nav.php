@@ -47,9 +47,9 @@ require_once('../resources/LTI_Data_Connector_qmp.php');
   $student->createParticipant();
   $student->joinGroup();
 
-  $bool_coaching_report = $student->isCoachingReportAvailable();
   $assessment = $student->getAssessment();
   $past_attempts = $student->getAttemptDetails();
+  $bool_coaching_report = $student->isCoachingReportAvailable();
   $number_attempts = $student->getNumberAttempts();
   $launch_disabled = $student->checkLaunchDisabled();
   $parsed_attempts = $student->getParsedAttempts();
