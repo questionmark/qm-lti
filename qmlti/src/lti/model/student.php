@@ -197,12 +197,13 @@ class Student {
   }
 
 /**
- * Checks database to identify if coaching report is available for participant and assessment.
+ * Checks database to identify if coaching report is available for participant and assessment. 
+ * Includes a sanitary check to identify if a previous assessment was taken.
  * 
  * @return Boolean TRUE if available.
  */
   function isCoachingReportAvailable() {
-    return is_coaching_report_available($this->db, $this->consumer_key, $this->resource_link_id, $this->assessment_id, $this->participant_name);
+    return (($this->past_attempts > 0) && (is_coaching_report_available($this->db, $this->consumer_key, $this->resource_link_id, $this->assessment_id, $this->participant_name)));
   }
 
 /**
