@@ -56,19 +56,26 @@ require_once('../resources/lib.php');
       exit;
     } else if ($action == 'Delete Profile') {
       if ($consumer->delete()) {
-        $message = '*** SUCCESS *** Consumer profile has been deleted.';
+        $message = 'SUCCESS: Consumer profile has been deleted.';
+        $alert = '<p class="alert alert-success col-md-6">';
         unset($_SESSION['consumer_key']);
         $consumer->initialise();
       } else {
-        $message = '*** ERROR *** Unable to delete Consumer profile, please try again.';
+        $message = 'ERROR: Unable to delete Consumer profile, please try again.';
+        $alert = '<p class="alert alert-danger col-md-6">';
       }
     } else if ($action == 'Apply') {
       $ok = $consumer->save();
       if (!$ok) {
-        $message = '*** ERROR *** Unable to save details, please check data and try again.';
+        $message = 'ERROR: Unable to save details, please check data and try again.';
+        $alert = '<p class="alert alert-danger col-md-6">';
+      } else {
+        $message = 'SUCCESS: Consumer profile details have been saved.';
+        $alert = '<p class="alert alert-success col-md-6">';
       }
     } else {
-      $message = '*** ERROR *** Request not recognised.';
+      $message = 'ERROR: Request not recognised.';
+      $alert = '<p class="alert alert-danger col-md-6">';
     }
   } else if (isset($_SESSION['consumer_key'])) {
     $consumer = loadConsumer($db, $_SESSION['customer_id'], $_SESSION['consumer_key']);
@@ -174,10 +181,9 @@ EOD;
         <br><br>
         <img src="../../web/images/exchange.gif" style="float: left; width: 50px; height: 50px; margin-right: 10px" />
         <h1>LTI Connector App Settings</h1>
-
 <?php
   if (isset($message)) {
-    echo "        <p style=\"font-weight: bold; color: #f00; clear: left;\">\n{$message}\n</p>\n";
+    echo "        <div class=\"spacer-sm\"></div>{$alert}{$message}</p><div class=\"spacer-sm\"></div><div class=\"spacer-sm\"></div>\n";
   } else {
     echo "        <p style=\"clear: left;\">&nbsp;</p>\n";
   }
@@ -221,7 +227,7 @@ EOD;
 <?php
   if ($hasSelected) {
 ?>
-            <br><input id="id_delete" type="button" class="btn btn-default" name="action" value="Delete Profile" onclick="return confirmDelete();" />
+            <br><input id="id_delete" type="submit" class="btn btn-default" name="action" value="Delete Profile" onclick="return confirmDelete();" />
 <?php
   }
 ?>
