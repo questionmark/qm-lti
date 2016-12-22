@@ -37,11 +37,11 @@ define('TABLE_PREFIX', '');  // optional prefix added to standard LTI database t
 // Uncomment and complete this section when using this connector with a single LMS
 // (this data is retrieved from the database for installations supporting multiple LMSs)
 
-// define('CONSUMER_KEY', 'KEY');        // consumer key as used when defining links to this connector in LMS
-// define('CONSUMER_SECRET', 'SECRET');     // shared secret as used when defining links to this connector in LMS
-// define('QMWISE_URL', 'https://gateway2.teamlab.questionmark.local/qmwise/20035/qmwise.asmx');  // e.g. https://ondemand.questionmark.com/qmwise/123456/qmwise.asmx
-// define('SECURITY_CLIENT_ID', '20035');
-// define('SECURITY_CHECKSUM', 'Passw0rd');
+// define('CONSUMER_KEY', '');        // consumer key as used when defining links to this connector in LMS
+// define('CONSUMER_SECRET', '');     // shared secret as used when defining links to this connector in LMS
+// define('QMWISE_URL', '');  // e.g. https://ondemand.questionmark.com/qmwise/123456/qmwise.asmx
+// define('SECURITY_CLIENT_ID', '');
+// define('SECURITY_CHECKSUM', '');
 // define('QM_USERNAME_PREFIX', '');  // prefix to add to user IDs supplied by the LMS (allowing these users to be easily distinguished from direct login accounts
 
 // Uncomment and complete this section if the database settings are not specified via environment variables (of the same names)
