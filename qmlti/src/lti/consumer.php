@@ -218,13 +218,6 @@ EOD;
 ?>
               <option value=""<?php echo $selected; ?>>New Profile...</option>
             </select>
-<?php
-  if ($hasSelected) {
-?>
-            <br><input id="id_delete" type="button" class="btn btn-default" name="action" value="Delete Profile" onclick="return confirmDelete();" />
-<?php
-  }
-?>
           </div>
         </div>
         <br>
@@ -283,7 +276,14 @@ EOD;
           <div class="panel-footer">
             <a href="<?php echo get_root_url() . '../../../pip/pip.php'; ?>" class="btn btn-default">Download LTI PIP file</a>&nbsp;&nbsp;&nbsp;
             <input id="id_configure" type="submit" class="btn btn-default" name="action" value="Apply" />&nbsp;&nbsp;&nbsp;
-            <input id="id_configure" type="submit" class="btn btn-default" name="action" value="Cancel" onclick="return confirmCancel();" />
+            <input id="id_configure" type="submit" class="btn btn-default" name="action" value="Cancel" onclick="return confirmCancel();" />&nbsp;&nbsp;&nbsp;
+            <?php
+              if ($hasSelected) {
+            ?>
+              <input id="id_delete" type="button" class="btn btn-default" name="action" value="Delete Profile" onclick="return confirmDelete();" />
+            <?php
+              }
+            ?>
           </div>
         </div>
         </div>
