@@ -40,7 +40,7 @@ require_once('../resources/lib.php');
     header('Location: error.php');
     exit;
   }
-
+  
   $url =  substr( get_root_url(), 0, -10 );
   if (isset($_GET['consumer_key'])) {
     $_SESSION['consumer_key'] = $_GET['consumer_key'];
@@ -56,26 +56,19 @@ require_once('../resources/lib.php');
       exit;
     } else if ($action == 'Delete Profile') {
       if ($consumer->delete()) {
-        $message = 'SUCCESS: Consumer profile has been deleted.';
-        $alert = '<p class="alert alert-success col-md-6">';
+        $message = '*** SUCCESS *** Consumer profile has been deleted.';
         unset($_SESSION['consumer_key']);
         $consumer->initialise();
       } else {
-        $message = 'ERROR: Unable to delete Consumer profile, please try again.';
-        $alert = '<p class="alert alert-danger col-md-6">';
+        $message = '*** ERROR *** Unable to delete Consumer profile, please try again.';
       }
     } else if ($action == 'Apply') {
       $ok = $consumer->save();
       if (!$ok) {
-        $message = 'ERROR: Unable to save details, please check data and try again.';
-        $alert = '<p class="alert alert-danger col-md-6">';
-      } else {
-        $message = 'SUCCESS: Consumer profile details have been saved.';
-        $alert = '<p class="alert alert-success col-md-6">';
+        $message = '*** ERROR *** Unable to save details, please check data and try again.';
       }
     } else {
-      $message = 'ERROR: Request not recognised.';
-      $alert = '<p class="alert alert-danger col-md-6">';
+      $message = '*** ERROR *** Request not recognised.';
     }
   } else if (isset($_SESSION['consumer_key'])) {
     $consumer = loadConsumer($db, $_SESSION['customer_id'], $_SESSION['consumer_key']);
@@ -181,9 +174,10 @@ EOD;
         <br><br>
         <img src="../../web/images/exchange.gif" style="float: left; width: 50px; height: 50px; margin-right: 10px" />
         <h1>LTI Connector App Settings</h1>
+
 <?php
   if (isset($message)) {
-    echo "        <div class=\"spacer-sm\"></div>{$alert}{$message}</p><div class=\"spacer-sm\"></div><div class=\"spacer-sm\"></div>\n";
+    echo "        <p style=\"font-weight: bold; color: #f00; clear: left;\">\n{$message}\n</p>\n";
   } else {
     echo "        <p style=\"clear: left;\">&nbsp;</p>\n";
   }
@@ -224,13 +218,6 @@ EOD;
 ?>
               <option value=""<?php echo $selected; ?>>New Profile...</option>
             </select>
-<?php
-  if ($hasSelected) {
-?>
-            <br><input id="id_delete" type="submit" class="btn btn-default" name="action" value="Delete Profile" onclick="return confirmDelete();" />
-<?php
-  }
-?>
           </div>
         </div>
         <br>
@@ -289,7 +276,14 @@ EOD;
           <div class="panel-footer">
             <a href="<?php echo get_root_url() . '../../../pip/pip.php'; ?>" class="btn btn-default">Download LTI PIP file</a>&nbsp;&nbsp;&nbsp;
             <input id="id_configure" type="submit" class="btn btn-default" name="action" value="Apply" />&nbsp;&nbsp;&nbsp;
-            <input id="id_configure" type="submit" class="btn btn-default" name="action" value="Cancel" onclick="return confirmCancel();" />
+            <input id="id_configure" type="submit" class="btn btn-default" name="action" value="Cancel" onclick="return confirmCancel();" />&nbsp;&nbsp;&nbsp;
+            <?php
+              if ($hasSelected):
+            ?>
+              <input id="id_delete" type="button" class="btn btn-default" name="action" value="Delete Profile" onclick="return confirmDelete();" />
+            <?php
+              endif;
+            ?>
           </div>
         </div>
         </div>
