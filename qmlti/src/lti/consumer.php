@@ -40,7 +40,7 @@ require_once('../resources/lib.php');
     header('Location: error.php');
     exit;
   }
-
+  
   $url =  substr( get_root_url(), 0, -10 );
   if (isset($_GET['consumer_key'])) {
     $_SESSION['consumer_key'] = $_GET['consumer_key'];
@@ -278,11 +278,11 @@ EOD;
             <input id="id_configure" type="submit" class="btn btn-default" name="action" value="Apply" />&nbsp;&nbsp;&nbsp;
             <input id="id_configure" type="submit" class="btn btn-default" name="action" value="Cancel" onclick="return confirmCancel();" />&nbsp;&nbsp;&nbsp;
             <?php
-              if ($hasSelected) {
+              if ($hasSelected):
             ?>
               <input id="id_delete" type="button" class="btn btn-default" name="action" value="Delete Profile" onclick="return confirmDelete();" />
             <?php
-              }
+              endif;
             ?>
           </div>
         </div>
