@@ -233,8 +233,8 @@ EOD;
         </div>
         <br><br>
         <p>
-          <input id="id_delete" type="submit" class="btn btn-default" name="action" value="Delete" onclick="return confirmDelete();" />&nbsp;&nbsp;&nbsp;
-          <input id="id_configure" type="submit" class="btn btn-default" name="action" value="Configure" />
+          <input id="id_configure" type="submit" class="btn btn-default" name="action" value="Configure" />&nbsp;&nbsp;&nbsp;
+          <input id="id_delete" type="submit" class="btn btn-default" name="action" value="Delete" onclick="return confirmDelete();" />
         </p>
 
         </form>
