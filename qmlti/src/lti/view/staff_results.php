@@ -8,7 +8,7 @@
   if (($results != NULL) && (count($results) > 0)) {
 ?>
         <form action="staff.php" method="POST">
-        <table class="DataTable table table-sm" cellpadding="0" cellspacing="0">
+        <table class="DataTable table table-sm table-bordered" cellpadding="0" cellspacing="0">
         <thead>
           <tr class="GridHeader">
             <th>Participant</th>
