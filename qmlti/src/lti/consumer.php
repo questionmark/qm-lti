@@ -280,7 +280,7 @@ EOD;
             <?php
               if ($hasSelected):
             ?>
-              <input id="id_delete" type="button" class="btn btn-default" name="action" value="Delete Profile" onclick="return confirmDelete();" />
+              <input id="id_delete" type="submit" class="btn btn-default" name="action" value="Delete Profile" onclick="return confirmDelete();" />
             <?php
               endif;
             ?>
