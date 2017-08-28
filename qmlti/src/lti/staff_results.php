@@ -1,7 +1,7 @@
 <?php
 /*
  *  LTI-Connector - Connect to Perception via IMS LTI
- *  Copyright (C) 2013  Questionmark
+ *  Copyright (C) 2017  Questionmark
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -42,9 +42,10 @@ require_once('model/staff.php');
     exit;
   }
 
-  $script = <<<EOD
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/jqc-1.12.4/dt-1.10.13/fh-3.1.2/r-2.1.0/datatables.min.css"/>
-<script type="text/javascript" src="https://cdn.datatables.net/v/bs/jqc-1.12.4/dt-1.10.13/fh-3.1.2/r-2.1.0/datatables.min.js"></script>
+  $script = <<< EOD
+<script src="../../../web/js/staff.js" type="text/javascript"></script>
+<link rel="stylesheet" type="text/css" href="../../../web/datatables/datatables.min.css"/>
+<script type="text/javascript" src="../../../web/datatables/datatables.min.js"></script>
 <script type="text/javascript" src="../../../web/js/datatables.js"></script>
 EOD;
 

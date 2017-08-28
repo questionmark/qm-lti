@@ -16,13 +16,16 @@
   if ((count($assessments) > 0) && !is_null($assessments[0])) {
 ?>
         <form action="staff.php" method="POST">
-        <table class="DataTable table table-sm" cellpadding="0" cellspacing="0">
-        <tr class="GridHeader">
-          <td>&nbsp;</td>
-          <td class="AssessmentName">Assessment Name</td>
-          <td class="AssessmentAuthor">Assessment Author</td>
-          <td class="LastModified">Last Modified</td>
-        </tr>
+        <table class="DataTable-staff table table-sm" cellpadding="0" cellspacing="0">
+          <thead>
+            <tr class="GridHeader">
+              <td>&nbsp;</td>
+              <td class="AssessmentName">Assessment Name</td>
+              <td class="AssessmentAuthor">Assessment Author</td>
+              <td class="LastModified">Last Modified</td>
+            </tr>
+          </thead>
+          <tbody>
 <?php
     $i = 0;
     foreach ($assessments as $assessment) {
@@ -33,17 +36,18 @@
         $selected = ' onclick="doChange(\'\');"';
       }
 ?>
-        <tr class="GridRow">
-          <td>
-            <input type="radio" name="assessment" value="<?php echo $assessment->Assessment_ID; ?>" <?php echo $selected; ?> />
-          </td>
-          <td><?php echo $assessment->Session_Name; ?></td>
-          <td><?php echo $assessment->Author; ?></td>
-          <td><?php echo $assessment->Modified_Date; ?></td>
-        </tr>
+            <tr class="GridRow">
+              <td>
+                <input type="radio" name="assessment" value="<?php echo $assessment->Assessment_ID; ?>" <?php echo $selected; ?> />
+              </td>
+              <td><?php echo $assessment->Session_Name; ?></td>
+              <td><?php echo $assessment->Author; ?></td>
+              <td><?php echo $assessment->Modified_Date; ?></td>
+            </tr>
 <?php
     }
-?>
+?>      
+          </tbody>
         </table>
         <br><br>
         <p>

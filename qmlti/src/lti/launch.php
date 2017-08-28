@@ -1,7 +1,7 @@
 <?php
 /*
  *  LTI-Connector - Connect to Perception via IMS LTI
- *  Copyright (C) 2013  Questionmark
+ *  Copyright (C) 2017  Questionmark
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ require_once('../resources/LTI_Data_Connector_qmp.php');
     $context_label = $tool_provider->resource_link->lti_context_label;
     $supports_outcomes = $tool_provider->resource_link->hasOutcomesService();
     if ($tool_provider->user->username != '') {
-      $username = $tool_provider->user->username;
+      $username = $prefix . $tool_provider->user->username;
     } else {
       $username = $prefix . $tool_provider->user->getId();
     }

@@ -187,7 +187,7 @@ class LTI_Tool_Provider {
 /**
  * Permitted LTI versions for messages.
  */
-  private $LTI_VERSIONS = array(self::LTI_VERSION, 'LTI-2p0');
+  private $LTI_VERSIONS = array(self::LTI_VERSION); // 'LTI-2p0' is not a permitted LTI version
 
 /**
  * Class constructor
@@ -1367,9 +1367,7 @@ EOF;
         $response = '';
       }
     }
-
     return $response;
-
   }
 
 /**
@@ -1780,6 +1778,7 @@ EOF;
     $resp = '';
     // Try using curl if available
     if (function_exists('curl_init')) {
+      // Start of Bart issue
       $ch = curl_init();
       curl_setopt($ch, CURLOPT_URL, $url);
       if (!empty($header)) {
@@ -1791,9 +1790,11 @@ EOF;
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
       curl_setopt($ch, CURLINFO_HEADER_OUT, TRUE);
       curl_setopt($ch, CURLOPT_HEADER, TRUE);
-      curl_setopt($ch, CURLOPT_SSLVERSION,3);
+      curl_setopt($ch, CURLOPT_SSLVERSION, 4);
+      curl_setopt($ch, CURLOPT_FOLLOWLOCATION, TRUE);
       $ch_resp = curl_exec($ch);
       $ok = $ch_resp !== FALSE;
+      $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
       if ($ok) {
         $ch_resp = str_replace("\r\n", "\n", $ch_resp);
         $ch_resp_split = explode("\n\n", $ch_resp, 2);
@@ -1803,6 +1804,7 @@ EOF;
       }
       $this->ext_request_headers = str_replace("\r\n", "\n", curl_getinfo($ch, CURLINFO_HEADER_OUT));
       curl_close($ch);
+      // End of Bart issue
     } else {
       // Try using fopen if curl was not available or did not work (could have been an SSL certificate issue)
       $opts = array('method' => 'POST',

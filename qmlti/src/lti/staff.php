@@ -56,7 +56,10 @@ require_once('model/staff.php');
   }
 
   $script = <<< EOD
-<script src="../../web/js/staff.js" type="text/javascript"></script>
+<script src="../../../web/js/staff.js" type="text/javascript"></script>
+<link rel="stylesheet" type="text/css" href="../../../web/datatables/datatables.min.css"/>
+<script type="text/javascript" src="../../../web/datatables/datatables.min.js"></script>
+<script type="text/javascript" src="../../../web/js/datatables.js"></script>
 EOD;
 
   page_header($script);

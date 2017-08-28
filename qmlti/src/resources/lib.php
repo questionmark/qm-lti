@@ -1,7 +1,7 @@
 <?php
 /*
  *  LTI-Connector - Connect to Perception via IMS LTI
- *  Copyright (C) 2013  Questionmark
+ *  Copyright (C) 2017  Questionmark
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -996,11 +996,11 @@ function get_coaching_report($db, $consumer_key, $lti_outcome, $resource_link_id
 <meta charset="utf-8" />
 <title>QMP - LTI</title>
 
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="/web/css/bootstrap.min.css">
 <link href="/web/css/qmp-lti.css" type="text/css" rel="stylesheet" />
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="/web/js/jquery.min.js"></script>
+<script src="/web/js/bootstrap.min.js"></script>
 {$script}
 
 </head>
@@ -1043,7 +1043,7 @@ EOD;
   <div class="spacer-sm"></div>
   <div id="FooterWrapper" class="footer navbar-fixed-bottom">
     <span id="Copyright">
-      © 2016 Questionmark Computing Ltd.
+      © 2017 Questionmark Computing Ltd.
     </span>
   </div>
 </div>

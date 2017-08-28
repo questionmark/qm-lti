@@ -1,7 +1,7 @@
 <?php
 /*
  *  LTI-Connector - Connect to Perception via IMS LTI
- *  Copyright (C) 2013  Questionmark
+ *  Copyright (C) 2017  Questionmark
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ require_once('../resources/LTI_Data_Connector_qmp.php');
         $outcome->clearAccessedResult($consumer, $resource_link, $participant_id);
         $outcome->saveToResult($consumer, $resource_link, $participant_id, 1, $result_id);
       } else {
-        error_log("Failed to pass outcome of {$score} for {$result_id}");
+        error_log("Failed to pass outcome of {$score} for {$result_id}.");
       }
     }
   } else {

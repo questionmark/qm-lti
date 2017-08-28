@@ -1,7 +1,7 @@
 <?php
 /*
  *  LTI-Connector - Connect to Perception via IMS LTI
- *  Copyright (C) 2013  Questionmark
+ *  Copyright (C) 2017  Questionmark
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -45,11 +45,11 @@ define('TABLE_PREFIX', '');  // optional prefix added to standard LTI database t
 // define('QM_USERNAME_PREFIX', '');  // prefix to add to user IDs supplied by the LMS (allowing these users to be easily distinguished from direct login accounts
 
 // Uncomment and complete this section if the database settings are not specified via environment variables (of the same names)
-define('DB_SERVER', 'tcp:qm-lti.database.windows.net,1433');           // leave empty except for SQL Server
-define('DB_NAME', 'qm-lti');
+// define('DB_SERVER', 'tcp:qm-lti.database.windows.net,1433');           // leave empty except for SQL Server
+// define('DB_NAME', 'qm-lti');
 // e.g. 'sqlite:qmp-lti.sqlitedb' or 'mysql:dbname=qmp-lti;host=localhost'
-define('DB_USERNAME', 'qmdev');        // name of account used to access database
-define('DB_PASSWORD', 'Development1');         // password for database account
+// define('DB_USERNAME', 'qmdev');        // name of account used to access database
+// define('DB_PASSWORD', 'Development1');         // password for database account
 
 
 ?>
