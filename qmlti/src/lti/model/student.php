@@ -179,8 +179,8 @@ class Student {
     if ($this->group != FALSE) {
       $this->group_list = get_participant_group_list($this->participant_id);
       $found = FALSE;
-      if (((count( (array)$this->group_list->GroupList) ) != 0) && is_array($this->group_list->GroupList)) {
-        foreach ($this->group_list->GroupList as $group_item ) {
+      if (((count( (array)$this->group_list->GroupList->Group) ) != 0) && is_array($this->group_list->GroupList->Group)) {
+        foreach ($this->group_list->GroupList->Group as $group_item ) {
           if ($group_item->Group_ID == $this->group->Group_ID) {
             $found = TRUE;
           }
