@@ -625,10 +625,10 @@ EOD;
  *
  *   returns the URL or FALSE
  */
-  function get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url, $participant_id) {
+  function get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url, $participant_id, $additional_params) {
     try {
       $soap_connection_id = perception_soapconnect_id();
-      $access = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url, $participant_id);
+      $access = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url, $participant_id, $additional_params);
       $url = $access->URL;
     } catch (Exception $e) {
       log_error($e);

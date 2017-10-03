@@ -10,7 +10,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License along
@@ -95,6 +95,7 @@ require_once('../resources/LTI_Data_Connector_qmp.php');
       $_SESSION['multiple_results'] = $multiple_results;
       $_SESSION['number_attempts'] = $number_attempts;
       $_SESSION['lti_return_url'] = $tool_provider->return_url;
+
       $_SESSION['result_id'] = $result_id;
       $_SESSION['allow_outcome'] = $supports_outcomes;
       $_SESSION['coaching_report'] = $coaching_report;
@@ -108,6 +109,9 @@ require_once('../resources/LTI_Data_Connector_qmp.php');
         $_SESSION['qmwise_client_id'] = $customer['qmwise_client_id'];
         $_SESSION['qmwise_checksum'] = $customer['qmwise_checksum'];
       }
+
+      $return_url = parse_url($_SESSION['lti_return_url']);
+      parse_str($return_url['query'], $_SESSION['additional_params']);
 
       // set redirect URL
       if ($is_student) {

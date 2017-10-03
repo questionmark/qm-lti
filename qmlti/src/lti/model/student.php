@@ -85,6 +85,10 @@ class Student {
  *  Number of attempts previously taken.
  */
   protected $past_attempts = NULL;
+/** 
+ *  Additional parameters passed by the tool consumer.
+ */
+  protected $additional_params = NULL;
 
 /**
  * Class constructor
@@ -116,6 +120,7 @@ class Student {
     $this->number_attempts = $session['number_attempts'];
     $this->parsed_attempts = $this->number_attempts;
     $this->past_attempts = 0;
+    $this->additional_params = $session['additional_params'];
   }
 
 /**
@@ -179,15 +184,21 @@ class Student {
     if ($this->group != FALSE) {
       $this->group_list = get_participant_group_list($this->participant_id);
       $found = FALSE;
-      if (((count( (array)$this->group_list->GroupList->Group) ) != 0) && is_array($this->group_list->GroupList->Group)) {
+      if (is_array($this->group_list) && is_array($this->group_list->GroupList) && is_array($this->group_list->GroupList->Group) && ((count( (array)$this->group_list->GroupList->Group) ) != 0)) {
         foreach ($this->group_list->GroupList->Group as $group_item ) {
           if ($group_item->Group_ID == $this->group->Group_ID) {
             $found = TRUE;
           }
         }
       } else {
-        if ((!stdclass_empty($this->group_list)) && (!stdclass_empty($this->group_list->GroupList)) && ($this->group_list->GroupList->Group->Group_ID == $this->group->Group_ID)) {
-          $found = TRUE;
+        if (!stdclass_empty($this->group_list) && !stdclass_empty($this->group_list->GroupList)) {
+          if (is_object($this->group_list->GroupList->Group) && !stdclass_empty($this->group_list->GroupList->Group)) { 
+            if (is_object($this->group) && !stdclass_empty($this->group)) {
+              if ($this->group_list->GroupList->Group->Group_ID == $this->group->Group_ID) {
+                $found = TRUE;
+              }
+            }
+          }
         }
       }
       if (!$found) {
@@ -275,7 +286,7 @@ class Student {
   function getAccessAssessmentNotify() {
   	$url = '';
   	if (!isset($_SESSION['error'])) {
-	    $url = get_access_assessment_notify($this->assessment_id, "{$this->firstname} {$this->lastname}", $this->consumer_key, $this->resource_link_id, $this->result_id, $this->notify_url, $this->return_url, $this->username);
+	    $url = get_access_assessment_notify($this->assessment_id, "{$this->firstname} {$this->lastname}", $this->consumer_key, $this->resource_link_id, $this->result_id, $this->notify_url, $this->return_url, $this->username, $this->additional_params);
 	  }
 	  return $url;
   }

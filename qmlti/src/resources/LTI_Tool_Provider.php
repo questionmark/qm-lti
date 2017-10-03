@@ -565,6 +565,7 @@ class LTI_Tool_Provider {
         if (isset($_POST['roles'])) {
           $this->user->roles = LTI_Tool_Provider::parseRoles($_POST['roles']);
         }
+        error_log("result_sourcedid: {$_POST['lis_result_sourcedid']}");
         # Save the user instance
         if (isset($_POST['lis_result_sourcedid'])) {
           if ($this->user->lti_result_sourcedid != $_POST['lis_result_sourcedid']) {
@@ -1251,6 +1252,7 @@ class LTI_Resource_Link {
     # Lookup service details from the source resource link appropriate to the user (in case the destination is being shared)
     $source_resource_link = $this;
     $sourcedid = $lti_outcome->getSourcedid();
+    error_log("Sourcedid from the outcome: {$sourcedid}");
     $resultid = $lti_outcome->getResultID();
     if (!is_null($user)) {
       $source_resource_link = $user->getResourceLink();
@@ -1314,6 +1316,7 @@ EOF;
         </sourcedGUID>{$xml}
       </resultRecord>
 EOF;
+        error_log("XML: {$xml}");
         if ($this->doLTI11Service($do, $urlLTI11, $xml)) {
           switch ($action) {
             case self::EXT_READ:
@@ -1328,6 +1331,7 @@ EOF;
               break;
           }
         }
+        error_log("LTI11 response: {$response}");
       } else {
         $params = array();
         $params['sourcedid'] = $sourcedid;
@@ -1367,6 +1371,7 @@ EOF;
         $response = '';
       }
     }
+    error_log("Result response: {$response}");
     return $response;
   }
 
@@ -1710,7 +1715,8 @@ EOF;
  */
   private function doLTI11Service($type, $url, $xml) {
     $ok = FALSE;
-    $this->ext_response = NULL;
+    $this->ext_response = NULL;      
+
     if (!empty($url)) {
       $id = uniqid();
       $xmlRequest = <<<EOF
@@ -1730,6 +1736,8 @@ EOF;
 </imsx_POXEnvelopeRequest>
 EOF;
       // Calculate body hash
+      error_log("URL: " . $url);
+      error_log("XML Request: " . $xmlRequest);
       $hash = base64_encode(sha1($xmlRequest, TRUE));
       $params = array('oauth_body_hash' => $hash);
       // Add OAuth signature
@@ -1740,11 +1748,15 @@ EOF;
       $params = $req->get_parameters();
       $header = $req->to_header();
       $header .= "\nContent-Type: application/xml";
+      $header .= "\nContent-Length: " . strlen($xmlRequest);
+      error_log("Header: {$header}");
       // Connect to tool consumer
       $this->ext_response = $this->do_post_request($url, $xmlRequest, $header);
+      error_log("XML Response: " . $this->ext_response);
       // Parse XML response
       if ($this->ext_response) {
         try {
+          $this->ext_response = html_entity_decode($this->ext_response);
           $this->ext_doc = new DOMDocument();
           $this->ext_doc->loadXML($this->ext_response);
           $this->ext_nodes = $this->domnode_to_array($this->ext_doc->documentElement);
@@ -1790,7 +1802,7 @@ EOF;
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
       curl_setopt($ch, CURLINFO_HEADER_OUT, TRUE);
       curl_setopt($ch, CURLOPT_HEADER, TRUE);
-      curl_setopt($ch, CURLOPT_SSLVERSION, 4);
+      curl_setopt($ch, CURLOPT_SSLVERSION, 'CURL_SSLVERSION_SSLv4');
       curl_setopt($ch, CURLOPT_FOLLOWLOCATION, TRUE);
       $ch_resp = curl_exec($ch);
       $ok = $ch_resp !== FALSE;
@@ -1801,6 +1813,8 @@ EOF;
         $this->ext_response_headers = $ch_resp_split[0];
         $resp = $ch_resp_split[1];
         $ok = curl_getinfo($ch, CURLINFO_HTTP_CODE) < 400;
+      } else {
+        error_log("cUrl error: " . curl_errno($ch) . " :: " . htmlspecialchars(curl_error($ch)));
       }
       $this->ext_request_headers = str_replace("\r\n", "\n", curl_getinfo($ch, CURLINFO_HEADER_OUT));
       curl_close($ch);

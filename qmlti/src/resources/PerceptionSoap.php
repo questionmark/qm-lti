@@ -284,9 +284,9 @@ class PerceptionSoap {
    * Perception doesn't check for one and just adds its own questionmark and
    * query string at the end.
    */
-  public function get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url, $participant_id) {
+  public function get_access_assessment_notify($assessment_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url, $participant_id, $additional_params = array()) {
     try {
-      $access_assessment = $this->soap->GetAccessAssessmentNotify(array(
+      $access_parameters = array(
         "PIP" => PIP_FILE,
         "Assessment_ID" => $assessment_id,
         "Participant_Name" => $participant_name,
@@ -301,7 +301,16 @@ class PerceptionSoap {
             array("Name" => "CALLBACK", "Value" => 1)
           )
         )
-      ));
+      );
+
+      foreach ($additional_params as $key => $value) {
+        $access_parameters['ParameterList']['Parameter'][] = array(
+          "Name" => $key,
+          "Value" => $value
+        );
+      }
+
+      $access_assessment = $this->soap->GetAccessAssessmentNotify($access_parameters);
     } catch(SoapFault $e) {
       throw new QMWiseException($e);
     }

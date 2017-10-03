@@ -1,8 +1,13 @@
 ; lti.pip
 ; PIP file for use with LTI connector to Perception
-; 11th August 2017
+; 9th September 2017
 
 [Input]
+; Moodle-specific parameters
+course=course
+launch_container=launch_container
+instanceid=instanceid
+sesskey=sesskey
 
 [Output]
 Participant=%SESSION.USER%
@@ -13,6 +18,12 @@ lti_consumer_key=lti_consumer_key
 lti_context_id=lti_context_id
 lti_result_id=lti_result_id
 lti_participant_id=lti_participant_id
+
+; Moodle-specific parameters
+course=course
+launch_container=launch_container
+instanceid=instanceid
+sesskey=sesskey
 
 [Settings]
 HEADER=Content-Type: application/x-www-form-urlencoded
