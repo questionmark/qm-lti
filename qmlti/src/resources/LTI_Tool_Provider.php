@@ -1781,7 +1781,6 @@ EOF;
     $resp = '';
     // Try using curl if available
     if (function_exists('curl_init')) {
-      // Start of Bart issue
       $ch = curl_init();
       curl_setopt($ch, CURLOPT_URL, $url);
       if (!empty($header)) {
@@ -1809,7 +1808,6 @@ EOF;
       }
       $this->ext_request_headers = str_replace("\r\n", "\n", curl_getinfo($ch, CURLINFO_HEADER_OUT));
       curl_close($ch);
-      // End of Bart issue
     } else {
       // Try using fopen if curl was not available or did not work (could have been an SSL certificate issue)
       $opts = array('method' => 'POST',
