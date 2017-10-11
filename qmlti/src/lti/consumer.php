@@ -40,8 +40,8 @@ require_once('../resources/lib.php');
     header('Location: error.php');
     exit;
   }
-  
-  $url =  substr( get_root_url(), 0, -10 );
+
+  $url =  substr( get_root_url(), 0, -14 );
   if (isset($_GET['consumer_key'])) {
     $_SESSION['consumer_key'] = $_GET['consumer_key'];
   }
