@@ -126,7 +126,7 @@ class Staff {
 
 /**
  * Get multiple results value.
- * 
+ *
  * @return Integer multiple_results value
  */
   function getMultipleResults() {
@@ -135,7 +135,7 @@ class Staff {
 
 /**
  * Gets array of results.
- * 
+ *
  * @return Array Array object describing multiple result options.
  */
   function getArrResults() {
@@ -144,7 +144,7 @@ class Staff {
 
 /**
  * Gets whether or not the object has encountered an error.
- * 
+ *
  * @return Boolean OK value.
  */
   function isOK() {
@@ -153,7 +153,7 @@ class Staff {
 
 /**
  * Gets UI descriptor for no_attempts
- * 
+ *
  * @return String no_attempts value
  */
   function getNoAttempts() {
@@ -162,7 +162,7 @@ class Staff {
 
 /**
  * Gets number of attempts available for assessment
- * 
+ *
  * @return mixed number_attempts value
  */
   function getNumberAttempts() {
@@ -171,7 +171,7 @@ class Staff {
 
 /**
  * Gets assessment ID for assessment currently on resource link.
- * 
+ *
  * @return Integer assessment ID.
  */
   function getAssessmentID() {
@@ -180,7 +180,7 @@ class Staff {
 
 /**
  * Sets UI based on number_attempts value.
- * 
+ *
  * @param String number_attempts from POST call.
  */
   function checkNumAttempts($request) {
@@ -214,7 +214,7 @@ class Staff {
 
 /**
  * Gets coaching_check value.
- * 
+ *
  * @return mixed coaching_check value.
  */
   function getCoachingCheck() {
@@ -223,7 +223,7 @@ class Staff {
 
 /**
  * Checks coaching report setting, then changes UI depending on result.
- * 
+ *
  * @param String POST request for new coaching report
  */
   function checkCoachingReportSettings($request) {
@@ -233,7 +233,7 @@ class Staff {
       } else {
         $this->disableCoachingReports();
       }
-    } 
+    }
 
     if (isset($request)) {
       if ($request == '1') {
@@ -246,7 +246,7 @@ class Staff {
 
 /**
  * Saves all options as settings in resource link.
- * 
+ *
  * @param String POST request for number of assessments
  * @param String POST request for multiple result option
  */
@@ -326,7 +326,7 @@ class Staff {
             $found = TRUE;
           }
         }
-      }   
+      }
       if ($this->ok && !$found) {
         add_group_administrator_list($group->Group_ID, $this->admin_id);
       }
@@ -355,7 +355,7 @@ class Staff {
 
 /**
  * Gets URL to login to Questionmark.
- * 
+ *
  * @return String URL
  */
   function getLoginURL() {
@@ -376,13 +376,29 @@ class Staff {
     $assessments = array();
     if ($this->ok && (($assessments = get_assessment_list()) === FALSE)) {
       $assessments = array();
+    } else {
+      $filtered_assessments = array_values(array_filter($assessments, array($this, 'filterDisabledForExternal')));
     }
-    return $assessments;
+    return $filtered_assessments;
   }
 
 /**
+ * Removes any assessments that are not enabled for external calls
+ *
+ * @return Boolean determines if array value should be removed
+ */
+function filterDisabledForExternal($obj) {
+  if (isset($obj->Permit_External_Call)) {
+    if ($obj->Permit_External_Call == 1) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Gets result list for participants of group.
- * 
+ *
  * @return Array result list
  */
   function getResults() {
@@ -409,8 +425,8 @@ class Staff {
       $this->results = array_values($result_list->AssessmentResult);
       foreach ($this->results as $result) {
         $result->Result->URL = get_report_url($result->Result->Result_ID)->URL;
-      } 
-    } 
+      }
+    }
     return $this->results;
   }
 }
