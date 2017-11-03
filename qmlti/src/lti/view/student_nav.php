@@ -13,7 +13,7 @@
     </tr>
     <tr class="GridRow">
       <td><?php echo $assessment->Session_Name; ?></td>
-      <td><input class="btn btn-sm" type="submit" name="action" value="Launch Assessment" <?php echo $launch_disabled; ?>/></td>
+      <td><?php echo $launch; ?></td>
       <td><?php echo $parsed_attempts; ?></td>
       <td><?php echo $past_attempts; ?></td>
     <?php if ($bool_coaching_report) { ?>

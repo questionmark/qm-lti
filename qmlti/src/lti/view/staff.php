@@ -13,7 +13,7 @@
 ?>
         <h1>Assessments</h1>
 <?php
-  if ((count($assessments) > 0) && !is_null($assessments[0])) {
+  if ((count($assessments) !== 0) && !is_null($assessments[0])) {
 ?>
         <form action="staff.php" method="POST">
         <table class="DataTable-staff table table-sm" cellpadding="0" cellspacing="0">
@@ -46,7 +46,7 @@
             </tr>
 <?php
     }
-?>      
+?>
           </tbody>
         </table>
         <br><br>
@@ -63,7 +63,7 @@
         <br>
         <div class="row">
           <div class="col1">
-          Select result to display: 
+          Select result to display:
           </div>
           <div class="col2">
           <select id="id_multipleresult" class="form-control dropdown-select" name="id_multipleresult" onchange="doChange('');">
@@ -72,13 +72,13 @@
       foreach ($arr_results as $results) {
         if ($results == $multiple_results) {
           $selectresults = 'selected';
-        } else { 
-          $selectresults = ''; 
+        } else {
+          $selectresults = '';
         }
 ?>
           <option value="<?php echo $results; ?>" <?php echo $selectresults; ?>><?php echo $results; ?></option>
 <?php
-      }             
+      }
 ?>
         </select>
         </div>
@@ -89,7 +89,7 @@
           Number of Attempts
           </div>
           <div class="col2">
-          
+
           <select id="id_numberattempts" class="form-control dropdown-select" name="id_numberattempts" onchange="doChange('');">
             <option value="none" <?php echo $no_attempts; ?>>No limit</option>
             <?php
@@ -101,7 +101,7 @@
                 }
             ?>
               <option value="<?php echo $i; ?>" <?php echo $selected_attempts; ?>><?php echo $i; ?></option>
-            <?php 
+            <?php
               }
             ?>
           </select>
