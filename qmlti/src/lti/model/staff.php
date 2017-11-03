@@ -377,7 +377,7 @@ class Staff {
     if ($this->ok && (($assessments = get_assessment_list()) === FALSE)) {
       $assessments = array();
     } else {
-      $filtered_assessments = array_filter($assessments, array($this, 'filterDisabledForExternal'));
+      $filtered_assessments = array_values(array_filter($assessments, array($this, 'filterDisabledForExternal')));
     }
     return $filtered_assessments;
   }
