@@ -58,8 +58,8 @@ class PerceptionSoap {
       $context = stream_context_create([
         'ssl' => [
           // set some SSL/TLS specific options
-          'verify_peer' => false,
-          'verify_peer_name' => false,
+          'verify_peer' => true,
+          'verify_peer_name' => true,
           'allow_self_signed' => true
         ]
       ]);
@@ -187,11 +187,10 @@ class PerceptionSoap {
     return $response->Assessment;
   }
 
-  public function get_assessment_list($parent_id, $only_run_from_integration) {
+  public function get_assessment_list($parent_id) {
     try {
       $list = $this->soap->GetAssessmentList(array(
-        "Parent_ID" => $parent_id,
-        "OnlyRunFromIntegration" => $only_run_from_integration
+        "Parent_ID" => $parent_id
       ));
     } catch(SoapFault $e) {
       throw new QMWiseException($e);
@@ -232,7 +231,7 @@ class PerceptionSoap {
     } catch(SoapFault $e) {
       throw new QMWiseException($e);
     }
-    return $response->AssessmentResultList; 
+    return $response->AssessmentResultList;
   }
 
 
@@ -244,7 +243,7 @@ class PerceptionSoap {
     } catch(SoapFault $e) {
       throw new QMWiseException($e);
     }
-    return $response; 
+    return $response;
   }
 
   public function get_assessment_result_list_by_participant($participant_name) {
@@ -316,6 +315,72 @@ class PerceptionSoap {
     }
     return $access_assessment;
   }
+
+  public function create_schedule_participant($schedule_id, $schedule_name, $assessment_id, $participant_id, $restrict_times = TRUE, $schedule_starts, $schedule_stops, $group_id, $group_tree_id, $web_delivery, $restrict_attempts, $max_attempts, $monitored, $test_center_id, $min_days_between_attempts, $time_limit_override, $time_limit, $offline_delivery) {
+    try {
+      $access_parameters = array(
+        "schedule" => array(
+          "Schedule_ID" => $schedule_id,
+          "Schedule_Name" => $schedule_name,
+          "Assessment_ID" => $assessment_id,
+          "Participant_ID" => $participant_id,
+          "Restrict_Times" => $restrict_times,
+          "Schedule_Starts" => $schedule_starts,
+          "Schedule_Stops" => $schedule_stops,
+          "Group_ID" => $group_id,
+          "Group_Tree_ID" => $group_tree_id,
+          "Web_Delivery" => $web_delivery,
+          "Restrict_Attempts" => $restrict_attempts,
+          "Max_Attempts" => $max_attempts,
+          "Monitored" => $monitored,
+          "Test_Center_ID" => $test_center_id,
+          "Min_Days_Between_Attempts" => $min_days_between_attempts,
+          "Time_Limit_Override" => $time_limit_override,
+          "Time_Limit" => $time_limit,
+          "Offline_Delivery" => $offline_delivery
+        )
+      );
+      $schedule_id = $this->soap->CreateScheduleParticipantV42($access_parameters);
+    } catch(SoapFault $e) {
+      throw new QMWiseException($e);
+    }
+    return $schedule_id;
+  }
+
+
+  public function get_access_schedule_notify($schedule_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url, $participant_id, $additional_params = array()) {
+    try {
+      $access_parameters = array(
+        "PIP" => PIP_FILE,
+        "Schedule_ID" => $schedule_id,
+        "Participant_Name" => $participant_name,
+        "Notify" => $notify_url,
+        "ParameterList" => array(
+          "Parameter" => array(
+            array("Name" => "HOME", "Value" => $home_url),
+            array("Name" => "lti_consumer_key", "Value" => $consumer_key),
+            array("Name" => "lti_context_id", "Value" => $resource_link_id),
+            array("Name" => "lti_result_id", "Value" => $result_id),
+            array("Name" => "lti_participant_id", "Value" => $participant_id),
+            array("Name" => "schedule_id", "Value" => $schedule_id),
+            array("Name" => "CALLBACK", "Value" => 1)
+          )
+        )
+      );
+
+      foreach ($additional_params as $key => $value) {
+        $access_parameters['ParameterList']['Parameter'][] = array(
+          "Name" => $key,
+          "Value" => $value
+        );
+      }
+      $access_assessment = $this->soap->GetAccessScheduleNotify($access_parameters);
+    } catch(SoapFault $e) {
+      throw new QMWiseException($e);
+    }
+    return $access_assessment;
+  }
+
 
   /**
    * get_report_url

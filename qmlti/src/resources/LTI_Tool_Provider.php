@@ -2003,6 +2003,20 @@ class LTI_Outcome {
 
 
 /**
+ * Saves the results in outcome to Results database
+ *
+ * @param consumer_tool Consumer tool used to connect to database
+ * @param resoure_link
+ * @param participant
+ *
+ * @return boolean True if saved
+ */
+  public function deleteAttempt($consumer, $resource_link, $schedule_id, $user_id) {
+    $result = $consumer->getDataConnector()->Attempts_deleteLatestAttempt($consumer, $resource_link, $schedule_id, $user_id);
+    return $result;
+  }
+
+/**
  * Get the result sourcedid value.
  *
  * @deprecated Use User object instead
@@ -2828,7 +2842,10 @@ abstract class LTI_Data_Connector {
  * Default name for database table used to store student result values
  */
   const RESULTS_TABLE_NAME = 'lti_results';
-
+/**
+ * Default name for database table used to store student attempts
+ */
+  const ATTEMPTS_TABLE_NAME = 'lti_attempts';
 /**
  * SQL date format (default = 'Y-m-d')
  */

@@ -18,6 +18,7 @@ lti_consumer_key=lti_consumer_key
 lti_context_id=lti_context_id
 lti_result_id=lti_result_id
 lti_participant_id=lti_participant_id
+schedule_id=schedule_id
 
 ; Moodle-specific parameters
 course=course

@@ -38,7 +38,7 @@ require_once('LTI_Tool_Provider.php');
   if (SECURE_COOKIE_ONLY) {
     $secure = TRUE;
   }
-  session_set_cookie_params(0, NULL, NULL, $secure, TRUE);
+  session_set_cookie_params(0, '/', NULL, $secure, TRUE);
 
   define('SESSION_NAME', 'QMP-LTI');  // name of session cookie
   define('INVALID_USERNAME_CHARS', '\'"&\\/£,:><');  // characters not allowed in QM usernames
@@ -59,9 +59,9 @@ require_once('LTI_Tool_Provider.php');
   define('PIP_FILE', 'lti.pip');  // name of PIP file on QM server used to handle LTI connections and grade return
   define('MIN_EU_CUSTOMER_ID', 600000);  // minimum value for customer IDs associated with the EU-based QM OnDemand server
 
-### 
+###
 ###  Client Initialisation Functions
-### 
+###
 
 /*
  * Open the database
@@ -245,7 +245,7 @@ CREATE TABLE [dbo].[{$users_table_name}] (
   [consumer_key] VARCHAR(50) NOT NULL DEFAULT '',
   [context_id] VARCHAR(255),
   [user_id] VARCHAR(255),
-  [firstname] VARCHAR(255), 
+  [firstname] VARCHAR(255),
   [lastname] VARCHAR(255),
   [fullname] VARCHAR(255),
   [email] VARCHAR(255),
@@ -265,7 +265,7 @@ CREATE TABLE [dbo].[{$tc_users_table_name}] (
   [consumer_key] VARCHAR(50) NOT NULL DEFAULT '',
   [context_id] VARCHAR(255),
   [user_id] VARCHAR(255),
-  [firstname] VARCHAR(255), 
+  [firstname] VARCHAR(255),
   [lastname] VARCHAR(255),
   [fullname] VARCHAR(255),
   [email] VARCHAR(255),
@@ -494,7 +494,7 @@ EOD;
   }
 
 /*
- * SOAP call to get an assessment's details 
+ * SOAP call to get an assessment's details
  *
  *   returns the assessment or FALSE
  */
@@ -517,7 +517,7 @@ EOD;
   function get_assessment_list() {
     try {
       $soap_connection_id = perception_soapconnect_id();
-      $assessments = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_assessment_list(0, 1);
+      $assessments = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_assessment_list(0);
     } catch (Exception $e) {
       log_error($e);
       $assessments = FALSE;
@@ -553,7 +553,7 @@ EOD;
     } catch (Exception $e) {
       log_error($e);
       return FALSE;
-    } 
+    }
     // Empty stdClass object
     if (stdclass_empty($response)) {
       return FALSE;
@@ -584,7 +584,7 @@ EOD;
 
 /*
  * SOAP call to get all result IDs from an assessment for all participants
- * 
+ *
  *   returns an array of resultIDs
  */
   function get_assessment_result_list_by_assessment($assessment_id) {
@@ -601,9 +601,9 @@ EOD;
 /*
  * SOAP call to grab participant list when provided group id
  *
- *   returns an array of participants 
+ *   returns an array of participants
  *
- */ 
+ */
   function get_participant_list_by_group($group_id) {
     try {
       $soap_connection_id = perception_soapconnect_id();
@@ -618,6 +618,41 @@ EOD;
       $participant_list = FALSE;
     }
     return $participant_list;
+  }
+
+/*
+ * SOAP call to create a schedule for a user given an assessment id and preferable times
+ *
+ *   returns the Schedule ID or FALSE
+ */
+  function create_schedule_participant($schedule_id, $schedule_name, $assessment_id, $participant_id, $restrict_times, $schedule_starts, $schedule_stops, $group_id, $group_tree_id, $web_delivery, $test_center_id, $restrict_attempts, $max_attempts, $monitored, $test_center_id, $min_days_between_attempts, $time_limit_override, $time_limit, $offline_delivery) {
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $access = $GLOBALS['perceptionsoap'][$soap_connection_id]->create_schedule_participant($schedule_id, $schedule_name, $assessment_id, $participant_id, $restrict_times, $schedule_starts, $schedule_stops, $group_id, $group_tree_id, $web_delivery, $restrict_attempts, $max_attempts, $monitored, $test_center_id, $min_days_between_attempts, $time_limit_override, $time_limit, $offline_delivery);
+      $schedule_id = $access->Schedule_ID;
+    } catch (Exception $e) {
+      log_error($e);
+      return FALSE;
+    }
+    return $schedule_id;
+  }
+
+
+/*
+ * SOAP call to get a direct URL to an assessment for a participant which includes the notify option
+ *
+ *   returns the URL or FALSE
+ */
+  function get_access_schedule_notify($schedule_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url, $participant_id, $additional_params) {
+    try {
+      $soap_connection_id = perception_soapconnect_id();
+      $access = $GLOBALS['perceptionsoap'][$soap_connection_id]->get_access_schedule_notify($schedule_id, $participant_name, $consumer_key, $resource_link_id, $result_id, $notify_url, $home_url, $participant_id, $additional_params);
+      $url = $access->GetAccessScheduleNotifyResult;
+    } catch (Exception $e) {
+      log_error($e);
+      $url = FALSE;
+    }
+    return $url;
   }
 
 /*
@@ -763,7 +798,7 @@ EOD;
 ###  Database Functions
 ###
 
-/* 
+/*
  * Boolean check for coaching report availability
  *
  * returns TRUE if coaching report is valid
@@ -775,7 +810,7 @@ function is_coaching_report_available($db, $consumer_key, $resource_link_id, $as
         return TRUE;
       } else {
         return FALSE;
-      }  
+      }
    } else {
       return FALSE;
    }
@@ -834,6 +869,28 @@ function is_best_result($db, $consumer, $resource_link, $user_id, $score) {
       return FALSE;
     }
   }
+}
+
+/*
+ * Either retrieves an existing attempt or creates a new attempt in the database
+ *
+ * returns attempt ID
+ */
+function get_latest_attempt($db, $consumer_key, $resource_link_id, $assessment_id, $user_id) {
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+  $result = $data_connector->Attempts_getLatestAttempt($consumer_key, $resource_link_id, $assessment_id, $user_id);
+  return $result;
+}
+
+/*
+ * Creates a new attempt in the database
+ *
+ * returns boolean
+ */
+function set_latest_attempt($db, $consumer_key, $resource_link_id, $assessment_id, $user_id, $schedule_id) {
+  $data_connector = LTI_Data_Connector::getDataConnector(TABLE_PREFIX, $db, DATA_CONNECTOR);
+  $result = $data_connector->Attempts_setLatestAttempt($consumer_key, $resource_link_id, $assessment_id, $schedule_id, $user_id);
+  return $result;
 }
 
 /*
@@ -914,7 +971,7 @@ function update_result_accessed($db, $consumer, $resource_link, $assessment_id, 
 
 /*
  * DB call to get all available participants specific to a context
- * 
+ *
  * returns the list of participants
  */
 function get_participants($db, $consumer_key) {
@@ -924,7 +981,7 @@ function get_participants($db, $consumer_key) {
 
 /*
  * DB call to get all available participants specific to a context
- * 
+ *
  * returns the list of participants
  */
 function get_participants_by_context_id($db, $consumer_key, $context_id) {
@@ -932,7 +989,7 @@ function get_participants_by_context_id($db, $consumer_key, $context_id) {
   return $data_connector->User_loadUsersbyContext($consumer_key, $context_id);
 }
 
-/* 
+/*
  * DB call to save user generated by manual sync process
  *
  * returns boolean
@@ -1366,7 +1423,7 @@ EOD;
   foreach ($session['roles'] as $user_role) {
     if ($user_role != NULL) {
       array_push( $user->roles, $roles[$user_role]);
-    } 
+    }
   }
   $response = $data_connector->TCUser_save($user);
   return $response;
@@ -1424,7 +1481,7 @@ EOD;
 
 /*
  *  Helper function to determine if an StdClass object is empty.
- * 
+ *
  *     returns TRUE or FALSE
  */
   function stdclass_empty($obj) {

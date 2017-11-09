@@ -48,6 +48,7 @@ require_once('../resources/LTI_Data_Connector_qmp.php');
   $participant_id = $_POST['lti_participant_id'];
   $score = $_POST['Percentage_Score'];
   $participant = $_POST['Participant'];
+  $schedule_id = $_POST['schedule_id'];
 
   $is_saved = FALSE;
   $score_decimal = $score / 100;
@@ -80,13 +81,14 @@ require_once('../resources/LTI_Data_Connector_qmp.php');
   $outcome->setValue($score);
   $outcome->setResultID($report_id);
   $outcome->type = 'percentage';
-  
+
   if ($is_saved) {
     if ($resource_link->hasOutcomesService()) {
       // Save result
       if ($resource_link->doOutcomesService(LTI_Resource_Link::EXT_WRITE, $outcome)) {
         $outcome->clearAccessedResult($consumer, $resource_link, $participant_id);
         $outcome->saveToResult($consumer, $resource_link, $participant_id, 1, $result_id);
+        $outcome->deleteAttempt($consumer, $resource_link, $schedule_id, $participant_id);
       } else {
         error_log("Failed to pass outcome of {$score} for {$result_id}.");
       }
@@ -94,5 +96,6 @@ require_once('../resources/LTI_Data_Connector_qmp.php');
   } else {
     $resource_link->checkValueType($outcome);
     $outcome->saveToResult($consumer, $resource_link, $participant_id, 0, $result_id);
+    $outcome->deleteAttempt($consumer, $resource_link, $participant_id, $schedule_id, $participant_id);
   }
 ?>

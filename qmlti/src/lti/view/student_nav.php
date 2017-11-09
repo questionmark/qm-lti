@@ -7,6 +7,7 @@
       <th>Launch</th>
       <th># of Possible Attempts</th>
       <th># of Attempts Taken</th>
+      <th>Attempt in Progress</th>
     <?php if ($bool_coaching_report) { ?>
       <th>Coaching Report</th>
     <?php } ?>
@@ -16,6 +17,7 @@
       <td><?php echo $launch; ?></td>
       <td><?php echo $parsed_attempts; ?></td>
       <td><?php echo $past_attempts; ?></td>
+      <td><?php echo $attempt_in_progress; ?></td>
     <?php if ($bool_coaching_report) { ?>
       <td><input class="btn btn-sm btn-link" type="submit" name="action" value="View Coaching Report" formtarget="_blank"/></td>
     <?php } ?>
