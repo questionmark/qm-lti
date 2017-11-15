@@ -377,7 +377,7 @@ class Staff {
     if ($this->ok && (($assessments = get_assessment_list()) === FALSE)) {
       $assessments = array();
     } else {
-      $filtered_assessments = array_filter($assessments, array($this, 'filterDisabledForExternal'));
+      $filtered_assessments = array_values(array_filter($assessments, array($this, 'filterDisabledForExternal')));
     }
     return $filtered_assessments;
   }
@@ -409,12 +409,12 @@ function filterDisabledForExternal($obj) {
         $found = FALSE;
         if (is_array($participant_list)) { // If participant list contains more than one participant
           foreach ($participant_list as $participant) {
-            if ($assessment->Result->Participant == "{$participant->First_Name} {$participant->Last_Name}") {
+            if ($assessment->Result->Participant == "$participant->Participant_Name") {
               $found = TRUE;
             }
           }
         } else { // Participant list contains only one participant
-          if ($assessment->Result->Participant == "{$participant_list->First_Name} {$participant_list->Last_Name}") {
+          if ($assessment->Result->Participant == "$participant->Participant_Name") {
             $found = TRUE;
           }
         }

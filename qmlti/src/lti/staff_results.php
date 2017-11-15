@@ -36,7 +36,7 @@ require_once('model/staff.php');
   $staff->setupAdministrator();
   $em_url = $staff->getLoginURL();
   $results = $staff->getResults();
-  
+
   if (!$staff->isOk()) {
     header('Location: error.php');
     exit;

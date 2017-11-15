@@ -137,6 +137,8 @@ class Student {
 
 /**
  * Checks if user is a student.
+ *
+ * @return NULL or ERROR if user is not a student
  */
   function checkValid() {
     if (!$this->is_student) {
@@ -152,6 +154,7 @@ class Student {
  * If action was submitted, page is redirected to appropriate area.
  *
  * @param String action
+ * @return URL redirect to either launch an assessment or view coaching report
  */
   function identifyAction($action) {
     // An action was previously selected
@@ -171,6 +174,8 @@ class Student {
 
 /**
  * Creates a participant in Perception.
+ *
+ * @return Student object holding student participant details
  */
   function createParticipant() {
     if (!isset($_SESSION['error']) && (($participant_details = get_participant_by_name($this->username)) !== FALSE)) {
@@ -185,6 +190,8 @@ class Student {
 
 /**
  * Adds a participant to a group. If group is not available, the group is created and the participant is added.
+ *
+ * @return Student object with group information
  */
   function joinGroup() {
     if (!isset($_SESSION['error']) && (($group = get_group_by_name($this->context_label)) !== FALSE)) {
@@ -341,14 +348,14 @@ class Student {
  */
   function checkLaunchDisabled() {
     if ($this->number_attempts != 'none') {
-      if (($this->past_attempts >= $this->number_attempts) && (!$this->hasAttemptInProgress)) {
+      if (($this->past_attempts >= $this->number_attempts) && (!$this->hasAttemptInProgress())) {
         return '';
       } else {
-        return '<input class="btn btn-sm" type="submit" name="action" value="Launch Assessment" <?php echo $launch_disabled; />';
+        return '<input class="btn btn-sm" type="submit" name="action" value="Launch Assessment"/>';
       }
     } else {
       $this->parsed_attempts = 'No limit';
-      return '<input class="btn btn-sm" type="submit" name="action" value="Launch Assessment" <?php echo $launch_disabled; />';
+      return '<input class="btn btn-sm" type="submit" name="action" value="Launch Assessment"/>';
     }
   }
 
