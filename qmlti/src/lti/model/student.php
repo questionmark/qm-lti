@@ -105,7 +105,7 @@ class Student {
 /**
  * Class constructor
  *
- * @param mixed   $session  Session data for this instance.
+ * @param mixed $session Session data for this instance.
  */
   function __construct($session) {
     $this->db = open_db();
@@ -153,7 +153,8 @@ class Student {
 /**
  * If action was submitted, page is redirected to appropriate area.
  *
- * @param String action
+ * @param String $action
+ *
  * @return URL redirect to either launch an assessment or view coaching report
  */
   function identifyAction($action) {

@@ -52,8 +52,8 @@ class PerceptionSoap {
    * Parameters are the Perception server's domain and an array of options
    * (purposes of which are obvious from the source code below)
    *
-   * @param String URL to connect to qmwise
-   * @param Array options
+   * @param String $perception_qmise URL to connect to qmwise
+   * @param Array $options
    *
    * @return NULL
    */
@@ -173,7 +173,7 @@ class PerceptionSoap {
   /**
    * Get an administrator's details from perception, we are especially interested in administrator id
    *
-   * @param String username
+   * @param String $username
    *
    * @return Administrator object
    */
@@ -191,11 +191,11 @@ class PerceptionSoap {
   /**
    * Create an administrator in perception, we are especially interested in administrator id
    *
-   * @param String username
-   * @param String first name
-   * @param String last name
-   * @param String email
-   * @param String Profile name
+   * @param String $username
+   * @param String $firstname
+   * @param String $lastname
+   * @param String $email
+   * @param String $profile
    *
    * @return Administrator object
    */
@@ -225,7 +225,7 @@ class PerceptionSoap {
   /**
    * Gets an assessment object based on assessment id.
    *
-   * @param Integer assessment id
+   * @param Integer $assessment_id
    *
    * @return Assessment object
    */
@@ -243,7 +243,7 @@ class PerceptionSoap {
   /**
    * Gets an assessment list object based on parent id.
    *
-   * @param Integer parent id
+   * @param Integer $parent_id
    *
    * @return Array of Assessment objects
    */
@@ -267,11 +267,11 @@ class PerceptionSoap {
   /**
    * Gets an assessment list based on the administrator id
    *
-   * @param Integer administrator id
-   * @param Integer parent id
-   * @param Boolean run from integration
+   * @param Integer $admin_id
+   * @param Integer $parent_id
+   * @param Boolean $only_run_from_integration
    *
-   * @return Array of  Assessment objects
+   * @return Array of Assessment objects
    */
   public function get_assessment_list_by_administrator($admin_id, $parent_id, $only_run_from_integration) {
     try {
@@ -295,7 +295,7 @@ class PerceptionSoap {
   /**
    * Gets an assessment results based on id.
    *
-   * @param Integer assessment id
+   * @param Integer $assessment_id
    *
    * @return Array of Assessment objects
    */
@@ -313,7 +313,7 @@ class PerceptionSoap {
   /**
    * Gets a participant list by group id
    *
-   * @param Integer group id
+   * @param Integer $group_id
    *
    * @return Array of Participant objects
    */
@@ -331,7 +331,7 @@ class PerceptionSoap {
   /**
    * Gets an assessment result list based on the participant
    *
-   * @param String participant name
+   * @param String $participant_name
    *
    * @return Array of assessment results
    */
@@ -349,9 +349,9 @@ class PerceptionSoap {
   /**
    * Gets the access URL for the administrator to access the Portal.
    *
-   * @param String username of administrator
+   * @param String $username
    *
-   * @return String url
+   * @return String URL
    */
   public function get_access_administrator($username) {
     try {
@@ -378,15 +378,15 @@ class PerceptionSoap {
    * Perception doesn't check for one and just adds its own questionmark and
    * query string at the end.
    *
-   * @param Integer assessment id
-   * @param String participant name
-   * @param String consumer key
-   * @param String The ID of the resource link
-   * @param Integer result id
-   * @param String the URL to allow the LTI to begin adjusting grades
-   * @param String the URL to return to after the assessment is completed
-   * @param String the participant ID
-   * @param Array optional parameters passed from the LMS
+   * @param Integer $assessment_id
+   * @param String $participant_name
+   * @param String $consumer_key
+   * @param String $resource_link_id
+   * @param Integer $result_id
+   * @param String $notify_url the URL to allow the LTI to begin adjusting grades
+   * @param String $home_url the URL to return to after the assessment is completed
+   * @param String $participant_id
+   * @param Array $additional_params optional parameters passed from the LMS
    *
    * @return String URL to access the assessment
    */
@@ -423,29 +423,29 @@ class PerceptionSoap {
     return $access_assessment;
   }
 
- /**
-  * Maps the variables to SOAP call createScheduleParticipantv42, gets back schedule_id with parameters set.
-  *
-  * All parameters are required to be passed to the function.
-  *
-  * @param Integer old schedule id, will be overwritten after but is required for call
-  * @param String schedule name
-  * @param Integer assessment id
-  * @param Integer participant id
-  * @param Boolean set whether or nnot the schedule is time restricted.
-  * @param String ISO 8601 standard for starting schedule time
-  * @param String ISO 8601 standard for ending schedule time
-  * @param Integer group id
-  * @param Integer group tree id, often defaulted to the group id
-  * @param Boolean identify whether or not this schedule is to be used for web delievery
-  * @param Boolean identify if the attempts are limited
-  * @param Integer max attempt count
-  * @param Boolean identify if system is monitored
-  * @param Integer test center id
-  * @param Integer minimum days between attempts taken
-  * @param Boolean identify if there is a time limit to be attached to the attempt
-  * @param Integer time limit
-  * @param Boolean identify if assessment should be used for offline delivery.
+/**
+ * Maps the variables to SOAP call createScheduleParticipantv42, gets back schedule_id with parameters set.
+ *
+ * All parameters are required to be passed to the function.
+ *
+ * @param Integer $schedule_id Will be overwritten after but is required for call
+ * @param String $schedule_name
+ * @param Integer $assessment_id
+ * @param Integer $participant_id
+ * @param Boolean $restrict_times
+ * @param String $schedule_starts ISO 8601 standard for starting schedule time
+ * @param String $schedule_stops ISO 8601 standard for ending schedule time
+ * @param Integer $group_id
+ * @param Integer $group_tree_id, same as group id for LTI use
+ * @param Boolean $web_delivery
+ * @param Boolean $restrict_attempts
+ * @param Integer $max_attempts
+ * @param Boolean $monitored
+ * @param Integer $test_center_id
+ * @param Integer $min_days_between_attempts
+ * @param Boolean $time_limit_override
+ * @param Integer $time_limit
+ * @param Boolean $offline_delivery
   *
   * @return Integer schedule id
   */
@@ -483,15 +483,15 @@ class PerceptionSoap {
   /**
    * Calls QM process to return URL to access assessment attempt
    *
-   * @param Integer schedule id
-   * @param String participant name
-   * @param String consumer key
-   * @param String The ID of the resource link
-   * @param Integer result id
-   * @param String the URL to allow the LTI to begin adjusting grades
-   * @param String the URL to return to after the assessment is completed
-   * @param String the participant ID
-   * @param Array optional parameters passed from the LMS
+   * @param Integer $schedule_id
+   * @param String $participant_name
+   * @param String $consumer_key
+   * @param String $resource_link_id
+   * @param Integer $result_id
+   * @param String $notify_url the URL to allow the LTI to begin adjusting grades
+   * @param String $home_url the URL to return to after the assessment is completed
+   * @param String $participant_id
+   * @param Array $additional_params optional parameters passed from the LMS
    *
    * @return String URL to access the schedule
    */
@@ -528,11 +528,10 @@ class PerceptionSoap {
     return $access_assessment;
   }
 
-
   /**
    * Return the URL of a report for a given result ID
    *
-   * @param String result id
+   * @param String $result_id
    *
    * @return String URL for coaching report
    */
@@ -550,7 +549,7 @@ class PerceptionSoap {
   /**
    * Gets a group from perception
    *
-   * @param String name of the group
+   * @param String $groupname
    *
    * @return SOAPResponse response from QMWISe
    */
@@ -568,9 +567,9 @@ class PerceptionSoap {
   /**
    * Creates a group with a specified name, description and parent group id
    *
-   * @param String name of group
-   * @param String description
-   * @param Integer parent group id
+   * @param String $groupname
+   * @param String $description
+   * @param Integer $parentid
    *
    * @return SOAPResponse response from QMWISe
    */
@@ -599,8 +598,8 @@ class PerceptionSoap {
   /**
    * Adds the participant to the group
    *
-   * @param Integer group id
-   * @param Integer participant id
+   * @param Integer $groupid
+   * @param Integer $participantid
    *
    * @return SOAPResponse response from QMWISe
    */
@@ -621,8 +620,8 @@ class PerceptionSoap {
   /**
    * Adds an administrator to the group
    *
-   * @param Integer group id
-   * @param Integer administrator id
+   * @param Integer $groupid
+   * @param Integer $administratorid
    *
    * @return SOAPResponse response from QMWISe
    */
@@ -643,7 +642,7 @@ class PerceptionSoap {
   /**
    * Gets group list attached to participant
    *
-   * @param Integer participant id
+   * @param Integer $participantid
    *
    * @return SOAPResponse response from QMWISe
    */
@@ -661,7 +660,7 @@ class PerceptionSoap {
   /**
    * Gets group list attached to administrator
    *
-   * @param Integer administrator id
+   * @param Integer $administratorid
    *
    * @return SOAPResponse response from QMWISe
    */
@@ -679,7 +678,7 @@ class PerceptionSoap {
   /**
    * Get an participant's details from perception
    *
-   * @param String username
+   * @param String $username
    *
    * @return Participant object
    */
@@ -697,10 +696,10 @@ class PerceptionSoap {
   /**
    * Create a participant in perception
    *
-   * @param String username
-   * @param String first name
-   * @param String last name
-   * @param String email
+   * @param String $username
+   * @param String $firstname
+   * @param String $lastname
+   * @param String $email
    *
    * @return Participant object
    */

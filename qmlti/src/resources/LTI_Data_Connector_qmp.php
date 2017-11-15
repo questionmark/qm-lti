@@ -90,6 +90,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 
 /**
  * Save the tool consumer to the database
+ *
  * @return Boolean for success or fail
  */
   public function Tool_Consumer_save($consumer) {

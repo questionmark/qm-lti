@@ -16,6 +16,11 @@ class LTIRestClient {
 
   /**
    * RestClient constructor.
+   *
+   * @param Integer $customer_id ID of customer to generate the URL
+   * @param String $url URL of DeliveryOData endpoint
+   * @param String $qmwise_username Username to be passed for security purposes
+   * @param String $qmwise_password Password to be passed for security purposes
    */
   public function __construct($customer_id, $url, $qmwise_username, $qmwise_password) {
     $this->api = new RestClient([
@@ -32,6 +37,14 @@ class LTIRestClient {
     ]);
   }
 
+  /**
+   * Call the DeliveryOData API
+   *
+   * @param String $endpoint Endpoint to be appended to the URL, used to specify feeds
+   * @param String $method GET or POST method
+   * @param Array $params Optional parameters to be added to the API call, including query parameters
+   * @param String $headers Optional headers to be added, including Content-Type
+   */
   public function callApi($endpoint, $method, $params = null, $headers = null) {
     if ($method == 'GET') {
       $result = $this->api->get($endpoint, $params, $headers);
