@@ -7,8 +7,12 @@
         </div>
         <hr class="qm-divider" />
         <div id="PageContent" class="block-color">
-          <div class="container-fluid"><p><button type="button" class="btn btn-default btn-grey no-margin" onclick="location.href='<?php echo $return_url; ?>'">Back to Course</button></p></div>
-            <div id="body" class="container-fluid" style="padding: 0px">
+          <div class="container-fluid">
+            <p>
+              <button type="button" class="btn btn-default btn-grey no-margin" onclick="location.href='<?php echo $return_url; ?>'">Back to Course</button>
+            </p>
+          </div>
+          <div id="body" class="container-fluid" style="padding: 0px">
             <form action="student_nav.php" method="POST">
               <div class="col-md-12">
                 <h2 style="font-weight: normal; color: #999;">Assessment</h2>

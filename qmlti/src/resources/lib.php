@@ -773,10 +773,12 @@ function is_coaching_report_available($db, $consumer_key, $resource_link_id, $as
    if ($data_connector->ReportConfig_loadAccessible($consumer_key, $resource_link_id, $assessment_id)) {
       if (get_result_id($user_id) != FALSE) {
         return TRUE;
-      } else {
+      }
+      else {
         return FALSE;
       }
-    } else {
+    }
+    else {
       return FALSE;
    }
 }

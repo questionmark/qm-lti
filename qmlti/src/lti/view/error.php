@@ -7,12 +7,12 @@
         </div>
         <hr class="qm-divider" />
         <div id="PageContent" class="block-color">
-        <div id="body" class="container-fluid" style="padding: 0px">
-          <p>Sorry, an unexpected error occured. Please try again.</p>
-          <br><br>
-          <p><?php echo $error; ?></p>
-        </div>
-        <div id="spacer-lg"></div>
+          <div id="body" class="container-fluid" style="padding: 0px">
+            <p>Sorry, an unexpected error occured. Please try again.</p>
+            <br><br>
+            <p><?php echo $error; ?></p>
+          </div>
+          <div id="spacer-lg"></div>
         </div>
       </div>
     </div>

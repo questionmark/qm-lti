@@ -37,6 +37,6 @@ require_once('../resources/lib.php');
   }
 
   page_header();
-  include_once("view/error.php");
+  include_once('view/error.php');
 
 ?>
