@@ -1,20 +1,9 @@
-<body class="bg-pattern" style="background-color: rgb(250, 250, 250);">
-  <div id="Wrapper">
-    <div id="MainContentWrapper" class="col-md-10 col-md-offset-1" style="padding-top: 5em">
-      <div id="ContentWrapper">
-        <div id="HeaderWrapper" class="header-top padding-top-md">
-          <a href="https://www.questionmark.com/"><img id="logoImage" src="/web/images/logo.png" alt="Questionmark" class="center-block" /></a>
-        </div>
-        <hr class="qm-divider" />
-        <div id="PageContent" class="block-color">
         <div id="body" class="container-fluid">
         <p>
-        <a class="btn btn-default btn-grey" href="<?php echo $return_url; ?>">Back to Course</button></a>
-        <a class="btn btn-default btn-grey" href="<?php echo $em_url; ?>" target="_blank" />Log into Questionmark Portal</a>
-        <a class="btn btn-default btn-grey" href="staff.php" />Back to Assessment Configuration Page</a>
+        <a class="btn btn-default" href="<?php echo $em_url; ?>" target="_blank" />Log into Questionmark Portal</a>&nbsp;&nbsp;
+        <a class="btn btn-default" href="staff.php" />Back to Assessment Configuration Page</a>
         </p>
         <h1>Assessment Results</h1>
-        <hr class="qm-divider-sm"><br>
 <?php
   if (($results != NULL) && (count($results) > 0)) {
 ?>
@@ -51,26 +40,11 @@
         <br><br><br>
         </form>
         </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-10 col-md-offset-1">
-      <p class="footer"><span id="Copyright"> © 2018 Questionmark Computing Ltd.</span></p>
-  </div>
-</body>
 <?php
   } else {
 ?>
         <p>No results available.</p>
         </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-10 col-md-offset-1">
-      <p class="footer"><span id="Copyright"> © 2018 Questionmark Computing Ltd.</span></p>
-  </div>
-</body>
 <?php
   }
 ?>

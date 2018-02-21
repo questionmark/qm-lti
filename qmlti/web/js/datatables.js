@@ -14,7 +14,6 @@ $(document).ready(function() {
     } );
 
     $('.DataTable').DataTable({
-        responsive: true,
         columnDefs: [
           { type: 'numeric-parse', targets: [1, 2] },
           { orderable: false, targets: -1 }
@@ -22,7 +21,6 @@ $(document).ready(function() {
     });
 
     $('.DataTable-staff').DataTable({
-        responsive: true,
         order: [],
         columnDefs: [
           { orderable: false, targets: 0 }

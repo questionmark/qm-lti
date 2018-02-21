@@ -1,17 +1,8 @@
-<body class="bg-pattern" style="background-color: rgb(250, 250, 250);">
-  <div id="Wrapper">
-    <div id="MainContentWrapper" class="col-md-10 col-md-offset-1" style="padding-top: 5em">
-      <div id="ContentWrapper">
-        <div id="HeaderWrapper" class="header-top padding-top-md">
-          <a href="https://www.questionmark.com/"><img id="logoImage" src="/web/images/logo.png" alt="Questionmark" class="center-block" /></a>
-        </div>
-        <hr class="qm-divider" />
-        <div id="PageContent" class="block-color">
+
         <div id="body" class="container-fluid">
         <p>
-          <a class="btn btn-default btn-grey" href="<?php echo $return_url; ?>">Back to Course</button></a>
-          <a class="btn btn-default btn-grey" href="<?php echo $em_url; ?>" target="_blank" />Log into Questionmark Portal</a>
-          <a class="btn btn-default btn-grey" href="staff_results.php" />View Assessment Results</a>
+        <a class="btn btn-default" href="<?php echo $em_url; ?>" target="_blank" />Log into Questionmark Portal</a>&nbsp;&nbsp;&nbsp;
+        <a class="btn btn-default" href="staff_results.php" />View Assessment Results</a>
         </p>
 <?php
   if (!$_SESSION['allow_outcome']) {
@@ -21,7 +12,6 @@
   }
 ?>
         <h1>Assessments</h1>
-        <hr class="qm-divider-sm"><br>
 <?php
   if ((count($assessments) !== 0) && !is_null($assessments[0])) {
 ?>
@@ -59,7 +49,7 @@
 ?>
           </tbody>
         </table>
-        <hr class="qm-divider-sm"><br>
+        <br><br>
         <p>
         <input type="hidden" id="id_coachingreport" name="id_coachingreport" value="0">
         <div class="row">
@@ -118,29 +108,17 @@
           </div>
         </div>
         <br><br><br>
-        <input class="button btn btn-grey no-margin" type="submit" id="id_save" value="Save change" disabled="disabled" />
+        <input class="button btn" type="submit" id="id_save" value="Save change" disabled="disabled" />
         </p>
         <br><br><br>
         <br><br><br>
         </form>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-10 col-md-offset-1">
-      <p class="footer"><span id="Copyright"> © 2018 Questionmark Computing Ltd.</span></p>
-  </div>
-</body>
+        </div>
 <?php
   } else {
 ?>
         <p>No assessments available.</p>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-10 col-md-offset-1">
-      <p class="footer"><span id="Copyright"> © 2018 Questionmark Computing Ltd.</span></p>
-  </div>
-</body>
+        </div>
 <?php
   }
 ?>

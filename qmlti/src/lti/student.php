@@ -31,6 +31,7 @@ require_once('model/student.php');
 
   session_name(SESSION_NAME);
   session_start();
+
   $student = new Student($_SESSION);
   $student->checkValid();
 
@@ -44,7 +45,7 @@ require_once('model/student.php');
   if (isset($_SESSION['error'])) {
     $url = "error.php";
   }
-
+  
   header("Location: {$url}");
 
 ?>
