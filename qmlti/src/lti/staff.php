@@ -49,6 +49,7 @@ require_once('model/staff.php');
   $number_attempts = $staff->getNumberAttempts();
   $arr_results = $staff->getArrResults();
   $multiple_results = $staff->getMultipleResults();
+  $return_url = $_SESSION['lti_return_url'];
 
   if (!$staff->isOK()) {
     header('Location: error.php');
@@ -64,6 +65,5 @@ EOD;
 
   page_header($script);
   include_once("view/staff.php");
-  page_footer();
 
 ?>

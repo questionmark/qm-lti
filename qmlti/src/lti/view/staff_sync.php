@@ -42,7 +42,7 @@
         <br>
 <?php
   } else {
-?>      
+?>
         <form action="staff_sync.php" method="POST">
         <p>No results available.</p>
         <br>

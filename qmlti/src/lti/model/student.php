@@ -85,7 +85,7 @@ class Student {
  *  Number of attempts previously taken.
  */
   protected $past_attempts = NULL;
-/** 
+/**
  *  Additional parameters passed by the tool consumer.
  */
   protected $additional_params = NULL;
@@ -138,13 +138,13 @@ class Student {
 
 /**
  * If action was submitted, page is redirected to appropriate area.
- * 
+ *
  * @param String action
  */
   function identifyAction($action) {
     // An action was previously selected
     if (isset($action)) {
-      if ($action == 'Launch Assessment') {
+      if ($action == 'Start Test') {
         // start assessment
         $redirect =  get_root_url() . '../lti/student.php';
         header("Location: {$redirect}");
@@ -192,7 +192,7 @@ class Student {
         }
       } else {
         if (!stdclass_empty($this->group_list) && !stdclass_empty($this->group_list->GroupList)) {
-          if (is_object($this->group_list->GroupList->Group) && !stdclass_empty($this->group_list->GroupList->Group)) { 
+          if (is_object($this->group_list->GroupList->Group) && !stdclass_empty($this->group_list->GroupList->Group)) {
             if (is_object($this->group) && !stdclass_empty($this->group)) {
               if ($this->group_list->GroupList->Group->Group_ID == $this->group->Group_ID) {
                 $found = TRUE;
@@ -203,14 +203,14 @@ class Student {
       }
       if (!$found) {
         add_group_participant_list($this->group->Group_ID, $this->participant_id);
-      } 
+      }
     }
   }
 
 /**
- * Checks database to identify if coaching report is available for participant and assessment. 
+ * Checks database to identify if coaching report is available for participant and assessment.
  * Includes a sanitary check to identify if a previous assessment was taken.
- * 
+ *
  * @return Boolean TRUE if available.
  */
   function isCoachingReportAvailable() {
@@ -219,7 +219,7 @@ class Student {
 
 /**
  * Gets assessment given the assessment ID.
- * 
+ *
  * @return Object Assessment.
  */
   function getAssessment() {
@@ -232,7 +232,7 @@ class Student {
 
 /**
  * Gets number of attempts previously taken.
- * 
+ *
  * @return Integer Past attempts.
  */
   function getAttemptDetails() {
@@ -244,7 +244,7 @@ class Student {
 
 /**
  * Gets number of attempts available for assessment.
- * 
+ *
  * @return Integer Number of attempts.
  */
   function getNumberAttempts() {
@@ -253,25 +253,25 @@ class Student {
 
 /**
  * Checks whether or not launch is disabled due to maximum attempts taken.
- * 
+ *
  * @return String UI disable string.
  */
   function checkLaunchDisabled() {
     if ($this->number_attempts != 'none') {
       if ($this->past_attempts >= $this->number_attempts) {
-        return 'disabled';
+        return FALSE;
       } else {
-        return '';
+        return TRUE;
       }
     } else {
-      $this->parsed_attempts = 'No limit';
-      return '';
+      $this->parsed_attempts = 'unlimited';
+      return TRUE;
     }
   }
 
 /**
  * Returns the number of attempts available in UI-interpretable form.
- * 
+ *
  * @return String Parsed attempts value.
  */
   function getParsedAttempts() {
@@ -280,7 +280,7 @@ class Student {
 
 /**
  * Returns the URL for the assessment given participant details.
- * 
+ *
  * @return String Assessment URL.
  */
   function getAccessAssessmentNotify() {
