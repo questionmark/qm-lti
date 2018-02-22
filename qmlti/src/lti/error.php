@@ -30,14 +30,13 @@ require_once('../resources/lib.php');
   session_name(SESSION_NAME);
   session_start();
 
-  page_header();
-
-  echo "<div class='container-fluid'><p>\nSorry, an unexpected error occured. Please try again.\n</p>\n";
   if (isset($_SESSION['error'])) {
-    echo "        <p>\n[{$_SESSION['error']}]\n</p>\n";
+    $error = $_SESSION['error'];
+  } else {
+    $error = '';
   }
-  echo "</div>";
 
-  page_footer(isset($_SESSION['frame']) && $_SESSION['frame']);
+  page_header();
+  include_once('view/error.php');
 
 ?>

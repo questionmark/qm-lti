@@ -1,11 +1,87 @@
 /****
  * General
- */ 
-
+ */
 body {
-  font-size: 12px;
-  font-family: "Droid Sans", Helvetica, Arial, sans-serif;
+  font-size: 40px;
   color: #333;
+  font-family: 'Roboto', 'Helvetica Neue', 'Droid Sans', 'Helvetica', 'Arial', sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 1px;
+}
+
+#logoImage {
+  height: 3em;
+}
+
+.mb-5 {
+  margin-bottom: 100px;
+}
+
+.btn-wide {
+  width: 100%;
+  padding: 25px 0px;
+  border-radius: 5px;
+}
+
+.block-color {
+  padding: 15px;
+  box-shadow: 5px 50px 200px #ccc;
+  border-radius: 5px;
+  padding: 50px 50px 300px 50px;
+  margin-bottom: 50px;
+}
+
+.footer {
+  color: #999;
+  width: 100%;
+  text-align: center;
+  margin-bottom: 150px;
+}
+
+.bg-pattern {
+  background-image: url('../images/pattern.svg');
+  background-repeat: repeat;
+}
+
+@media (min-width: 576px) {
+  body {
+    font-size: 16px;
+    letter-spacing: 0.4px;
+  }
+}
+
+@media (min-width: 768px) {
+  body {
+    font-size: 32px;
+  }
+}
+
+@media (min-width: 992px) {
+  body {
+    font-size: 14px;
+  }
+  .block-color {
+    padding: 50px 50px 50px 50px;
+  }
+}
+
+@media (min-width: 1200px) {
+  body {
+    font-size: 13px;
+  }
+  #logoImage {
+    height: 2.5em;
+  }
+  .mb-5 {
+    margin-bottom: 0px;
+  }
+  .btn-wide {
+    padding: 15px 0px;
+  }
+  .spacer-lg {
+    margin-bottom: 25px;
+  }
 }
 
 /***
@@ -29,9 +105,53 @@ a {
 /***
  * Bootstrap
  */
-
 .btn {
   font-size: 100%;
+  border-color: #fff;
+  font-weight: 100;
+  letter-spacing: 0.4px;
+  padding: 15px;
+  white-space: normal;
+}
+
+.btn-green {
+  background: #389e1c; /* Old browsers */
+  background: -moz-linear-gradient(-45deg, #47ad41 0%, #389e1c 100%); /* FF3.6-15 */
+  background: -webkit-linear-gradient(-45deg, #47ad41 0%,#389e1c 100%); /* Chrome10-25,Safari5.1-6 */
+  background: linear-gradient(135deg, #47ad41 0%,#389e1c 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#47ad41', endColorstr='#389e1c',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+  opacity: 0.8;
+}
+
+.btn-blue {
+  background: #18227c; /* Old browsers */
+  background: -moz-linear-gradient(-45deg, #4f3d72 0%, #18227c 100%); /* FF3.6-15 */
+  background: -webkit-linear-gradient(-45deg, #4f3d72 0%,#18227c 100%); /* Chrome10-25,Safari5.1-6 */
+  background: linear-gradient(135deg, #4f3d72 0%,#18227c 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#4f3d72', endColorstr='#18227c',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+  opacity: 0.8;
+}
+
+.btn-grey {
+  padding: 15px 35px;
+  background-color: #fff;
+  border: 1px solid #18227c;
+  color: #18227c;
+  margin: 10px;
+}
+
+.btn-grey:not([disabled]):hover {
+  background-color: #f5efff;
+  border: 1px solid #18227c;
+  color: #18227c;
+}
+
+.btn:not([disabled]):hover {
+  opacity: 1.0;
+}
+
+.no-margin {
+  margin: 0px;
 }
 
 .form-control {
@@ -45,6 +165,15 @@ a {
 
 .row {
   margin-left: 0;
+}
+
+.qm-divider-sm {
+  margin: 10px 10px 10px 0px;
+  width: 25%;
+}
+
+.qm-divider {
+  opacity: 0;
 }
 
 /***
@@ -113,3 +242,5 @@ input[type="text"], input[type="password"], input[type="checkbox"] {
   width: 100%;
   clear: both;
 }
+
+
