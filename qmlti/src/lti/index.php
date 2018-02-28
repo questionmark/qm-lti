@@ -170,7 +170,7 @@ function checkForm() {
     if (!ok) {
       alert('Please enter a QMWISe Password');
       el.focus();
-    } 
+    }
   }
   return ok;
 }
@@ -233,8 +233,8 @@ EOD;
         </div>
         <br><br>
         <p>
-          <input id="id_configure" type="submit" class="btn btn-default" name="action" value="Configure" />&nbsp;&nbsp;&nbsp;
-          <input id="id_delete" type="submit" class="btn btn-default" name="action" value="Delete" onclick="return confirmDelete();" />
+          <input id="id_configure" type="submit" class="btn btn-primary" name="action" value="Configure" />&nbsp;&nbsp;&nbsp;
+          <input id="id_delete" type="submit" class="btn btn-danger" name="action" value="Delete" onclick="return confirmDelete();" />
         </p>
 
         </form>

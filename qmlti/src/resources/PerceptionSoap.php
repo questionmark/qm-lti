@@ -58,8 +58,8 @@ class PerceptionSoap {
       $context = stream_context_create([
         'ssl' => [
           // set some SSL/TLS specific options
-          'verify_peer' => false,
-          'verify_peer_name' => false,
+          'verify_peer' => true,
+          'verify_peer_name' => true,
           'allow_self_signed' => true
         ]
       ]);
@@ -187,11 +187,10 @@ class PerceptionSoap {
     return $response->Assessment;
   }
 
-  public function get_assessment_list($parent_id, $only_run_from_integration) {
+  public function get_assessment_list($parent_id) {
     try {
       $list = $this->soap->GetAssessmentList(array(
-        "Parent_ID" => $parent_id,
-        "OnlyRunFromIntegration" => $only_run_from_integration
+        "Parent_ID" => $parent_id
       ));
     } catch(SoapFault $e) {
       throw new QMWiseException($e);
@@ -232,7 +231,7 @@ class PerceptionSoap {
     } catch(SoapFault $e) {
       throw new QMWiseException($e);
     }
-    return $response->AssessmentResultList; 
+    return $response->AssessmentResultList;
   }
 
 
@@ -244,7 +243,7 @@ class PerceptionSoap {
     } catch(SoapFault $e) {
       throw new QMWiseException($e);
     }
-    return $response; 
+    return $response;
   }
 
   public function get_assessment_result_list_by_participant($participant_name) {
