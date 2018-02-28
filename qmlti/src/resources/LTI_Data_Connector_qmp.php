@@ -36,7 +36,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 
 /*
  * Class constructor
- */ 
+ */
   function __construct($db, $dbTableNamePrefix = '') {
     $this->db = $db;
     $this->dbTableNamePrefix = $dbTableNamePrefix;
@@ -476,7 +476,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
   public function Results_clearAccessedResult($consumer, $resource_link, $user_id) {
     $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
            'SET is_accessed = 0 ' .
-           'WHERE (consumer_key = :consumer) AND (context_id = :context) AND (assessment_id = :assessment) ' . 
+           'WHERE (consumer_key = :consumer) AND (context_id = :context) AND (assessment_id = :assessment) ' .
            'AND (customer_id = :customer)' ;
     $query = $this->db->prepare($sql);
     $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
@@ -493,7 +493,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
   public function Results_setAccessedResult($consumer, $resource_link, $result_id) {
     $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
            'SET is_accessed = 1 ' .
-           'WHERE (consumer_key = :consumer) AND (context_id = :context) AND (assessment_id = :assessment) ' . 
+           'WHERE (consumer_key = :consumer) AND (context_id = :context) AND (assessment_id = :assessment) ' .
            'AND (result_id = :result)' ;
     $query = $this->db->prepare($sql);
     $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
@@ -638,7 +638,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
            'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
            'WHERE (assessment_id = :assessment) AND (customer_id = :customer) AND (consumer_key = :consumer) ' .
            'AND (context_id = :context)' .
-           'ORDER BY score ' . $order . ' ' . 
+           'ORDER BY score ' . $order . ' ' .
            'LIMIT 1 ';
     }
     $query = $this->db->prepare($sql);
@@ -673,7 +673,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
            'FROM ' . $this->dbTableNamePrefix . LTI_Data_Connector::RESULTS_TABLE_NAME . ' ' .
            'WHERE (assessment_id = :assessment) AND (customer_id = :customer) AND (consumer_key = :consumer) ' .
            'AND (context_id = :context)' .
-           'ORDER BY ' . $param . ' ' . $order . ' ' . 
+           'ORDER BY ' . $param . ' ' . $order . ' ' .
            'LIMIT 1 ';
     }
     $query = $this->db->prepare($sql);
@@ -715,11 +715,11 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
     $query->bindValue('consumer', $consumer->getKey(), PDO::PARAM_STR);
     $query->bindValue('context', $id, PDO::PARAM_STR);
     $ok = $query->execute();
-    error_log(print_r($query->errorInfo(), true));
     if ($ok) {
       $row = $query->fetch();
       $result_id = $row['result_id'];
     } else {
+      error_log(print_r($query->errorInfo(), true));
       return FALSE;
     }
     return $result_id;
@@ -880,7 +880,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 
 /*
  * Load the user from the database
- */    
+ */
   public function User_load($user) {
     $key = $user->getResourceLink()->getKey();
     $id = $user->getContext();
@@ -1001,7 +1001,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
       $user->updated = strtotime($row['updated']);
       $user->lti_result_sourcedid = $row['lti_result_sourcedid'];
     }
-    return $ok; 
+    return $ok;
   }
 
 /*
