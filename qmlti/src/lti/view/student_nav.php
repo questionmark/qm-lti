@@ -9,7 +9,9 @@
         <div id="PageContent" class="block-color">
           <div class="container-fluid">
             <p>
-              <button type="button" class="btn btn-default btn-grey no-margin" onclick="location.href='<?php echo $return_url; ?>'">Back to Course</button>
+              <?php if (!empty($return_url)) { ?>
+                <a class="btn btn-default btn-grey" href="<?php echo $return_url; ?>">Back to Course</button></a>
+              <?php } ?>
             </p>
           </div>
           <div id="body" class="container-fluid" style="padding: 0px">

@@ -59,6 +59,9 @@ require_once('../resources/lib.php');
 
   if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST') {
     $action = $_POST['action'];
+    if (isset($_POST['reduced_checksum'])) {
+      $_SESSION['reduced_checksum'] = 1;
+    }
     if (isset($_POST['debug'])) {
       $customer['customer_id'] = $_POST['customer_id'];
     } else {
@@ -113,7 +116,10 @@ require_once('../resources/lib.php');
 
   $script = <<< EOD
 <script type="text/javascript">
-<!--
+$(document).ready(function(){
+  $('[data-toggle="tooltip"]').tooltip();
+});
+
 if (!String.prototype.trim) {
  String.prototype.trim = function() {
   return this.replace(/^\s+|\s+$/g,'');
@@ -174,7 +180,6 @@ function checkForm() {
   }
   return ok;
 }
-// -->
 </script>
 EOD;
 
@@ -229,6 +234,17 @@ EOD;
           </div>
           <div class="col2">
             <input type="checkbox" id="debug" name="debug" value="1" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="col1">
+              Use reduced checksum
+            <a href="#" data-toggle="tooltip" title="Some learning management systems use a version of the LTI that requires the checksum to be reduced. Enabling this feature could lower the security of your LTI connector.">
+              <span class="glyphicon glyphicon-question-sign"></span>
+            </a>
+          </div>
+          <div class="col2">
+            <input type="checkbox" id="reduced_checksum" name="reduced_checksum" value="1" />
           </div>
         </div>
         <br><br>
