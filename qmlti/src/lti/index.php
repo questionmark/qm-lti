@@ -238,8 +238,8 @@ EOD;
         </div>
         <div class="row">
           <div class="col1">
-              Use reduced checksum
-            <a href="#" data-toggle="tooltip" title="Some learning management systems use a version of the LTI that requires the checksum to be reduced. Enabling this feature could lower the security of your LTI connector.">
+              Use reduced consumer key
+            <a href="#" data-toggle="tooltip" title="Some learning management systems use a version of the LTI that requires the consumer key to be reduced. Enabling this feature could lower the security of your LTI connector.">
               <span class="glyphicon glyphicon-question-sign"></span>
             </a>
           </div>
