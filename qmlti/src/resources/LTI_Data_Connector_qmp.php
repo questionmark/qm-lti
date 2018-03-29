@@ -89,7 +89,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
 /*
  *    Save the tool consumer to the database
  */
-  public function Tool_Consumer_save($consumer) {
+  public function Tool_Consumer_save($consumer, $changeConsumerName = TRUE) {
     $ok = TRUE;
     if (defined('CONSUMER_KEY')) {
       $consumer->updated = time();
@@ -116,19 +116,34 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
         $query->bindValue('created', $now, PDO::PARAM_STR);
         $query->bindValue('updated', $now, PDO::PARAM_STR);
       } else {
-        $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::CONSUMER_TABLE_NAME . ' ' .
+        if ($changeConsumerName) {
+          $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::CONSUMER_TABLE_NAME . ' ' .
                'SET secret = :secret, ' .
                'consumer_name = :consumer_name, customer_id = :customer_id, username_prefix = :username_prefix, ' .
                'last_access = :last_access, updated = :updated ' .
                'WHERE consumer_key = :key';
-        $query = $this->db->prepare($sql);
-        $query->bindValue('key', $key, PDO::PARAM_STR);
-        $query->bindValue('secret', $consumer->secret, PDO::PARAM_STR);
-        $query->bindValue('consumer_name', $consumer->consumer_name, PDO::PARAM_STR);
-        $query->bindValue('customer_id', $consumer->custom['customer_id'], PDO::PARAM_STR);
-        $query->bindValue('username_prefix', $consumer->custom['username_prefix'], PDO::PARAM_STR);
-        $query->bindValue('last_access', $last, PDO::PARAM_STR);
-        $query->bindValue('updated', $now, PDO::PARAM_STR);
+          $query = $this->db->prepare($sql);
+          $query->bindValue('key', $key, PDO::PARAM_STR);
+          $query->bindValue('secret', $consumer->secret, PDO::PARAM_STR);
+          $query->bindValue('consumer_name', $consumer->consumer_name, PDO::PARAM_STR);
+          $query->bindValue('customer_id', $consumer->custom['customer_id'], PDO::PARAM_STR);
+          $query->bindValue('username_prefix', $consumer->custom['username_prefix'], PDO::PARAM_STR);
+          $query->bindValue('last_access', $last, PDO::PARAM_STR);
+          $query->bindValue('updated', $now, PDO::PARAM_STR);
+        } else {
+          $sql = 'UPDATE ' . $this->dbTableNamePrefix . LTI_Data_Connector::CONSUMER_TABLE_NAME . ' ' .
+               'SET secret = :secret, ' .
+               'customer_id = :customer_id, username_prefix = :username_prefix, ' .
+               'last_access = :last_access, updated = :updated ' .
+               'WHERE consumer_key = :key';
+          $query = $this->db->prepare($sql);
+          $query->bindValue('key', $key, PDO::PARAM_STR);
+          $query->bindValue('secret', $consumer->secret, PDO::PARAM_STR);
+          $query->bindValue('customer_id', $consumer->custom['customer_id'], PDO::PARAM_STR);
+          $query->bindValue('username_prefix', $consumer->custom['username_prefix'], PDO::PARAM_STR);
+          $query->bindValue('last_access', $last, PDO::PARAM_STR);
+          $query->bindValue('updated', $now, PDO::PARAM_STR);
+        }
       }
       $ok = $query->execute();
       if ($ok) {
@@ -719,6 +734,7 @@ class LTI_Data_Connector_QMP extends LTI_Data_Connector {
       $row = $query->fetch();
       $result_id = $row['result_id'];
     } else {
+      error_log(print_r($query->errorInfo(), true));
       return FALSE;
     }
     return $result_id;
