@@ -628,7 +628,7 @@ class LTI_Tool_Provider {
     }
     # Persist changes to consumer
     if ($doSaveConsumer) {
-      $this->consumer->save();
+      $this->consumer->save(false);
     }
     if ($this->isOK && isset($this->resource_link)) {
     # Check if a share arrangement is in place for this resource link
@@ -850,8 +850,8 @@ class LTI_Tool_Consumer {
  *
  * @return boolean True if the object was successfully saved
  */
-  public function save() {
-    return $this->data_connector->Tool_Consumer_save($this);
+  public function save($changeConsumerName = TRUE) {
+    return $this->data_connector->Tool_Consumer_save($this, $changeConsumerName);
   }
 
 /**
