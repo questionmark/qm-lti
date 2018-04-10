@@ -94,7 +94,7 @@ require_once('LTI_Tool_Provider.php');
       $db_name = "sqlsrv:server={$db_server};Database={$db_name}";
     }
     try {
-      $db = new PDO($db_name, $db_username, $db_password, array(PDO::MYSQL_ATTR_FOUND_ROWS => true));
+      $db = new PDO($db_name, $db_username, $db_password, NULL);
     } catch(PDOException $e) {
       log_error($e);
       $_SESSION['error'] = 'Unable to connect to database';
